@@ -10,6 +10,7 @@ use crate::{
     constants::{EMPTY, END, START},
     deserializer::{
         header::validate_header,
+        iter::PropertyResolverIterator,
         number::{read_double, read_float, read_signed_int, read_unsigned_int},
         read::{read_byte_at, read_exact_bytes, read_pointer},
         string::read_string,
@@ -84,6 +85,27 @@ impl<'a> TypedStreamDeserializer<'a> {
         self.object_table
             .first()
             .ok_or(TypedStreamError::UnexpectedEnd)
+    }
+
+    /// Creates an iterator that resolves the top-level properties of an object
+    /// while preserving its nested structure.
+    ///
+    /// This should be called after `oxidize()` has completed. It iterates over the
+    /// property groups of the object at the given index. If a property group is a
+    /// reference to another object, the iterator returns the resolved `Archived`
+    /// object. Otherwise, it returns a slice of the data properties.
+    ///
+    /// This allows for recursive exploration of the object graph.
+    ///
+    /// # Arguments
+    ///
+    /// * `root_object_index` - The index of the object in the `object_table` to iterate over.
+    pub fn resolve_properties(
+        &self,
+        root_object_index: usize,
+    ) -> Result<PropertyResolverIterator<'a, '_>> {
+        PropertyResolverIterator::new(&self.object_table, &self.type_table, root_object_index)
+            .ok_or(TypedStreamError::InvalidPointer(root_object_index as u8))
     }
 
     /// Reads the next byte from the stream, advancing the position.
@@ -233,8 +255,10 @@ impl<'a> TypedStreamDeserializer<'a> {
                 self.position += 1;
 
                 if let Some(cls) = self.read_class()? {
-                    self.object_table[placeholder_index] =
-                        Archived::Object(cls, Vec::with_capacity(8));
+                    self.object_table[placeholder_index] = Archived::Object {
+                        class: cls,
+                        data: Vec::with_capacity(8),
+                    };
                     while self.position < self.data.len()
                         && *read_byte_at(self.data, self.position)? != END
                     {
@@ -247,8 +271,10 @@ impl<'a> TypedStreamDeserializer<'a> {
                         if let Some(next_index) = self.read_type(false)? {
                             // Recursively read the types for this object
                             if let Some(data) = self.read_types(next_index)? {
-                                if let Some(Archived::Object(_, data_vec)) =
-                                    self.object_table.get_mut(placeholder_index)
+                                if let Some(Archived::Object {
+                                    class: _,
+                                    data: data_vec,
+                                }) = self.object_table.get_mut(placeholder_index)
                                 {
                                     // Add the data to the object
                                     data_vec.push(data);

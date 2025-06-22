@@ -12,7 +12,7 @@ pub mod models;
 mod tests {
     use std::{env::current_dir, fs::File, io::Read};
 
-    use crate::deserializer::typedstream::TypedStreamDeserializer;
+    use crate::deserializer::{iter::print_resolved, typedstream::TypedStreamDeserializer};
 
     #[test]
     fn test_parse_text_basic() {
@@ -27,9 +27,8 @@ mod tests {
 
         // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
-        let result = typedstream.oxidize().unwrap();
-
-        println!("\n{:#?}\n", result);
+        let _ = typedstream.oxidize().unwrap();
+        print_resolved(typedstream.resolve_properties(0).unwrap(), 2);
 
         println!("\n\nFound {:?} types:", typedstream.type_table.len());
         typedstream
