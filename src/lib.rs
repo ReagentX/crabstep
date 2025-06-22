@@ -31,9 +31,9 @@ mod tests {
 
         println!("\n{:#?}\n", result);
 
-        println!("\n\nFound {:?} types:", typedstream.types_table.len());
+        println!("\n\nFound {:?} types:", typedstream.type_table.len());
         typedstream
-            .types_table
+            .type_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:x?}"));

@@ -15,7 +15,7 @@ use crate::{
         string::read_string,
     },
     error::{Result, TypedStreamError},
-    models::{archivable::Archivable, class::Class, output_data::OutputData, types::Type},
+    models::{archivable::Archived, class::Class, output_data::OutputData, types::Type},
 };
 
 #[derive(Debug, PartialEq)]
@@ -42,9 +42,9 @@ pub struct TypedStreamDeserializer<'a> {
     ///
     /// The first time a [`Type`] is seen, it is present in the stream literally,
     /// but afterwards are only referenced by index in order of appearance.
-    pub types_table: Vec<Vec<Type<'a>>>,
+    pub type_table: Vec<Vec<Type<'a>>>,
     /// As we parse the `typedstream`, build a table of seen archivable data to reference in the future
-    object_table: Vec<Archivable<'a>>,
+    object_table: Vec<Archived<'a>>,
     /// We want to copy embedded types the first time they are seen, even if the types were resolved through references
     seen_embedded_types: HashSet<usize>,
 }
@@ -54,14 +54,14 @@ impl<'a> TypedStreamDeserializer<'a> {
         Self {
             data,
             position: 0,
-            types_table: Vec::with_capacity(16),
+            type_table: Vec::with_capacity(16),
             object_table: Vec::with_capacity(32),
             seen_embedded_types: HashSet::with_capacity(8),
         }
     }
 
     /// Parses the `typedstream` and extracts the data, returning a vector of parsed data.
-    pub fn oxidize(&mut self) -> Result<&Archivable<'a>> {
+    pub fn oxidize(&mut self) -> Result<&Archived<'a>> {
         let validation = validate_header(self.data)?;
 
         // Advance by the number of bytes consumed by the header validation
@@ -72,7 +72,7 @@ impl<'a> TypedStreamDeserializer<'a> {
         println!(
             "Found type at: {:?}: {:?}",
             found_type,
-            self.types_table.get(found_type.unwrap())
+            self.type_table.get(found_type.unwrap())
         );
 
         if let Some(type_index) = found_type {
@@ -114,7 +114,7 @@ impl<'a> TypedStreamDeserializer<'a> {
             EMPTY => Ok(None),
             ptr => {
                 let pointer = read_pointer(&ptr)?.map(|v| v as usize);
-                if let Some(Archivable::Type(idx)) = self.object_table.get(pointer.value) {
+                if let Some(Archived::Type(idx)) = self.object_table.get(pointer.value) {
                     Ok(Some(pointer.value))
                 } else {
                     Err(TypedStreamError::InvalidPointer(pointer.value as u8))
@@ -130,9 +130,9 @@ impl<'a> TypedStreamDeserializer<'a> {
             START => {
                 let string_data = read_string(&self.data[self.position..])?;
                 self.position += string_data.bytes_consumed;
-                self.types_table
+                self.type_table
                     .push(vec![Type::new_string(string_data.value)]);
-                Ok(self.types_table.len() - 1)
+                Ok(self.type_table.len() - 1)
             }
             EMPTY => {
                 println!("Found empty string at position: 0x{:x}", self.position - 1);
@@ -141,7 +141,7 @@ impl<'a> TypedStreamDeserializer<'a> {
             ptr => {
                 let pointer = read_pointer(&ptr)?.map(|v| v as usize);
                 if let Some(Type::String(_)) = self
-                    .types_table
+                    .type_table
                     .get(pointer.value)
                     .and_then(|inner| inner.first())
                 {
@@ -173,12 +173,12 @@ impl<'a> TypedStreamDeserializer<'a> {
                     // Append the new class with no parent yet
                     let idx = self.object_table.len();
                     self.object_table
-                        .push(Archivable::Class(Class::new(name_idx, version, None)));
+                        .push(Archived::Class(Class::new(name_idx, version, None)));
 
                     // The class we just appended (*idx*) is the **parent** of the
                     // class we appended in the previous iteration (*prev_new*)
                     if let Some(child_idx) = prev_new {
-                        if let Archivable::Class(ref mut child_cls) = self.object_table[child_idx] {
+                        if let Archived::Class(ref mut child_cls) = self.object_table[child_idx] {
                             child_cls.parent_index = Some(idx);
                         }
                     }
@@ -212,7 +212,7 @@ impl<'a> TypedStreamDeserializer<'a> {
         // Patch the outer-most newly created class so that it points to the
         // already-existing parent (or to `None` if EMPTY terminated the list).
         if let Some(outer_idx) = prev_new {
-            if let Archivable::Class(ref mut outer_cls) = self.object_table[outer_idx] {
+            if let Archived::Class(ref mut outer_cls) = self.object_table[outer_idx] {
                 outer_cls.parent_index = final_parent;
             }
         }
@@ -228,13 +228,13 @@ impl<'a> TypedStreamDeserializer<'a> {
             START => {
                 let placeholder_index = self.object_table.len();
                 // This placeholder will be replaced with the actual object data once we read the class
-                self.object_table.push(Archivable::Placeholder);
+                self.object_table.push(Archived::Placeholder);
                 // Advance the position to the next byte, which should be the start of a class
                 self.position += 1;
 
                 if let Some(cls) = self.read_class()? {
                     self.object_table[placeholder_index] =
-                        Archivable::Object(cls, Vec::with_capacity(8));
+                        Archived::Object(cls, Vec::with_capacity(8));
                     while self.position < self.data.len()
                         && *read_byte_at(self.data, self.position)? != END
                     {
@@ -247,7 +247,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                         if let Some(next_index) = self.read_type(false)? {
                             // Recursively read the types for this object
                             if let Some(data) = self.read_types(next_index)? {
-                                if let Some(Archivable::Object(_, data_vec)) =
+                                if let Some(Archived::Object(_, data_vec)) =
                                     self.object_table.get_mut(placeholder_index)
                                 {
                                     // Add the data to the object
@@ -263,7 +263,6 @@ impl<'a> TypedStreamDeserializer<'a> {
             ptr => {
                 println!("Reading object pointer at position: 0x{:x}", self.position);
                 let pointer = read_pointer(&ptr)?;
-                // self.position += pointer.bytes_consumed;
                 Ok(pointer.value as usize)
             }
         }
@@ -271,15 +270,15 @@ impl<'a> TypedStreamDeserializer<'a> {
 
     fn read_types(&mut self, types_index: usize) -> Result<Option<Vec<OutputData<'a>>>> {
         // Get the types at the specified index
-        let types = &self.types_table[types_index];
+        let types = &self.type_table[types_index];
 
-        let count = self.types_table[types_index].len();
+        let count = self.type_table[types_index].len();
         println!("Reading types at index {}: {:?}", types_index, types);
 
         let mut out_v = Vec::with_capacity(count);
 
         for i in 0..count {
-            match &self.types_table[types_index][i] {
+            match &self.type_table[types_index][i] {
                 Type::Utf8String => {
                     let str = &read_string(&self.data[self.position..])?;
                     self.position += str.bytes_consumed;
@@ -304,7 +303,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                     println!(
                         "Found obj at {obj_idx:?}: {:?}\n{:?}\n{}",
                         self.object_table.get(obj_idx),
-                        self.types_table,
+                        self.type_table,
                         self.object_table
                             .iter()
                             .enumerate()
@@ -365,7 +364,7 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     /// Gets the current type from the stream, either by reading it from the stream or reading it from
-    /// the specified index of [`Self::types_table`]. Returns an index into the types table
+    /// the specified index of [`Self::type_table`]. Returns an index into the types table
     /// to avoid cloning large type vectors.
     fn read_type(&mut self, is_embedded_type: bool) -> Result<Option<usize>> {
         let byte = *self.consume_current_byte()?;
@@ -376,7 +375,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                 println!("Start type at position {:x}", self.position);
                 // Get the type of the object
                 let new_types = Type::read_new_type(&self.data[self.position..])?;
-                let new_type_index = self.types_table.len();
+                let new_type_index = self.type_table.len();
                 println!(
                     "Parsed type of length {:?}: {:?}",
                     new_types.value.len(),
@@ -385,15 +384,15 @@ impl<'a> TypedStreamDeserializer<'a> {
 
                 // Embedded data is stored as a C String in the objects table
                 if is_embedded_type {
-                    self.object_table.push(Archivable::Type(new_type_index));
+                    self.object_table.push(Archived::Type(new_type_index));
                     // We only want to include the first embedded reference tag, not subsequent references to the same embed
                     self.seen_embedded_types
                         .insert(self.object_table.len().saturating_sub(1));
                 }
 
-                self.types_table.push(new_types.value);
+                self.type_table.push(new_types.value);
                 self.position += new_types.bytes_consumed;
-                Ok(Some(self.types_table.len() - 1))
+                Ok(Some(self.type_table.len() - 1))
             }
             EMPTY => {
                 println!("Empty type at position {:x}", self.position - 1);
@@ -408,16 +407,16 @@ impl<'a> TypedStreamDeserializer<'a> {
                 let pointer = read_pointer(&ptr)?;
                 let ref_tag = pointer.value as usize;
 
-                if ref_tag as usize >= self.types_table.len() {
+                if ref_tag as usize >= self.type_table.len() {
                     return Ok(None);
                 }
 
                 if is_embedded_type {
                     // We only want to include the first embedded reference tag, not subsequent references to the same embed
                     if !self.seen_embedded_types.contains(&ref_tag)
-                        && self.types_table.get(ref_tag as usize).is_some()
+                        && self.type_table.get(ref_tag as usize).is_some()
                     {
-                        self.object_table.push(Archivable::Type(ref_tag));
+                        self.object_table.push(Archived::Type(ref_tag));
                         self.seen_embedded_types.insert(ref_tag);
                     }
                 }

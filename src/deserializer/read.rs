@@ -24,6 +24,9 @@ pub fn read_byte_at(data: &[u8], idx: usize) -> Result<&u8> {
 }
 
 /// Read a reference pointer for a Type
+///
+/// While this does consume a byte, pointers refer to an index in the [`type_table`](crate::deserializer::typedstream::TypedStreamDeserializer::type_table) or
+/// [`object_table`](crate::deserializer::typedstream::TypedStreamDeserializer::object_table), so it does generally need to advance the current position.
 pub fn read_pointer(pointer: &u8) -> Result<Consumed<u64>> {
     let result = u64::from(*pointer)
         .checked_sub(REFERENCE_TAG)

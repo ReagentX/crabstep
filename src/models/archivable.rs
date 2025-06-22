@@ -1,8 +1,8 @@
-use crate::models::{class::Class, output_data::OutputData, types::Type};
+use crate::models::{class::Class, output_data::OutputData};
 
 /// Types of data that can be archived into the `typedstream`
 #[derive(Debug, PartialEq)]
-pub enum Archivable<'a> {
+pub enum Archived<'a> {
     /// An instance of a class that may contain some embedded data. `typedstream` data doesn't include property
     /// names, so data is stored in order of appearance. The class is stored in the `object_table` and
     /// the data is stored in the `data` field.
@@ -16,6 +16,6 @@ pub enum Archivable<'a> {
     /// comes before the ones it inherits from. To preserve the order, we reserve the first slot to store the actual object's data
     /// and then later add it back to the right place.
     Placeholder,
-    /// A type that made it through the parsing process without getting replaced by an object, referred to by its index in the `types_table`.
+    /// An embedded type that describes the [`Type`] of the subsequent bytes, referred to by its index in the `type_table`.
     Type(usize),
 }
