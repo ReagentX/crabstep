@@ -74,7 +74,7 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// # Examples
     ///
     /// ```no_run
-    /// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
+    /// use crabstep::TypedStreamDeserializer;
     ///
     /// let mut deserializer = TypedStreamDeserializer::new(&[]);
     /// let result = deserializer.oxidize();
@@ -126,10 +126,12 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// # Examples
     ///
     /// ```no_run
-    /// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
-    /// let mut ds = TypedStreamDeserializer::new(&[]);
-    /// // after ds.oxidize().unwrap();
-    /// let iter = ds.resolve_properties(0).unwrap();
+    /// use crabstep::TypedStreamDeserializer;
+    ///
+    /// let mut ts = TypedStreamDeserializer::new(&[]);
+    /// let root = ts.oxidize().unwrap();
+    ///
+    /// let iter = ts.resolve_properties(root).unwrap();
     /// ```
     pub fn resolve_properties(
         &self,

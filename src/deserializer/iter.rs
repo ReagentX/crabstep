@@ -19,6 +19,7 @@ pub enum ResolvedProperty<'a, 'b> {
     /// A primitive value (string, number, byte, etc.).
     Primitive(&'b OutputData<'a>),
 }
+
 /// An iterator that resolves the top-level properties of a single [`Archived::Object`].
 ///
 /// It iterates over the `Vec<Vec<OutputData>>` of an object. If an inner `Vec`

@@ -11,7 +11,7 @@ The typedstream format is a binary serialization protocol designed for `C` and `
 ```rust,no_run
 use std::{env::current_dir, fs::File, io::Read};
 
-use crabstep::deserializer::typedstream::TypedStreamDeserializer;
+use crabstep::TypedStreamDeserializer;
 
 // Read the typedstream file into memory
 let typedstream_path = current_dir()
@@ -24,7 +24,12 @@ file.read_to_end(&mut bytes).unwrap();
 
 // Oxidize the typedstream
 let mut typedstream = TypedStreamDeserializer::new(&bytes);
-let root = typedstream.oxidize();
+let root = typedstream.oxidize().unwrap();
+
+// Iterate over the typedstream's properties
+typedstream.resolve_properties(root)
+    .unwrap()
+    .for_each(|prop| println!("{:#?}", prop))
 ```
 
 ## Origin

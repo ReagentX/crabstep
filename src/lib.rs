@@ -7,6 +7,9 @@ pub mod deserializer;
 pub mod error;
 pub mod models;
 
+pub use deserializer::{iter::PropertyResolverIterator, typedstream::TypedStreamDeserializer};
+pub use models::{archivable::Archived, output_data::OutputData};
+
 #[cfg(test)]
 mod test_typedstream_deserializer {
     use std::{env::current_dir, fs::File, io::Read};
