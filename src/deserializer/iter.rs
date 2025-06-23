@@ -104,8 +104,9 @@ impl<'a, 'b: 'a> Iterator for PropertyResolverIterator<'a, 'b> {
 /// use crabstep::deserializer::iter::print_resolved;
 /// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
 /// let mut ds = TypedStreamDeserializer::new(&[]);
-/// // after ds.oxidize() and ds.resolve_properties
-/// if let Ok(iter) = ds.resolve_properties(0) {
+/// let root = ds.oxidize().unwrap();
+///
+/// if let Ok(iter) = ds.resolve_properties(root) {
 ///     print_resolved(iter, 2);
 /// }
 /// ```
@@ -116,15 +117,8 @@ pub fn print_resolved(iter: PropertyResolverIterator<'_, '_>, indent: usize) {
 }
 
 /// Print a single `ResolvedProperty` with indentation, recursing for nested data.
-///
-/// # Examples
-/// ```no_run
-/// use crabstep::deserializer::iter::{ResolvedProperty, print_property};
-/// # // assume `prop` of type ResolvedProperty
-/// # let prop: ResolvedProperty<'_, '_> = unimplemented!();
-/// print_property(prop, 4);
 /// ```
-pub fn print_property<'a, 'b: 'a>(prop: ResolvedProperty<'a, 'b>, indent: usize) {
+pub(crate) fn print_property<'a, 'b: 'a>(prop: ResolvedProperty<'a, 'b>, indent: usize) {
     match prop {
         ResolvedProperty::Object {
             class: _,
