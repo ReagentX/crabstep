@@ -70,14 +70,14 @@ mod string_tests {
         let combined = start_bytes
             .iter()
             .chain(long_string.iter())
-            .cloned()
+            .copied()
             .collect::<Vec<u8>>();
 
         let result = read_string(&combined).unwrap();
 
         assert_eq!(result.value.len(), 1000);
-        assert!(result.value.starts_with("a"));
-        assert!(result.value.ends_with("a"));
+        assert!(result.value.starts_with('a'));
+        assert!(result.value.ends_with('a'));
         // 1 byte for the int type, 2 bytes for I_16, 1000 bytes for the string
         assert_eq!(result.bytes_consumed, 1003);
     }
@@ -90,14 +90,14 @@ mod string_tests {
         let combined = start_bytes
             .iter()
             .chain(long_string.iter())
-            .cloned()
+            .copied()
             .collect::<Vec<u8>>();
 
         let result = read_string(&combined).unwrap();
 
         assert_eq!(result.value.len(), 16843009);
-        assert!(result.value.starts_with("a"));
-        assert!(result.value.ends_with("a"));
+        assert!(result.value.starts_with('a'));
+        assert!(result.value.ends_with('a'));
         // 1 byte for the int type, 4 bytes for I_32, 16843009 bytes for the string
         assert_eq!(result.bytes_consumed, 16843014);
     }

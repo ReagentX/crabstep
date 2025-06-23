@@ -35,21 +35,20 @@ impl Display for TypedStreamError {
             TypedStreamError::UnmatchedEnd => write!(f, "Unmatched end in stream"),
             TypedStreamError::OutOfBounds(n, len) => write!(
                 f,
-                "Out of bounds access: tried to access byte {} in a stream of length {}",
-                n, len
+                "Out of bounds access: tried to access byte {n} in a stream of length {len}"
             ),
             TypedStreamError::SliceError(try_from_slice_error) => {
-                write!(f, "Slice conversion error: {}", try_from_slice_error)
+                write!(f, "Slice conversion error: {try_from_slice_error}")
             }
             TypedStreamError::StringParseError(utf8_error) => {
-                write!(f, "String parsing error: {}", utf8_error)
+                write!(f, "String parsing error: {utf8_error}")
             }
             TypedStreamError::InvalidHeader => write!(f, "Invalid header in typedstream!"),
             TypedStreamError::InvalidPointer(pointer) => {
-                write!(f, "Invalid pointer: {}", pointer)
+                write!(f, "Invalid pointer: {pointer}")
             }
             TypedStreamError::InvalidArray(offset) => {
-                write!(f, "Invalid array at index: {:x}", offset)
+                write!(f, "Invalid array at index: {offset:x}")
             }
             TypedStreamError::EmptyString => write!(f, "Empty string encountered in typedstream"),
         }

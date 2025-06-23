@@ -54,6 +54,7 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// let data: &[u8] = &[];
     /// let deserializer = TypedStreamDeserializer::new(data);
     /// ```
+    #[must_use]
     pub fn new(data: &'a [u8]) -> Self {
         Self {
             data,
@@ -96,7 +97,7 @@ impl<'a> TypedStreamDeserializer<'a> {
         if let Some(type_index) = found_type {
             // Read the types at the specified index
             obj = self.read_types(type_index)?;
-            println!("End of object: {:?}", obj);
+            println!("End of object: {obj:?}");
         }
 
         match obj
@@ -324,7 +325,7 @@ impl<'a> TypedStreamDeserializer<'a> {
         }
     }
 
-    /// Reads numeric types (signed, unsigned, float, double) and returns the corresponding OutputData
+    /// Reads numeric types (signed, unsigned, float, double) and returns the corresponding `OutputData`
     fn read_number(&mut self, ty: &Type<'a>) -> Result<OutputData<'a>> {
         match ty {
             Type::SignedInt => {
@@ -367,9 +368,8 @@ impl<'a> TypedStreamDeserializer<'a> {
                     if let Some(idx) = self.read_embedded_type()? {
                         self.position += 1;
                         return self.read_types(idx);
-                    } else {
-                        return Ok(None);
                     }
+                    return Ok(None);
                 }
                 Type::Object => {
                     let obj_idx = self.read_object()?;

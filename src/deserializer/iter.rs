@@ -109,7 +109,7 @@ impl<'a, 'b: 'a> Iterator for PropertyResolverIterator<'a, 'b> {
 ///     print_resolved(iter, 2);
 /// }
 /// ```
-pub fn print_resolved<'a, 'b>(iter: PropertyResolverIterator<'a, 'b>, indent: usize) {
+pub fn print_resolved(iter: PropertyResolverIterator<'_, '_>, indent: usize) {
     for prop in iter {
         print_property(prop, indent);
     }

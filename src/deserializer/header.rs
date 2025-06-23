@@ -79,7 +79,7 @@ mod header_tests {
             .unwrap()
             .as_path()
             .join("src/test_data/AttributedBodyTextOnly");
-        println!("Parsing file: {:?}", typedstream_path);
+        println!("Parsing file: {typedstream_path:?}");
         let mut file = File::open(typedstream_path).unwrap();
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
