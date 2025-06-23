@@ -18,7 +18,7 @@ use crate::{
 ///
 /// # Errors
 ///
-/// Returns [`TypedStreamError::OutOfBounds`] if there are not enough bytes.
+/// Returns [`TypedStreamError::OutOfBounds`](crate::error::TypedStreamError::OutOfBounds) if there are not enough bytes.
 ///
 /// # Examples
 /// ```no_run
@@ -71,7 +71,7 @@ pub fn read_signed_int(data: &[u8]) -> Result<Consumed<i64>> {
 ///
 /// # Errors
 ///
-/// Returns [`TypedStreamError::OutOfBounds`] if there are not enough bytes.
+/// Returns [`TypedStreamError::OutOfBounds`](crate::error::TypedStreamError::OutOfBounds) if there are not enough bytes.
 ///
 /// # Examples
 /// ```no_run
@@ -121,7 +121,7 @@ pub fn read_unsigned_int(data: &[u8]) -> Result<Consumed<u64>> {
 ///
 /// # Errors
 ///
-/// Returns [`TypedStreamError`] if the underlying byte slice is too short.
+/// Returns [`TypedStreamError::OutOfBounds`](crate::error::TypedStreamError::OutOfBounds) if the underlying byte slice is too short.
 ///
 /// # Examples
 /// ```no_run
@@ -151,7 +151,7 @@ pub fn read_float(data: &[u8]) -> Result<Consumed<f32>> {
 ///
 /// # Errors
 ///
-/// Returns [`TypedStreamError`] if the underlying byte slice is too short.
+/// Returns [`TypedStreamError::OutOfBounds`](crate::error::TypedStreamError::OutOfBounds) if the underlying byte slice is too short.
 ///
 /// # Examples
 /// ```no_run

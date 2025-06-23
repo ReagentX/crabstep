@@ -1,8 +1,8 @@
-//! Error types and result alias for typed stream deserialization.
+//! Error types and result alias for typed stream deserialization
 
 use std::{array::TryFromSliceError, fmt::Display};
 
-/// A specialized [`Result`] type for typed stream operations.
+/// A specialized [`Result`] type for `typedstream` operations.
 pub type Result<T> = std::result::Result<T, TypedStreamError>;
 
 /// Errors that can occur while deserializing a typed stream.
@@ -26,6 +26,8 @@ pub enum TypedStreamError {
     InvalidArray(usize),
     /// Encountered an empty string where data was expected.
     EmptyString,
+    /// File read error, such as when reading from a file.
+    FileReadError(std::io::Error),
 }
 
 impl Display for TypedStreamError {
@@ -51,6 +53,7 @@ impl Display for TypedStreamError {
                 write!(f, "Invalid array at index: {offset:x}")
             }
             TypedStreamError::EmptyString => write!(f, "Empty string encountered in typedstream"),
+            TypedStreamError::FileReadError(error) => write!(f, "File read error: {error}"),
         }
     }
 }
@@ -64,6 +67,12 @@ impl From<TryFromSliceError> for TypedStreamError {
 impl From<std::str::Utf8Error> for TypedStreamError {
     fn from(error: std::str::Utf8Error) -> Self {
         TypedStreamError::StringParseError(error)
+    }
+}
+
+impl From<std::io::Error> for TypedStreamError {
+    fn from(error: std::io::Error) -> Self {
+        TypedStreamError::FileReadError(error)
     }
 }
 

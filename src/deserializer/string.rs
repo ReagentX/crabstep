@@ -12,8 +12,8 @@ use crate::{
 ///
 /// # Errors
 ///
-/// Returns [`TypedStreamError::OutOfBounds`] if not enough bytes for length or data,
-/// or [`TypedStreamError::StringParseError`] if the bytes are not valid UTF-8.
+/// Returns [`TypedStreamError::OutOfBounds`](crate::error::TypedStreamError::OutOfBounds) if not enough bytes for length or data,
+/// or [`TypedStreamError::StringParseError`](crate::error::TypedStreamError::StringParseError) if the bytes are not valid UTF-8.
 ///
 /// # Examples
 /// ```no_run

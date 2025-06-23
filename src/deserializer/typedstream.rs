@@ -36,9 +36,9 @@ pub struct TypedStreamDeserializer<'a> {
     ///
     /// The first time a [`Type`] is seen, it is present in the stream literally,
     /// but afterwards are only referenced by index in order of appearance.
-    pub(crate) type_table: Vec<Vec<Type<'a>>>,
+    pub type_table: Vec<Vec<Type<'a>>>,
     /// As we parse the `typedstream`, build a table of seen archivable data to reference in the future
-    pub(crate) object_table: Vec<Archived<'a>>,
+    pub object_table: Vec<Archived<'a>>,
     /// We want to copy embedded types the first time they are seen, even if the types were resolved through references
     pub(crate) seen_embedded_types: HashSet<usize>,
 }
@@ -113,7 +113,7 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// Creates an iterator that resolves the properties of an object
     /// at the specified index in the `object_table`, preserving nested structure.
     ///
-    /// This should be called after [`oxidize`].
+    /// This should be called after [`oxidize()`](Self::oxidize).
     ///
     /// # Arguments
     ///
