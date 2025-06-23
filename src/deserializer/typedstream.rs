@@ -137,7 +137,7 @@ impl<'a> TypedStreamDeserializer<'a> {
             ptr => {
                 let pointer = read_pointer(&ptr)?.map(|v| v as usize);
                 if let Some(Archived::Type(idx)) = self.object_table.get(pointer.value) {
-                    Ok(Some(pointer.value))
+                    Ok(Some(*idx))
                 } else {
                     Err(TypedStreamError::InvalidPointer(pointer.value as u8))
                 }

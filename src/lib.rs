@@ -16,10 +16,7 @@ mod tests {
 
     #[test]
     fn test_parse_text_basic() {
-        let typedstream_path = current_dir()
-            .unwrap()
-            .as_path()
-            .join("src/test_data/0123456789");
+        let typedstream_path = current_dir().unwrap().as_path().join("src/test_data/35123");
         println!("Parsing file: {:?}", typedstream_path);
         let mut file = File::open(typedstream_path).unwrap();
         let mut bytes = vec![];
