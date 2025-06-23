@@ -2,5 +2,13 @@
 name = "crabstep"
 version = "0.0.0"
 edition = "2024"
+authors = ["Christopher Sardegna <imessage@reagentx.net>"]
+license = "GPL-3.0-or-later"
+description = "Cross-platform, zero-dependency Apple/NeXTSTEP typedstream deserializer"
+exclude = [".github"]
+readme = "README.md"
+repository = "https://github.com/ReagentX/crabstep"
+keywords = ["typedstream", "macos", "ios", "apple"]
+categories = ["parsing", "parser-implementations", "database"]
 
 [dependencies]
