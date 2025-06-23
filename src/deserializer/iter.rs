@@ -108,7 +108,11 @@ pub fn print_resolved<'a, 'b>(iter: PropertyResolverIterator<'a, 'b>, indent: us
 /// with `indent` spaces of indentation.
 pub fn print_property<'a, 'b: 'a>(prop: ResolvedProperty<'a, 'b>, indent: usize) {
     match prop {
-        ResolvedProperty::Object { class, name, data } => {
+        ResolvedProperty::Object {
+            class: _,
+            name,
+            data,
+        } => {
             // Print the object itself
             println!("{:indent$}Object: {:?}", "", name, indent = indent);
             // Recurse into its children with increased indent

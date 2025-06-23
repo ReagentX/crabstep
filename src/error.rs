@@ -56,3 +56,5 @@ impl From<std::str::Utf8Error> for TypedStreamError {
         TypedStreamError::StringParseError(error)
     }
 }
+
+impl std::error::Error for TypedStreamError {}

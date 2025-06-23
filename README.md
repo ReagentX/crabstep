@@ -24,7 +24,7 @@ file.read_to_end(&mut bytes).unwrap();
 
 // Oxidize the typedstream
 let mut typedstream = TypedStreamDeserializer::new(&bytes);
-let result = typedstream.oxidize();
+let root = typedstream.oxidize();
 ```
 
 ## Origin
@@ -40,3 +40,10 @@ The format is derived from the data structure used by `NeXTSTEP`'s `NXTypedStrea
 ## Reverse Engineering
 
  A blog post describing the reverse engineering of `typedstream` is located [here](https://chrissardegna.com/blog/reverse-engineering-apples-typedstream-format/).
+
+## Highlights
+
+- 100% safe Rust; no `unsafe` code
+- No external dependencies; pure Rust implementation
+- Robust error handling via the `TypedStreamError` enum
+- Ergonomic `TypedStreamDeserializer` with `resolve_properties` iterator for exploring object graphs
