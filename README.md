@@ -6,6 +6,10 @@
 
 The typedstream format is a binary serialization protocol designed for `C` and `Objective-C` data structures. It is primarily used in Apple's Foundation framework, specifically within the `NSArchiver` and `NSUnarchiver` classes.
 
+## ⚠️ Warning
+
+This library is in alpha state; the API surface may change.
+
 ### Quick Start
 
 ```rust,no_run
@@ -31,6 +35,10 @@ typedstream.resolve_properties(root)
     .unwrap()
     .for_each(|prop| println!("{:#?}", prop))
 ```
+
+### Detailed examples
+
+This crate is heavily used by [`imessage-database`](https://crates.io/crates/imessage-database)'s [`body`](https://github.com/ReagentX/imessage-exporter/blob/develop/imessage-database/src/tables/messages/body.rs) module.
 
 ## Origin
 
