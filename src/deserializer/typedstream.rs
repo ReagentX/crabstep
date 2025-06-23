@@ -19,13 +19,6 @@ use crate::{
     models::{archivable::Archived, class::Class, output_data::OutputData, types::Type},
 };
 
-#[derive(Debug, PartialEq)]
-pub enum ParsedData {
-    Object(Vec<ParsedData>),
-    Data(u8),
-    Null,
-}
-
 /// Contains logic and data used to deserialize data from a `typedstream`.
 ///
 /// `typedstream` is a binary serialization format developed by `NeXTSTEP` and later adopted by Apple.
@@ -38,19 +31,29 @@ pub struct TypedStreamDeserializer<'a> {
     /// The `typedstream` we want to parse
     pub data: &'a [u8],
     /// The current index we are at in the stream
-    pub position: usize,
+    pub(crate) position: usize,
     /// As we parse the `typedstream`, build a table of seen [`Type`]s to reference in the future
     ///
     /// The first time a [`Type`] is seen, it is present in the stream literally,
     /// but afterwards are only referenced by index in order of appearance.
-    pub type_table: Vec<Vec<Type<'a>>>,
+    pub(crate) type_table: Vec<Vec<Type<'a>>>,
     /// As we parse the `typedstream`, build a table of seen archivable data to reference in the future
-    object_table: Vec<Archived<'a>>,
+    pub(crate) object_table: Vec<Archived<'a>>,
     /// We want to copy embedded types the first time they are seen, even if the types were resolved through references
-    seen_embedded_types: HashSet<usize>,
+    pub(crate) seen_embedded_types: HashSet<usize>,
 }
 
 impl<'a> TypedStreamDeserializer<'a> {
+    /// Create a new `TypedStreamDeserializer` for the provided byte slice.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
+    ///
+    /// let data: &[u8] = &[];
+    /// let deserializer = TypedStreamDeserializer::new(data);
+    /// ```
     pub fn new(data: &'a [u8]) -> Self {
         Self {
             data,
@@ -61,8 +64,22 @@ impl<'a> TypedStreamDeserializer<'a> {
         }
     }
 
-    /// Parses the `typedstream` and extracts the data, returning a vector of parsed data.
-    pub fn oxidize(&mut self) -> Result<&Archived<'a>> {
+    /// Parse the typed stream, consuming header and objects, returning the index of the top-level archived object.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`TypedStreamError`] if parsing fails or the stream ends unexpectedly.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
+    ///
+    /// let mut deserializer = TypedStreamDeserializer::new(&[]);
+    /// let result = deserializer.oxidize();
+    /// ```
+    pub fn oxidize(&mut self) -> Result<usize> {
+        let mut obj = None;
         let validation = validate_header(self.data)?;
 
         // Advance by the number of bytes consumed by the header validation
@@ -78,28 +95,41 @@ impl<'a> TypedStreamDeserializer<'a> {
 
         if let Some(type_index) = found_type {
             // Read the types at the specified index
-            let obj = self.read_types(type_index)?;
+            obj = self.read_types(type_index)?;
             println!("End of object: {:?}", obj);
         }
 
-        self.object_table
+        match obj
+            .ok_or(TypedStreamError::UnmatchedEnd)?
             .first()
-            .ok_or(TypedStreamError::UnexpectedEnd)
+            .ok_or(TypedStreamError::UnmatchedEnd)?
+        {
+            OutputData::Object(idx) => Ok(*idx),
+            _ => Err(TypedStreamError::UnmatchedEnd),
+        }
     }
 
-    /// Creates an iterator that resolves the top-level properties of an object
-    /// while preserving its nested structure.
+    /// Creates an iterator that resolves the properties of an object
+    /// at the specified index in the `object_table`, preserving nested structure.
     ///
-    /// This should be called after `oxidize()` has completed. It iterates over the
-    /// property groups of the object at the given index. If a property group is a
-    /// reference to another object, the iterator returns the resolved `Archived`
-    /// object. Otherwise, it returns a slice of the data properties.
-    ///
-    /// This allows for recursive exploration of the object graph.
+    /// This should be called after [`oxidize`].
     ///
     /// # Arguments
     ///
-    /// * `root_object_index` - The index of the object in the `object_table` to iterate over.
+    /// * `root_object_index` - Index of the object in the deserializer's `object_table` to iterate.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TypedStreamError::InvalidPointer`] if the index is not a valid object reference.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
+    /// let mut ds = TypedStreamDeserializer::new(&[]);
+    /// // after ds.oxidize().unwrap();
+    /// let iter = ds.resolve_properties(0).unwrap();
+    /// ```
     pub fn resolve_properties(
         &self,
         root_object_index: usize,
@@ -294,97 +324,77 @@ impl<'a> TypedStreamDeserializer<'a> {
         }
     }
 
+    /// Reads numeric types (signed, unsigned, float, double) and returns the corresponding OutputData
+    fn read_number(&mut self, ty: &Type<'a>) -> Result<OutputData<'a>> {
+        match ty {
+            Type::SignedInt => {
+                let signed_int = read_signed_int(&self.data[self.position..])?;
+                self.position += signed_int.bytes_consumed;
+                Ok(OutputData::SignedInteger(signed_int.value as i64))
+            }
+            Type::UnsignedInt => {
+                let unsigned_int = read_unsigned_int(&self.data[self.position..])?;
+                self.position += unsigned_int.bytes_consumed;
+                Ok(OutputData::UnsignedInteger(unsigned_int.value))
+            }
+            Type::Float => {
+                let float = read_float(&self.data[self.position..])?;
+                self.position += float.bytes_consumed;
+                Ok(OutputData::Float(float.value as f32))
+            }
+            Type::Double => {
+                let double = read_double(&self.data[self.position..])?;
+                self.position += double.bytes_consumed;
+                Ok(OutputData::Double(double.value as f64))
+            }
+            _ => unreachable!(),
+        }
+    }
+
     fn read_types(&mut self, types_index: usize) -> Result<Option<Vec<OutputData<'a>>>> {
-        // Get the types at the specified index
-        let types = &self.type_table[types_index];
+        // Clone types to avoid holding an immutable borrow on self during parsing
+        let types = self.type_table[types_index].clone();
+        let mut out_v = Vec::with_capacity(types.len());
 
-        let count = self.type_table[types_index].len();
-        println!("Reading types at index {}: {:?}", types_index, types);
-
-        let mut out_v = Vec::with_capacity(count);
-
-        for i in 0..count {
-            match &self.type_table[types_index][i] {
+        for ty in types {
+            match ty {
                 Type::Utf8String => {
-                    let str = &read_string(&self.data[self.position..])?;
-                    self.position += str.bytes_consumed;
-                    println!("Found string: {:?}", str.value);
-                    out_v.push(OutputData::String(str.value));
+                    let str_data = read_string(&self.data[self.position..])?;
+                    self.position += str_data.bytes_consumed;
+                    out_v.push(OutputData::String(str_data.value));
                 }
                 Type::EmbeddedData => {
-                    return match self.read_embedded_type()? {
-                        Some(idx) => {
-                            println!("Found embedded data at index: {:?}", idx);
-                            self.position += 1; // Advance past the START byte
-                            return self.read_types(idx);
-                        }
-                        None => {
-                            println!("No embedded data found");
-                            Ok(None)
-                        }
-                    };
+                    if let Some(idx) = self.read_embedded_type()? {
+                        self.position += 1;
+                        return self.read_types(idx);
+                    } else {
+                        return Ok(None);
+                    }
                 }
                 Type::Object => {
                     let obj_idx = self.read_object()?;
-                    println!(
-                        "Found obj at {obj_idx:?}: {:?}\n{:?}\n{}",
-                        self.object_table.get(obj_idx),
-                        self.type_table,
-                        self.object_table
-                            .iter()
-                            .enumerate()
-                            .map(|(idx, item)| format!("  {idx}: {item:?}"))
-                            .collect::<Vec<_>>()
-                            .join("\n")
-                    );
-                    self.position += 1; // Advance past the END byte
+                    self.position += 1;
                     out_v.push(OutputData::Object(obj_idx));
                 }
-                Type::SignedInt => {
-                    let signed_int = read_signed_int(&self.data[self.position..])?;
-                    self.position += signed_int.bytes_consumed;
-                    println!("Found signed int: {:?}", signed_int.value);
-                    out_v.push(OutputData::SignedInteger(signed_int.value as i64));
-                }
-                Type::UnsignedInt => {
-                    let unsigned_int = read_unsigned_int(&self.data[self.position..])?;
-                    self.position += unsigned_int.bytes_consumed;
-                    println!("Found unsigned int: {:?}", unsigned_int.value);
-                    out_v.push(OutputData::UnsignedInteger(unsigned_int.value));
-                }
-                Type::Float => {
-                    let float = read_float(&self.data[self.position..])?;
-                    self.position += float.bytes_consumed;
-                    println!("Found float: {:?}", float.value);
-                    out_v.push(OutputData::Float(float.value as f32));
-                }
-                Type::Double => {
-                    let double = read_double(&self.data[self.position..])?;
-                    self.position += double.bytes_consumed;
-                    println!("Found double: {:?}", double.value);
-                    out_v.push(OutputData::Double(double.value as f64));
-                }
                 Type::String(s) => {
-                    println!("Found string: {:?}", s);
-                    // This means we should look up the associated index in the object table
-                    println!(
-                        "object at position: 0x{:x}: {:?}",
-                        i,
-                        self.object_table.get(types_index)
-                    );
-                    out_v.push(OutputData::Object(types_index));
+                    out_v.push(OutputData::String(s));
                 }
                 Type::Array(length) => {
-                    let array_length = *length;
-                    let array_data = read_exact_bytes(&self.data[self.position..], array_length)?;
-                    self.position += array_length;
-                    println!("Found array of length {}: {:?}", array_length, array_data);
+                    let array_data = read_exact_bytes(&self.data[self.position..], length)?;
+                    self.position += length;
                     out_v.push(OutputData::Array(array_data));
                 }
-                Type::Unknown(_) => todo!(),
+                Type::Unknown(byte) => {
+                    // Read a single byte for unknown data
+                    out_v.push(OutputData::Byte(byte));
+                }
+                // numeric types
+                Type::SignedInt | Type::UnsignedInt | Type::Float | Type::Double => {
+                    let val = self.read_number(&ty)?;
+                    out_v.push(val);
+                }
             }
         }
-        println!("Finished reading types");
 
         Ok(Some(out_v))
     }
@@ -408,7 +418,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                     new_types.value
                 );
 
-                // Embedded data is stored as a C String in the objects table
+                // Embedded data is stored as a String in the objects table
                 if is_embedded_type {
                     self.object_table.push(Archived::Type(new_type_index));
                     // We only want to include the first embedded reference tag, not subsequent references to the same embed
