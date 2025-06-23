@@ -1,17 +1,17 @@
 use crate::models::{archivable::Archived, class::Class, output_data::OutputData, types::Type};
 
-/// A single resolved property: either
-///  - an object with its class and fully-resolved children,
-///  - a group of mixed properties,
-///  - or a primitive value.
+/// A single resolved property from an [`Archived::Object`].
 #[derive(Debug)]
 pub enum ResolvedProperty<'a, 'b> {
+    /// An object with its class metadata, class name, and nested properties iterator.
     Object {
         class: &'a Class,
         name: &'a str,
         data: PropertyResolverIterator<'a, 'b>,
     },
+    /// A group of properties (primitives or nested objects).
     Group(Vec<ResolvedProperty<'a, 'b>>),
+    /// A primitive value (string, number, byte, etc.).
     Primitive(&'b OutputData<'a>),
 }
 /// An iterator that resolves the top-level properties of a single [`Archived::Object`].
@@ -98,14 +98,32 @@ impl<'a, 'b: 'a> Iterator for PropertyResolverIterator<'a, 'b> {
 
 /// Walk an entire `PropertyResolverIterator`, printing each property
 /// with `indent` spaces of indentation.
+///
+/// # Examples
+/// ```no_run
+/// use crabstep::deserializer::iter::print_resolved;
+/// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
+/// let mut ds = TypedStreamDeserializer::new(&[]);
+/// // after ds.oxidize() and ds.resolve_properties
+/// if let Ok(iter) = ds.resolve_properties(0) {
+///     print_resolved(iter, 2);
+/// }
+/// ```
 pub fn print_resolved<'a, 'b>(iter: PropertyResolverIterator<'a, 'b>, indent: usize) {
     for prop in iter {
         print_property(prop, indent);
     }
 }
 
-/// Recursively walk a `PropertyResolverIterator` and print each property
-/// with `indent` spaces of indentation.
+/// Print a single `ResolvedProperty` with indentation, recursing for nested data.
+///
+/// # Examples
+/// ```no_run
+/// use crabstep::deserializer::iter::{ResolvedProperty, print_property};
+/// # // assume `prop` of type ResolvedProperty
+/// # let prop: ResolvedProperty<'_, '_> = unimplemented!();
+/// print_property(prop, 4);
+/// ```
 pub fn print_property<'a, 'b: 'a>(prop: ResolvedProperty<'a, 'b>, indent: usize) {
     match prop {
         ResolvedProperty::Object {

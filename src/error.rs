@@ -1,18 +1,32 @@
+//! Error types and result alias for typed stream deserialization.
+
 use std::{array::TryFromSliceError, fmt::Display};
 
+/// A specialized [`Result`] type for typed stream operations.
 pub type Result<T> = std::result::Result<T, TypedStreamError>;
 
+/// Errors that can occur while deserializing a typed stream.
 #[derive(Debug)]
 pub enum TypedStreamError {
+    /// The stream ended unexpectedly.
     UnexpectedEnd,
+    /// A start tag without a matching end tag was found.
     UnmatchedStart,
+    /// An end tag without a matching start tag was found.
     UnmatchedEnd,
+    /// Attempted to access an index outside the stream bounds (requested, length).
     OutOfBounds(usize, usize),
+    /// Error converting a slice into an array of fixed size.
     SliceError(TryFromSliceError),
+    /// Error parsing a string as UTF-8.
     StringParseError(std::str::Utf8Error),
+    /// The typed stream header was invalid.
     InvalidHeader,
+    /// Encountered an invalid pointer value.
     InvalidPointer(u8),
+    /// The array header is malformed or too large.
     InvalidArray(usize),
+    /// Encountered an empty string where data was expected.
     EmptyString,
 }
 

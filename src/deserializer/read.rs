@@ -6,7 +6,21 @@ use crate::{
 
 /// Read exactly `n` bytes from a slice of the stream.
 ///
-/// If the slice is shorter than `n`, it returns an `OutOfBounds` error.
+/// Returns a slice of length `n` or an error if the data is too short.
+///
+/// # Errors
+///
+/// Returns [`TypedStreamError::OutOfBounds`] when `data.len() < n`.
+///
+/// # Examples
+/// ```no_run
+/// use crabstep::deserializer::read::read_exact_bytes;
+///
+/// let data = [0x01, 0x02, 0x03];
+/// let slice = read_exact_bytes(&data, 2).unwrap();
+///
+/// assert_eq!(slice, &[0x01, 0x02]);
+/// ```
 pub fn read_exact_bytes(data: &[u8], n: usize) -> Result<&[u8]> {
     let range = data
         .get(0..n)
@@ -15,18 +29,45 @@ pub fn read_exact_bytes(data: &[u8], n: usize) -> Result<&[u8]> {
     Ok(range)
 }
 
-/// Read a single byte from a slice of the stream.
+/// Read a single byte from a slice of the stream at index `idx`.
 ///
-/// If the slice is shorter than `n`, it returns an `OutOfBounds` error.
+/// # Errors
+///
+/// Returns [`TypedStreamError::OutOfBounds`] when `idx >= data.len()`.
+///
+/// # Examples
+/// ```no_run
+/// use crabstep::deserializer::read::read_byte_at;
+///
+/// let data = [0xFF];
+/// let byte = read_byte_at(&data, 0).unwrap();
+///
+/// assert_eq!(*byte, 0xFF);
+/// ```
 pub fn read_byte_at(data: &[u8], idx: usize) -> Result<&u8> {
     data.get(idx)
         .ok_or(TypedStreamError::OutOfBounds(idx, data.len()))
 }
 
-/// Read a reference pointer for a Type
+/// Read a reference pointer encoded as a single byte.
 ///
-/// While this does consume a byte, pointers refer to an index in the [`type_table`](crate::deserializer::typedstream::TypedStreamDeserializer::type_table) or
-/// [`object_table`](crate::deserializer::typedstream::TypedStreamDeserializer::object_table), so it does generally need to advance the current position.
+/// Subtracts the [`REFERENCE_TAG`] constant to yield the zero-based index.
+///
+/// # Errors
+///
+/// Returns [`TypedStreamError::InvalidPointer`] if the byte is less than `REFERENCE_TAG`.
+///
+/// # Examples
+/// ```no_run
+/// use crabstep::constants::REFERENCE_TAG;
+/// use crabstep::deserializer::read::read_pointer;
+///
+/// let raw = REFERENCE_TAG + 3;
+/// let consumed = read_pointer(&raw).unwrap();
+///
+/// assert_eq!(consumed.value, 3);
+/// assert_eq!(consumed.bytes_consumed, 1);
+/// ```
 pub fn read_pointer(pointer: &u8) -> Result<Consumed<u64>> {
     let result = u64::from(*pointer)
         .checked_sub(REFERENCE_TAG)

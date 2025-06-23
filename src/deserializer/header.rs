@@ -7,9 +7,28 @@ use crate::{
     error::{Result, TypedStreamError},
 };
 
-/// In the original source there are several variants of the header, but we
-/// only need to validate that this is the header used by macOS/iOS, as iMessage
-/// is probably not available on any `NeXT` platform
+/// Validate the typed stream header for macOS/iOS format.
+///
+/// Reads version, signature, and system version, returning a [`Consumed<bool>`]
+/// indicating validity and bytes consumed.
+///
+/// # Errors
+///
+/// Returns [`TypedStreamError::InvalidHeader`] if the header does not match expected values.
+///
+/// # Examples
+/// ```no_run
+/// use crabstep::deserializer::header::validate_header;
+///
+/// let data: &[u8] = &[
+///     0x04, 0x0b, b's', b't', b'r', b'e', b'a', b'm', b't', b'y', b'p', b'e', b'd',
+///     0x81, 0xe8, 0x03,
+/// ];
+///
+/// let result = validate_header(data).unwrap();
+/// assert!(result.value);
+/// assert_eq!(result.bytes_consumed, 16);
+/// ```
 pub fn validate_header(data: &[u8]) -> Result<Consumed<bool>> {
     // Encoding type
     let typedstream_version = read_unsigned_int(data)?;

@@ -7,8 +7,27 @@ use crate::{
     error::Result,
 };
 
-/// Read a signed integer from the stream. Because we don't know the size of the integer ahead of time,
-/// we store it in the largest possible value.
+/// Read a signed integer from the stream (i8, i16, or i32) and return its value and bytes consumed.
+///
+/// The format byte indicates size:
+/// - `0x81` (`I_16`) for `i16`,
+/// - `0x82` (`I_32`) for `i32`,
+/// - otherwise reads a single `i8` or skips reference tags.
+///
+/// # Errors
+///
+/// Returns [`TypedStreamError::OutOfBounds`] if there are not enough bytes.
+///
+/// # Examples
+/// ```no_run
+/// use crabstep::deserializer::number::read_signed_int;
+///
+/// let data = [0x01];
+/// let consumed = read_signed_int(&data).unwrap();
+///
+/// assert_eq!(consumed.value, 1);
+/// assert_eq!(consumed.bytes_consumed, 1);
+/// ```
 pub fn read_signed_int(data: &[u8]) -> Result<Consumed<i64>> {
     let current_byte = read_byte_at(data, 0)?;
     let (value, consumed) = match *current_byte {
@@ -41,8 +60,27 @@ pub fn read_signed_int(data: &[u8]) -> Result<Consumed<i64>> {
     Ok(Consumed::new(value, consumed))
 }
 
-/// Read a signed integer from the stream. Because we don't know the size of the integer ahead of time,
-/// we store it in the largest possible value.
+/// Read an unsigned integer from the stream (u8, u16, or u32) and return its value and bytes consumed.
+///
+/// The format byte indicates size:
+/// - `0x81` (`I_16`) for `u16`,
+/// - `0x82` (`I_32`) for `u32`,
+/// - otherwise reads a single `u8` or skips reference tags.
+///
+/// # Errors
+///
+/// Returns [`TypedStreamError::OutOfBounds`] if there are not enough bytes.
+///
+/// # Examples
+/// ```no_run
+/// use crabstep::deserializer::number::read_unsigned_int;
+///
+/// let data = [0xFF];
+/// let consumed = read_unsigned_int(&data).unwrap();
+///
+/// assert_eq!(consumed.value, 255);
+/// assert_eq!(consumed.bytes_consumed, 1);
+/// ```
 pub fn read_unsigned_int(data: &[u8]) -> Result<Consumed<u64>> {
     let current_byte = read_byte_at(data, 0)?;
     let (value, consumed) = match *current_byte {
@@ -75,7 +113,23 @@ pub fn read_unsigned_int(data: &[u8]) -> Result<Consumed<u64>> {
     Ok(Consumed::new(value, consumed))
 }
 
-/// Read a single-precision float from the byte stream
+/// Read a single-precision float (`f32`) from the byte stream.
+///
+/// Prefixed by `DECIMAL` for a raw `f32`, or coerced from integer tags.
+///
+/// # Errors
+///
+/// Returns [`TypedStreamError`] if the underlying byte slice is too short.
+///
+/// # Examples
+/// ```no_run
+/// use crabstep::deserializer::number::read_float;
+///
+/// let raw = [0x83, 0x00, 0x00, 0x80, 0x3F]; // DECIMAL tag + little-endian 1.0f32
+/// let consumed = read_float(&raw).unwrap();
+///
+/// assert_eq!(consumed.value, 1.0f32);
+/// ```
 pub fn read_float(data: &[u8]) -> Result<Consumed<f32>> {
     let current_byte = read_byte_at(data, 0)?;
     match *current_byte {
@@ -89,7 +143,23 @@ pub fn read_float(data: &[u8]) -> Result<Consumed<f32>> {
     }
 }
 
-/// Read a double-precision float from the byte stream
+/// Read a double-precision float (`f64`) from the byte stream.
+///
+/// Prefixed by `DECIMAL` for a raw `f64`, or coerced from integer tags.
+///
+/// # Errors
+///
+/// Returns [`TypedStreamError`] if the underlying byte slice is too short.
+///
+/// # Examples
+/// ```no_run
+/// use crabstep::deserializer::number::read_double;
+///
+/// let raw = [0x83, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F]; // DECIMAL + 1.0f64
+/// let consumed = read_double(&raw).unwrap();
+///
+/// assert_eq!(consumed.value, 1.0f64);
+/// ```
 pub fn read_double(data: &[u8]) -> Result<Consumed<f64>> {
     let current_byte = read_byte_at(data, 0)?;
     match *current_byte {

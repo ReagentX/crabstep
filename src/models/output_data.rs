@@ -17,8 +17,6 @@ pub enum OutputData<'a> {
     Byte(u8),
     /// Arbitrary collection of bytes in an array, denoted in the stream by [`Type::Array`]
     Array(&'a [u8]),
-    /// A found class, in order of inheritance, used by [`Archivable::Class`]
-    Class(Class),
-    /// An object reference in the stream
+    /// Reference to another object by index in the [`object_table`](crate::deserializer::typedstream::TypedStreamDeserializer::object_table).
     Object(usize),
 }

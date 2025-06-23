@@ -4,10 +4,12 @@ use crate::models::{class::Class, output_data::OutputData};
 #[derive(Debug, PartialEq)]
 pub enum Archived<'a> {
     /// An instance of a class that may contain some embedded data. `typedstream` data doesn't include property
-    /// names, so data is stored in order of appearance. The class is stored in the `object_table` and
+    /// names, so data is stored in order of appearance. The class is stored in the [`object_table`](crate::deserializer::typedstream::TypedStreamDeserializer::object_table) and
     /// the data is stored in the `data` field.
     Object {
+        /// Index into [`object_table`](crate::deserializer::typedstream::TypedStreamDeserializer::object_table) for this object’s class.
         class: usize,
+        /// Nested data groups for this object.
         data: Vec<Vec<OutputData<'a>>>,
     },
     /// Some data that is likely a property on the object described by the `typedstream` but not part of a class.
@@ -19,6 +21,6 @@ pub enum Archived<'a> {
     /// comes before the ones it inherits from. To preserve the order, we reserve the first slot to store the actual object's data
     /// and then later add it back to the right place.
     Placeholder,
-    /// An embedded type that describes the [`Type`] of the subsequent bytes, referred to by its index in the `type_table`.
+    /// An embedded type that describes the [`Type`] of the subsequent bytes, referred to by its index in the [`type_table`](crate::deserializer::typedstream::TypedStreamDeserializer::type_table).
     Type(usize),
 }

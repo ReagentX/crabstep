@@ -1,9 +1,30 @@
+//! Utilities for reading UTF-8 strings from a typed stream.
+
 use crate::{
     deserializer::{consumed::Consumed, number::read_unsigned_int},
     error::Result,
 };
 
-/// Read String data
+/// Read a UTF-8 string from the stream, prefixed by its length encoded as an unsigned integer.
+///
+/// The function reads the length (1, 2, or 4 bytes as needed), then the UTF-8 bytes.
+/// Returns a slice to the string and total bytes consumed.
+///
+/// # Errors
+///
+/// Returns [`TypedStreamError::OutOfBounds`] if not enough bytes for length or data,
+/// or [`TypedStreamError::StringParseError`] if the bytes are not valid UTF-8.
+///
+/// # Examples
+/// ```no_run
+/// use crabstep::deserializer::string::read_string;
+///
+/// let data = [0x05, b'H', b'e', b'l', b'l', b'o'];
+/// let consumed = read_string(&data).unwrap();
+///
+/// assert_eq!(consumed.value, "Hello");
+/// assert_eq!(consumed.bytes_consumed, 6);
+/// ```
 pub fn read_string(data: &[u8]) -> Result<Consumed<&str>> {
     let length = read_unsigned_int(data)?;
     Ok(Consumed::new(
