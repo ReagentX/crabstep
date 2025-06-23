@@ -1,6 +1,5 @@
 #![forbid(unsafe_code)]
-// TODO: Enable this once we have documentation for all public items
-// #![deny(missing_docs)]
+#![deny(missing_docs)]
 #![doc = include_str!("../README.md")]
 
 pub mod constants;

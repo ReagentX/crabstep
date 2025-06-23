@@ -1,3 +1,5 @@
+//! Header validation for TypedStream format
+
 use crate::{
     deserializer::{
         consumed::Consumed,

@@ -1,3 +1,5 @@
+//! This module defines the `Class` struct, which represents a class stored in the `typedstream`
+
 /// Represents a class stored in the `typedstream`
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Class {

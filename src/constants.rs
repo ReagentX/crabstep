@@ -1,3 +1,5 @@
+//! Constants used in the serialization and deserialization process
+
 /// Indicates an [`i16`] in the byte stream
 pub const I_16: u8 = 0x81;
 /// Indicates an [`i32`] in the byte stream

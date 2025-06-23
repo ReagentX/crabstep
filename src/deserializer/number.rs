@@ -1,3 +1,5 @@
+//! Functions for reading numbers from a byte stream
+
 use crate::{
     constants::{DECIMAL, END, I_16, I_32, REFERENCE_TAG},
     deserializer::{

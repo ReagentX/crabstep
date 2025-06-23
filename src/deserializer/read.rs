@@ -1,3 +1,5 @@
+//! This module provides functions to read data from a byte slice
+
 use crate::{
     constants::REFERENCE_TAG,
     deserializer::consumed::Consumed,

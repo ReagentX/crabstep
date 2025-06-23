@@ -1,3 +1,5 @@
+//! Output data types for the `typedstream` deserializer
+
 /// Rust structures containing data stored in the `typedstream`
 #[derive(Debug, PartialEq)]
 pub enum OutputData<'a> {

@@ -1,3 +1,5 @@
+//! Iterators for resolving properties in an [`Archived::Object`]
+
 use crate::models::{archivable::Archived, class::Class, output_data::OutputData, types::Type};
 
 /// A single resolved property from an [`Archived::Object`].
@@ -5,8 +7,11 @@ use crate::models::{archivable::Archived, class::Class, output_data::OutputData,
 pub enum ResolvedProperty<'a, 'b> {
     /// An object with its class metadata, class name, and nested properties iterator.
     Object {
+        /// The class of the object
         class: &'a Class,
+        /// The name of the class, typically a string from the type table
         name: &'a str,
+        /// An iterator over the properties of this object
         data: PropertyResolverIterator<'a, 'b>,
     },
     /// A group of properties (primitives or nested objects).

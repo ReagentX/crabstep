@@ -1,3 +1,5 @@
+//! This module provides a deserializer for the `typedstream` format
+
 pub mod consumed;
 pub mod header;
 pub mod iter;
