@@ -41,7 +41,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -167,7 +167,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -288,7 +288,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -846,7 +846,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -1076,7 +1076,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -1314,7 +1314,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -1449,7 +1449,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -1663,7 +1663,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -1881,7 +1881,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -2064,7 +2064,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -2130,7 +2130,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -2347,7 +2347,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -2503,7 +2503,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -2709,7 +2709,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -2829,7 +2829,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -3049,7 +3049,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -3218,7 +3218,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -3342,7 +3342,7 @@ mod tests {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
         typedstream
             .object_table
             .iter()
@@ -3440,6 +3440,1184 @@ mod tests {
                 parent_index: Some(3),
             }),
             Archived::Type(9),
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    #[test]
+    fn test_parse_text_mention() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/Mention");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        // Skip the header for now
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            vec![Type::Object],
+            vec![Type::String("NSMutableAttributedString")],
+            vec![Type::String("NSAttributedString")],
+            vec![Type::String("NSObject")],
+            vec![Type::String("NSMutableString")],
+            vec![Type::String("NSString")],
+            vec![Type::Utf8String],
+            vec![Type::SignedInt, Type::UnsignedInt],
+            vec![Type::String("NSDictionary")],
+            vec![Type::SignedInt],
+            vec![Type::String("NSNumber")],
+            vec![Type::String("NSValue")],
+            vec![Type::EmbeddedData],
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: vec![
+                    vec![OutputData::Object(4)],
+                    vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(5)],
+                    vec![OutputData::Object(7)],
+                    vec![OutputData::SignedInteger(2), OutputData::UnsignedInteger(3)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(1)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Class(Class {
+                name_index: 3,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 5,
+                data: vec![vec![OutputData::String("Test Dad ")]],
+            },
+            Archived::Class(Class {
+                name_index: 4,
+                version: 1,
+                parent_index: Some(6),
+            }),
+            Archived::Class(Class {
+                name_index: 5,
+                version: 1,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(1)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(0)]],
+            },
+            Archived::Class(Class {
+                name_index: 10,
+                version: 0,
+                parent_index: Some(12),
+            }),
+            Archived::Class(Class {
+                name_index: 11,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Type(9),
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(2)],
+                    vec![OutputData::Object(15)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(17)],
+                    vec![OutputData::Object(10)],
+                ],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMMentionConfirmedMention")]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("+15558675309")]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    #[test]
+    fn test_parse_text_multi_attachment() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/MultiAttachment");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        // Skip the header for now
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            vec![Type::Object],
+            vec![Type::String("NSMutableAttributedString")],
+            vec![Type::String("NSAttributedString")],
+            vec![Type::String("NSObject")],
+            vec![Type::String("NSMutableString")],
+            vec![Type::String("NSString")],
+            vec![Type::Utf8String],
+            vec![Type::SignedInt, Type::UnsignedInt],
+            vec![Type::String("NSDictionary")],
+            vec![Type::SignedInt],
+            vec![Type::String("NSNumber")],
+            vec![Type::String("NSValue")],
+            vec![Type::EmbeddedData],
+            vec![Type::SignedInt],
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: vec![
+                    vec![OutputData::Object(4)],
+                    vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(1)],
+                    vec![OutputData::Object(7)],
+                    vec![OutputData::SignedInteger(2), OutputData::UnsignedInteger(1)],
+                    vec![OutputData::Object(18)],
+                    vec![OutputData::SignedInteger(3), OutputData::UnsignedInteger(1)],
+                    vec![OutputData::Object(21)],
+                    vec![OutputData::SignedInteger(4), OutputData::UnsignedInteger(1)],
+                    vec![OutputData::Object(26)],
+                    vec![OutputData::SignedInteger(5), OutputData::UnsignedInteger(1)],
+                    vec![OutputData::Object(29)],
+                    vec![OutputData::SignedInteger(6), OutputData::UnsignedInteger(1)],
+                    vec![OutputData::Object(32)],
+                    vec![OutputData::SignedInteger(7), OutputData::UnsignedInteger(1)],
+                    vec![OutputData::Object(35)],
+                    vec![OutputData::SignedInteger(8), OutputData::UnsignedInteger(1)],
+                    vec![OutputData::Object(38)],
+                    vec![OutputData::SignedInteger(9), OutputData::UnsignedInteger(1)],
+                    vec![OutputData::Object(41)],
+                    vec![
+                        OutputData::SignedInteger(10),
+                        OutputData::UnsignedInteger(1),
+                    ],
+                    vec![OutputData::Object(44)],
+                    vec![
+                        OutputData::SignedInteger(11),
+                        OutputData::UnsignedInteger(1),
+                    ],
+                    vec![OutputData::Object(47)],
+                    vec![
+                        OutputData::SignedInteger(12),
+                        OutputData::UnsignedInteger(1),
+                    ],
+                    vec![OutputData::Object(50)],
+                    vec![
+                        OutputData::SignedInteger(13),
+                        OutputData::UnsignedInteger(1),
+                    ],
+                    vec![OutputData::Object(53)],
+                    vec![
+                        OutputData::SignedInteger(14),
+                        OutputData::UnsignedInteger(1),
+                    ],
+                    vec![OutputData::Object(56)],
+                    vec![
+                        OutputData::SignedInteger(15),
+                        OutputData::UnsignedInteger(1),
+                    ],
+                    vec![OutputData::Object(59)],
+                    vec![
+                        OutputData::SignedInteger(16),
+                        OutputData::UnsignedInteger(1),
+                    ],
+                    vec![OutputData::Object(62)],
+                    vec![
+                        OutputData::SignedInteger(17),
+                        OutputData::UnsignedInteger(1),
+                    ],
+                    vec![OutputData::Object(65)],
+                    vec![
+                        OutputData::SignedInteger(18),
+                        OutputData::UnsignedInteger(1),
+                    ],
+                    vec![OutputData::Object(68)],
+                    vec![
+                        OutputData::SignedInteger(19),
+                        OutputData::UnsignedInteger(1),
+                    ],
+                    vec![OutputData::Object(71)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Class(Class {
+                name_index: 3,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 5,
+                data: vec![vec![OutputData::String("￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼")]],
+            },
+            Archived::Class(Class {
+                name_index: 4,
+                version: 1,
+                parent_index: Some(6),
+            }),
+            Archived::Class(Class {
+                name_index: 5,
+                version: 1,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(15)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(17)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "__kIMBaseWritingDirectionAttributeName",
+                )]],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(-1)]],
+            },
+            Archived::Class(Class {
+                name_index: 10,
+                version: 0,
+                parent_index: Some(12),
+            }),
+            Archived::Class(Class {
+                name_index: 11,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Type(13),
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(0)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "__kIMFileTransferGUIDAttributeName",
+                )]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_0_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(19)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(20)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(1)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_1_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(22)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(23)],
+                    vec![OutputData::Object(24)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(25)],
+                ],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "__kIMBaseWritingDirectionAttributeName",
+                )]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(2)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_2_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(27)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(28)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(3)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_3_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(30)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(31)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(4)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_4_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(33)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(34)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(5)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_5_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(36)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(37)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(6)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_6_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(39)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(40)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(7)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_7_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(42)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(43)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(8)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_8_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(45)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(46)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(9)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_9_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(48)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(49)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(10)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_10_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(51)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(52)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(11)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_11_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(54)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(55)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(12)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_12_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(57)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(58)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(13)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_13_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(60)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(61)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(14)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_14_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(63)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(64)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(15)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_15_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(66)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(67)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(16)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_16_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(69)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(70)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(17)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_17_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(3)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(72)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(73)],
+                ],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(18)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_18_48B9C973-3466-438C-BE72-E5B498D30772",
+                )]],
+            },
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    #[test]
+    fn test_parse_text_multi_part() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/MultiPart");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        // Skip the header for now
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            vec![Type::Object],
+            vec![Type::String("NSMutableAttributedString")],
+            vec![Type::String("NSAttributedString")],
+            vec![Type::String("NSObject")],
+            vec![Type::String("NSMutableString")],
+            vec![Type::String("NSString")],
+            vec![Type::Utf8String],
+            vec![Type::SignedInt, Type::UnsignedInt],
+            vec![Type::String("NSDictionary")],
+            vec![Type::SignedInt],
+            vec![Type::String("NSNumber")],
+            vec![Type::String("NSValue")],
+            vec![Type::EmbeddedData],
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: vec![
+                    vec![OutputData::Object(4)],
+                    vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(1)],
+                    vec![OutputData::Object(7)],
+                    vec![OutputData::SignedInteger(2), OutputData::UnsignedInteger(6)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::SignedInteger(3), OutputData::UnsignedInteger(1)],
+                    vec![OutputData::Object(19)],
+                    vec![OutputData::SignedInteger(4), OutputData::UnsignedInteger(7)],
+                    vec![OutputData::Object(22)],
+                    vec![OutputData::SignedInteger(5), OutputData::UnsignedInteger(1)],
+                    vec![OutputData::Object(24)],
+                    vec![OutputData::SignedInteger(6), OutputData::UnsignedInteger(6)],
+                    vec![OutputData::Object(27)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Class(Class {
+                name_index: 3,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 5,
+                data: vec![vec![OutputData::String("￼test 1￼test 2 ￼test 3")]],
+            },
+            Archived::Class(Class {
+                name_index: 4,
+                version: 1,
+                parent_index: Some(6),
+            }),
+            Archived::Class(Class {
+                name_index: 5,
+                version: 1,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(2)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(11)],
+                    vec![OutputData::Object(12)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "__kIMFileTransferGUIDAttributeName",
+                )]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_0_F0668F79-20C2-49C9-A87F-1B007ABB0CED",
+                )]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 13,
+                data: vec![vec![OutputData::SignedInteger(0)]],
+            },
+            Archived::Class(Class {
+                name_index: 10,
+                version: 0,
+                parent_index: Some(14),
+            }),
+            Archived::Class(Class {
+                name_index: 11,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Type(9),
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(1)],
+                    vec![OutputData::Object(17)],
+                    vec![OutputData::Object(18)],
+                ],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 13,
+                data: vec![vec![OutputData::SignedInteger(1)]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(2)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(20)],
+                    vec![OutputData::Object(11)],
+                    vec![OutputData::Object(21)],
+                ],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_2_F0668F79-20C2-49C9-A87F-1B007ABB0CED",
+                )]],
+            },
+            Archived::Object {
+                class: 13,
+                data: vec![vec![OutputData::SignedInteger(2)]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(1)],
+                    vec![OutputData::Object(11)],
+                    vec![OutputData::Object(23)],
+                ],
+            },
+            Archived::Object {
+                class: 13,
+                data: vec![vec![OutputData::SignedInteger(3)]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(2)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(25)],
+                    vec![OutputData::Object(11)],
+                    vec![OutputData::Object(26)],
+                ],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "at_4_F0668F79-20C2-49C9-A87F-1B007ABB0CED",
+                )]],
+            },
+            Archived::Object {
+                class: 13,
+                data: vec![vec![OutputData::SignedInteger(4)]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(1)],
+                    vec![OutputData::Object(11)],
+                    vec![OutputData::Object(28)],
+                ],
+            },
+            Archived::Object {
+                class: 13,
+                data: vec![vec![OutputData::SignedInteger(5)]],
+            },
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    #[test]
+    fn test_parse_text_multi_part_with_deleted() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/MultiPartWithDeleted");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        // Skip the header for now
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            vec![Type::Object],
+            vec![Type::String("NSMutableAttributedString")],
+            vec![Type::String("NSAttributedString")],
+            vec![Type::String("NSObject")],
+            vec![Type::String("NSMutableString")],
+            vec![Type::String("NSString")],
+            vec![Type::Utf8String],
+            vec![Type::SignedInt, Type::UnsignedInt],
+            vec![Type::String("NSDictionary")],
+            vec![Type::SignedInt],
+            vec![Type::String("NSNumber")],
+            vec![Type::String("NSValue")],
+            vec![Type::EmbeddedData],
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: vec![
+                    vec![OutputData::Object(4)],
+                    vec![
+                        OutputData::SignedInteger(1),
+                        OutputData::UnsignedInteger(28),
+                    ],
+                    vec![OutputData::Object(7)],
+                    vec![OutputData::SignedInteger(2), OutputData::UnsignedInteger(1)],
+                    vec![OutputData::Object(14)],
+                    vec![
+                        OutputData::SignedInteger(3),
+                        OutputData::UnsignedInteger(32),
+                    ],
+                    vec![OutputData::Object(19)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Class(Class {
+                name_index: 3,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 5,
+                data: vec![vec![OutputData::String(
+                    "From arbitrary byte stream:\r￼To native Rust data structures:\r",
+                )]],
+            },
+            Archived::Class(Class {
+                name_index: 4,
+                version: 1,
+                parent_index: Some(6),
+            }),
+            Archived::Class(Class {
+                name_index: 5,
+                version: 1,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(1)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(0)]],
+            },
+            Archived::Class(Class {
+                name_index: 10,
+                version: 0,
+                parent_index: Some(12),
+            }),
+            Archived::Class(Class {
+                name_index: 11,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Type(9),
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(2)],
+                    vec![OutputData::Object(15)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(17)],
+                    vec![OutputData::Object(18)],
+                ],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "__kIMFileTransferGUIDAttributeName",
+                )]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "D0551D89-4E11-43D0-9A0E-06F19704E97B",
+                )]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(1)]],
+            },
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(1)],
+                    vec![OutputData::Object(20)],
+                    vec![OutputData::Object(21)],
+                ],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(2)]],
+            },
         ];
 
         assert_eq!(typedstream.type_table, expected_types);
