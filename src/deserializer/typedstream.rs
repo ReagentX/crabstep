@@ -10,7 +10,7 @@ use crate::{
     constants::{EMPTY, END, START},
     deserializer::{
         header::validate_header,
-        iter::PropertyResolverIterator,
+        iter::PropertyIterator,
         number::{read_double, read_float, read_signed_int, read_unsigned_int},
         read::{read_byte_at, read_exact_bytes, read_pointer},
         string::read_string,
@@ -133,11 +133,8 @@ impl<'a> TypedStreamDeserializer<'a> {
     ///
     /// let iter = ts.resolve_properties(root).unwrap();
     /// ```
-    pub fn resolve_properties(
-        &self,
-        root_object_index: usize,
-    ) -> Result<PropertyResolverIterator<'a, '_>> {
-        PropertyResolverIterator::new(&self.object_table, &self.type_table, root_object_index)
+    pub fn resolve_properties(&self, root_object_index: usize) -> Result<PropertyIterator<'a, '_>> {
+        PropertyIterator::new(&self.object_table, &self.type_table, root_object_index)
             .ok_or(TypedStreamError::InvalidPointer(root_object_index as u8))
     }
 

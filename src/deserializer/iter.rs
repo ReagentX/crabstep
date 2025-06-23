@@ -4,7 +4,7 @@ use crate::models::{archivable::Archived, class::Class, output_data::OutputData,
 
 /// A single resolved property from an [`Archived::Object`].
 #[derive(Debug)]
-pub enum ResolvedProperty<'a, 'b> {
+pub enum Property<'a, 'b> {
     /// An object with its class metadata, class name, and nested properties iterator.
     Object {
         /// The class of the object
@@ -12,28 +12,28 @@ pub enum ResolvedProperty<'a, 'b> {
         /// The name of the class, typically a string from the type table
         name: &'a str,
         /// An iterator over the properties of this object
-        data: PropertyResolverIterator<'a, 'b>,
+        data: PropertyIterator<'a, 'b>,
     },
     /// A group of properties (primitives or nested objects).
-    Group(Vec<ResolvedProperty<'a, 'b>>),
+    Group(Vec<Property<'a, 'b>>),
     /// A primitive value (string, number, byte, etc.).
     Primitive(&'b OutputData<'a>),
 }
 
 /// An iterator that resolves the top-level properties of a single [`Archived::Object`].
 ///
-/// It iterates over the `Vec<Vec<OutputData>>` of an object. If an inner `Vec`
-/// contains a single `OutputData::Object` reference, it resolves that reference
-/// against the `object_table` and yields a `ResolvedProperty::Object`. Otherwise,
-/// it yields a `ResolvedProperty::Data` containing the slice of properties.
+/// This iterator will yield `Property` items, which can be either nested objects or primitive values.
+/// It is created from an `Archived` object and its associated type table.
+///
+/// It is designed to traverse the properties of an object, allowing you to access nested objects and their properties recursively.
 #[derive(Debug)]
-pub struct PropertyResolverIterator<'a, 'b> {
+pub struct PropertyIterator<'a, 'b> {
     object_table: &'b [Archived<'a>],
     type_table: &'b [Vec<Type<'a>>],
     property_groups: std::slice::Iter<'b, Vec<OutputData<'a>>>,
 }
 
-impl<'a, 'b> PropertyResolverIterator<'a, 'b> {
+impl<'a, 'b> PropertyIterator<'a, 'b> {
     pub(crate) fn new(
         object_table: &'b [Archived<'a>],
         type_table: &'b [Vec<Type<'a>>],
@@ -55,8 +55,8 @@ impl<'a, 'b> PropertyResolverIterator<'a, 'b> {
     }
 }
 
-impl<'a, 'b: 'a> Iterator for PropertyResolverIterator<'a, 'b> {
-    type Item = ResolvedProperty<'a, 'b>;
+impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
+    type Item = Property<'a, 'b>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let groups = self.property_groups.next()?;
@@ -82,12 +82,9 @@ impl<'a, 'b: 'a> Iterator for PropertyResolverIterator<'a, 'b> {
                                 })
                                 .unwrap_or("Unknown Class");
                             // recurse into that object’s own data
-                            let sub_iter = PropertyResolverIterator::new(
-                                self.object_table,
-                                self.type_table,
-                                *idx,
-                            )?;
-                            resolved.push(ResolvedProperty::Object {
+                            let sub_iter =
+                                PropertyIterator::new(self.object_table, self.type_table, *idx)?;
+                            resolved.push(Property::Object {
                                 class: cls,
                                 name: class_name,
                                 data: sub_iter,
@@ -95,10 +92,10 @@ impl<'a, 'b: 'a> Iterator for PropertyResolverIterator<'a, 'b> {
                         }
                     }
                 }
-                prim => resolved.push(ResolvedProperty::Primitive(prim)),
+                prim => resolved.push(Property::Primitive(prim)),
             }
         }
-        Some(ResolvedProperty::Group(resolved))
+        Some(Property::Group(resolved))
     }
 }
 
@@ -116,7 +113,7 @@ impl<'a, 'b: 'a> Iterator for PropertyResolverIterator<'a, 'b> {
 ///     print_resolved(iter, 2);
 /// }
 /// ```
-pub fn print_resolved(iter: PropertyResolverIterator<'_, '_>, indent: usize) {
+pub fn print_resolved(iter: PropertyIterator<'_, '_>, indent: usize) {
     for prop in iter {
         print_property(prop, indent);
     }
@@ -124,9 +121,9 @@ pub fn print_resolved(iter: PropertyResolverIterator<'_, '_>, indent: usize) {
 
 /// Print a single `ResolvedProperty` with indentation, recursing for nested data.
 /// ```
-pub(crate) fn print_property<'a, 'b: 'a>(prop: ResolvedProperty<'a, 'b>, indent: usize) {
+pub(crate) fn print_property<'a, 'b: 'a>(prop: Property<'a, 'b>, indent: usize) {
     match prop {
-        ResolvedProperty::Object {
+        Property::Object {
             class: _,
             name,
             data,
@@ -136,14 +133,14 @@ pub(crate) fn print_property<'a, 'b: 'a>(prop: ResolvedProperty<'a, 'b>, indent:
             // Recurse into its children with increased indent
             print_resolved(data, indent + 2);
         }
-        ResolvedProperty::Group(slice) => {
+        Property::Group(slice) => {
             println!("{:indent$}Group:", "", indent = indent);
             // drill into every slot in the group
             for slot in slice {
                 print_property(slot, indent + 2);
             }
         }
-        ResolvedProperty::Primitive(p) => {
+        Property::Primitive(p) => {
             println!("{:indent$}Primitive: {:?}", "", p, indent = indent);
         }
     }
