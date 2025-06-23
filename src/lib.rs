@@ -3024,4 +3024,425 @@ mod tests {
         assert_eq!(typedstream.type_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
+
+    #[test]
+    fn test_parse_text_emoji_bold_underline() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/EmojiBoldUnderline");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        // Skip the header for now
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            vec![Type::Object],
+            vec![Type::String("NSAttributedString")],
+            vec![Type::String("NSObject")],
+            vec![Type::String("NSString")],
+            vec![Type::Utf8String],
+            vec![Type::SignedInt, Type::UnsignedInt],
+            vec![Type::String("NSDictionary")],
+            vec![Type::SignedInt],
+            vec![Type::String("NSNumber")],
+            vec![Type::String("NSValue")],
+            vec![Type::EmbeddedData],
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: vec![
+                    vec![OutputData::Object(3)],
+                    vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(3)],
+                    vec![OutputData::Object(5)],
+                    vec![OutputData::SignedInteger(2), OutputData::UnsignedInteger(4)],
+                    vec![OutputData::Object(12)],
+                    vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(1)],
+                    vec![OutputData::SignedInteger(3), OutputData::UnsignedInteger(9)],
+                    vec![OutputData::Object(16)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 4,
+                data: vec![vec![OutputData::String("🅱\u{fe0f}Bold_Underline")]],
+            },
+            Archived::Class(Class {
+                name_index: 3,
+                version: 1,
+                parent_index: Some(2),
+            }),
+            Archived::Object {
+                class: 6,
+                data: vec![
+                    vec![OutputData::SignedInteger(1)],
+                    vec![OutputData::Object(7)],
+                    vec![OutputData::Object(8)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 6,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Object {
+                class: 4,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 9,
+                data: vec![vec![OutputData::SignedInteger(0)]],
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(10),
+            }),
+            Archived::Class(Class {
+                name_index: 9,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Type(7),
+            Archived::Object {
+                class: 6,
+                data: vec![
+                    vec![OutputData::SignedInteger(2)],
+                    vec![OutputData::Object(13)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(15)],
+                    vec![OutputData::Object(8)],
+                ],
+            },
+            Archived::Object {
+                class: 4,
+                data: vec![vec![OutputData::String("__kIMTextBoldAttributeName")]],
+            },
+            Archived::Object {
+                class: 9,
+                data: vec![vec![OutputData::SignedInteger(1)]],
+            },
+            Archived::Object {
+                class: 4,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![
+                    vec![OutputData::SignedInteger(2)],
+                    vec![OutputData::Object(17)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(15)],
+                    vec![OutputData::Object(8)],
+                ],
+            },
+            Archived::Object {
+                class: 4,
+                data: vec![vec![OutputData::String("__kIMTextUnderlineAttributeName")]],
+            },
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    #[test]
+    fn test_parse_text_extra_data() {
+        // This test file is missing a block of text so the pointers become misaligned during parsing
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/ExtraData");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        // Skip the header for now
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize();
+        assert!(root.is_err());
+    }
+
+    #[test]
+    fn test_parse_text_formatted() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/Formatted");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        // Skip the header for now
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            vec![Type::Object],
+            vec![Type::String("NSAttributedString")],
+            vec![Type::String("NSObject")],
+            vec![Type::String("NSString")],
+            vec![Type::Utf8String],
+            vec![Type::SignedInt, Type::UnsignedInt],
+            vec![Type::String("NSDictionary")],
+            vec![Type::SignedInt],
+            vec![Type::String("NSNumber")],
+            vec![Type::String("NSValue")],
+            vec![Type::EmbeddedData],
+            vec![Type::SignedInt],
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: vec![
+                    vec![OutputData::Object(3)],
+                    vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(9)], // Changed 6 to 9 here
+                    vec![OutputData::Object(5)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 4,
+                data: vec![vec![OutputData::String("Big small")]], // Changed "Test 3" to "Big small"
+            },
+            Archived::Class(Class {
+                name_index: 3,
+                version: 1,
+                parent_index: Some(2),
+            }),
+            Archived::Object {
+                class: 6,
+                data: vec![
+                    vec![OutputData::SignedInteger(2)],
+                    vec![OutputData::Object(7)],
+                    vec![OutputData::Object(8)],
+                    vec![OutputData::Object(12)],
+                    vec![OutputData::Object(13)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 6,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Object {
+                class: 4,
+                data: vec![vec![OutputData::String(
+                    "__kIMBaseWritingDirectionAttributeName",
+                )]],
+            },
+            Archived::Object {
+                class: 9,
+                data: vec![vec![OutputData::SignedInteger(-1)]],
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(10),
+            }),
+            Archived::Class(Class {
+                name_index: 9,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Type(11),
+            Archived::Object {
+                class: 4,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 9,
+                data: vec![vec![OutputData::SignedInteger(0)]],
+            },
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    #[test]
+    fn test_parse_text_long_message() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/LongMessage");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        // Skip the header for now
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.type_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            vec![Type::Object],
+            vec![Type::String("NSMutableAttributedString")],
+            vec![Type::String("NSAttributedString")],
+            vec![Type::String("NSObject")],
+            vec![Type::String("NSMutableString")],
+            vec![Type::String("NSString")],
+            vec![Type::Utf8String],
+            vec![Type::SignedInt, Type::UnsignedInt],
+            vec![Type::String("NSDictionary")],
+            vec![Type::SignedInt],
+            vec![Type::String("NSNumber")],
+            vec![Type::String("NSValue")],
+            vec![Type::EmbeddedData],
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: vec![
+                    vec![OutputData::Object(4)],
+                    vec![
+                        OutputData::SignedInteger(1),
+                        OutputData::UnsignedInteger(2359),
+                    ],
+                    vec![OutputData::Object(7)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Class(Class {
+                name_index: 3,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 5,
+                data: vec![vec![OutputData::String(
+                    "Sed nibh velit, sodales et facilisis ut, sodales id libero. Mauris nec venenatis lorem, ac vulputate lorem. Maecenas in faucibus dui. In hac habitasse platea dictumst. Integer commodo erat eu elit tincidunt malesuada. Ut tellus mi, eleifend a ligula vitae, eleifend malesuada nibh. Duis leo magna, porttitor eu viverra varius, laoreet eget urna. Duis faucibus eleifend pretium. Nulla nec orci rhoncus, tincidunt lorem non, viverra velit. Aliquam id tincidunt lacus, vel accumsan enim.\nProin id ultrices nunc. Integer id posuere tellus. Donec vitae lacinia elit. In diam est, scelerisque non lacus ultrices, consequat hendrerit ex. Proin ut felis mi. Fusce id ultrices mi. Duis sagittis justo quis sapien tincidunt faucibus. Suspendisse id feugiat risus, ac vestibulum neque. Sed sit amet mauris mauris.\nAenean pharetra, nisl eu maximus commodo, est leo volutpat tortor, sodales semper risus eros non lorem. Phasellus auctor erat quis ante tristique ultrices. Nam at eleifend ligula. Donec posuere lobortis ante quis pulvinar. Maecenas cursus nibh sit amet finibus ultrices. Etiam ut volutpat risus, in molestie velit. Curabitur ornare justo lacus, vitae consequat augue commodo eget. Praesent tincidunt, urna et posuere mattis, orci diam efficitur lorem, eu tincidunt tortor mi id velit. Morbi justo felis, placerat accumsan blandit vel, accumsan eu mauris. Aliquam mattis nisl sed pulvinar hendrerit. Fusce hendrerit fermentum tellus, sit amet lacinia ante viverra ac. Vivamus ultricies tristique congue. Aliquam varius, odio ut porta consectetur, justo est dignissim massa, id dapibus orci risus dignissim dolor. Aliquam viverra tincidunt neque vel euismod. Integer semper ultricies libero vel cursus. Vestibulum sapien eros, dictum id ultricies in, accumsan vel est.\nCurabitur et lacus quis mauris viverra accumsan a non dui. Donec efficitur ex vitae maximus facilisis. Suspendisse molestie lectus quis bibendum porta. Donec a tellus vehicula, iaculis libero non, tincidunt dolor. Curabitur sit amet felis quis magna euismod feugiat vel vitae magna. Proin tellus nunc, mollis quis ipsum ac, blandit tristique libero. Etiam sit amet hendrerit nisl. Mauris dapibus tortor vel enim interdum faucibus. Nulla facilisi. Nulla ut nulla sit amet leo accumsan convallis eget in tortor. Donec sit amet ullamcorper urna. Curabitur consectetur cursus sem nec accumsan.",
+                )]],
+            },
+            Archived::Class(Class {
+                name_index: 4,
+                version: 1,
+                parent_index: Some(6),
+            }),
+            Archived::Class(Class {
+                name_index: 5,
+                version: 1,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(1)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(0)]],
+            },
+            Archived::Class(Class {
+                name_index: 10,
+                version: 0,
+                parent_index: Some(12),
+            }),
+            Archived::Class(Class {
+                name_index: 11,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Type(9),
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
 }
