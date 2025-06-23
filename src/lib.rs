@@ -9,7 +9,7 @@ pub mod error;
 pub mod models;
 
 #[cfg(test)]
-mod tests {
+mod test_typedstream_deserializer {
     use std::{env::current_dir, fs::File, io::Read};
 
     use crate::{
@@ -6294,6 +6294,578 @@ mod tests {
                 class: 13,
                 data: vec![vec![OutputData::SignedInteger(0)]],
             },
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    #[test]
+    fn test_parse_text_url() {
+        let typedstream_path = current_dir().unwrap().as_path().join("src/test_data/URL");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        // Skip the header for now
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            vec![Type::Object],
+            vec![Type::String("NSMutableAttributedString")],
+            vec![Type::String("NSAttributedString")],
+            vec![Type::String("NSObject")],
+            vec![Type::String("NSMutableString")],
+            vec![Type::String("NSString")],
+            vec![Type::Utf8String],
+            vec![Type::SignedInt, Type::UnsignedInt],
+            vec![Type::String("NSDictionary")],
+            vec![Type::SignedInt],
+            vec![Type::String("NSURL")],
+            vec![Type::SignedInt],
+            vec![Type::String("NSNumber")],
+            vec![Type::String("NSValue")],
+            vec![Type::EmbeddedData],
+            vec![Type::SignedInt],
+            vec![Type::String("NSData")],
+            vec![Type::Array(582)],
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: vec![
+                    vec![OutputData::Object(4)],
+                    vec![
+                        OutputData::SignedInteger(1),
+                        OutputData::UnsignedInteger(34),
+                    ],
+                    vec![OutputData::Object(7)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Class(Class {
+                name_index: 3,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 5,
+                data: vec![vec![OutputData::String(
+                    "https://github.com/ReagentX/Logria",
+                )]],
+            },
+            Archived::Class(Class {
+                name_index: 4,
+                version: 1,
+                parent_index: Some(6),
+            }),
+            Archived::Class(Class {
+                name_index: 5,
+                version: 1,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(4)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(13)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(18)],
+                    vec![OutputData::Object(19)],
+                    vec![OutputData::Object(20)],
+                    vec![OutputData::Object(21)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMLinkAttributeName")]],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![
+                    vec![OutputData::SignedInteger(0)],
+                    vec![OutputData::Object(12)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 10,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "https://github.com/ReagentX/Logria",
+                )]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 15,
+                data: vec![vec![OutputData::SignedInteger(0)]],
+            },
+            Archived::Class(Class {
+                name_index: 12,
+                version: 0,
+                parent_index: Some(16),
+            }),
+            Archived::Class(Class {
+                name_index: 13,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Type(15),
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "__kIMBaseWritingDirectionAttributeName",
+                )]],
+            },
+            Archived::Object {
+                class: 15,
+                data: vec![vec![OutputData::SignedInteger(-1)]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMDataDetectedAttributeName")]],
+            },
+            Archived::Object {
+                class: 22,
+                data: vec![
+                    vec![OutputData::SignedInteger(582)],
+                    vec![OutputData::Array(&[
+                        98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
+                        118, 101, 114, 115, 105, 111, 110, 89, 36, 97, 114, 99, 104, 105, 118, 101,
+                        114, 84, 36, 116, 111, 112, 88, 36, 111, 98, 106, 101, 99, 116, 115, 18, 0,
+                        1, 134, 160, 95, 16, 15, 78, 83, 75, 101, 121, 101, 100, 65, 114, 99, 104,
+                        105, 118, 101, 114, 210, 8, 9, 10, 11, 87, 118, 101, 114, 115, 105, 111,
+                        110, 89, 100, 100, 45, 114, 101, 115, 117, 108, 116, 128, 11, 128, 1, 172,
+                        13, 14, 28, 36, 37, 38, 44, 45, 46, 50, 54, 58, 85, 36, 110, 117, 108, 108,
+                        215, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 26, 82, 77, 83,
+                        86, 36, 99, 108, 97, 115, 115, 82, 65, 82, 81, 84, 81, 80, 82, 83, 82, 82,
+                        86, 78, 128, 6, 128, 10, 128, 2, 128, 7, 16, 1, 128, 8, 212, 29, 30, 31,
+                        16, 32, 33, 34, 35, 95, 16, 18, 78, 83, 46, 114, 97, 110, 103, 101, 118,
+                        97, 108, 46, 108, 101, 110, 103, 116, 104, 95, 16, 20, 78, 83, 46, 114, 97,
+                        110, 103, 101, 118, 97, 108, 46, 108, 111, 99, 97, 116, 105, 111, 110, 90,
+                        78, 83, 46, 115, 112, 101, 99, 105, 97, 108, 128, 3, 128, 4, 16, 4, 128, 5,
+                        16, 34, 16, 0, 210, 39, 40, 41, 42, 90, 36, 99, 108, 97, 115, 115, 110, 97,
+                        109, 101, 88, 36, 99, 108, 97, 115, 115, 101, 115, 87, 78, 83, 86, 97, 108,
+                        117, 101, 162, 41, 43, 88, 78, 83, 79, 98, 106, 101, 99, 116, 95, 16, 34,
+                        104, 116, 116, 112, 115, 58, 47, 47, 103, 105, 116, 104, 117, 98, 46, 99,
+                        111, 109, 47, 82, 101, 97, 103, 101, 110, 116, 88, 47, 76, 111, 103, 114,
+                        105, 97, 87, 72, 116, 116, 112, 85, 82, 76, 210, 47, 16, 48, 49, 90, 78,
+                        83, 46, 111, 98, 106, 101, 99, 116, 115, 160, 128, 9, 210, 39, 40, 51, 52,
+                        94, 78, 83, 77, 117, 116, 97, 98, 108, 101, 65, 114, 114, 97, 121, 163, 51,
+                        53, 43, 87, 78, 83, 65, 114, 114, 97, 121, 210, 39, 40, 55, 56, 95, 16, 15,
+                        68, 68, 83, 99, 97, 110, 110, 101, 114, 82, 101, 115, 117, 108, 116, 162,
+                        57, 43, 95, 16, 15, 68, 68, 83, 99, 97, 110, 110, 101, 114, 82, 101, 115,
+                        117, 108, 116, 16, 1, 0, 8, 0, 17, 0, 26, 0, 36, 0, 41, 0, 50, 0, 55, 0,
+                        73, 0, 78, 0, 86, 0, 96, 0, 98, 0, 100, 0, 113, 0, 119, 0, 134, 0, 137, 0,
+                        144, 0, 147, 0, 149, 0, 151, 0, 154, 0, 157, 0, 159, 0, 161, 0, 163, 0,
+                        165, 0, 167, 0, 169, 0, 178, 0, 199, 0, 222, 0, 233, 0, 235, 0, 237, 0,
+                        239, 0, 241, 0, 243, 0, 245, 0, 250, 1, 5, 1, 14, 1, 22, 1, 25, 1, 34, 1,
+                        71, 1, 79, 1, 84, 1, 95, 1, 96, 1, 98, 1, 103, 1, 118, 1, 122, 1, 130, 1,
+                        135, 1, 153, 1, 156, 1, 174, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0,
+                        59, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 176,
+                    ])],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 16,
+                version: 0,
+                parent_index: Some(3),
+            }),
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    #[test]
+    fn test_parse_text_url_message() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/URLMessage");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        // Skip the header for now
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            vec![Type::Object],
+            vec![Type::String("NSMutableAttributedString")],
+            vec![Type::String("NSAttributedString")],
+            vec![Type::String("NSObject")],
+            vec![Type::String("NSMutableString")],
+            vec![Type::String("NSString")],
+            vec![Type::Utf8String],
+            vec![Type::SignedInt, Type::UnsignedInt],
+            vec![Type::String("NSDictionary")],
+            vec![Type::SignedInt],
+            vec![Type::String("NSURL")],
+            vec![Type::SignedInt],
+            vec![Type::String("NSNumber")],
+            vec![Type::String("NSValue")],
+            vec![Type::EmbeddedData],
+            vec![Type::SignedInt],
+            vec![Type::String("NSMutableData")],
+            vec![Type::String("NSData")],
+            vec![Type::Array(604)],
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: vec![
+                    vec![OutputData::Object(4)],
+                    vec![
+                        OutputData::SignedInteger(1),
+                        OutputData::UnsignedInteger(56),
+                    ],
+                    vec![OutputData::Object(7)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Class(Class {
+                name_index: 3,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 5,
+                data: vec![vec![OutputData::String(
+                    "https://twitter.com/xxxxxxxxx/status/0000223300009216128",
+                )]],
+            },
+            Archived::Class(Class {
+                name_index: 4,
+                version: 1,
+                parent_index: Some(6),
+            }),
+            Archived::Class(Class {
+                name_index: 5,
+                version: 1,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(4)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(13)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::Object(18)],
+                    vec![OutputData::Object(19)],
+                    vec![OutputData::Object(22)],
+                    vec![OutputData::Object(23)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMLinkAttributeName")]],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![
+                    vec![OutputData::SignedInteger(0)],
+                    vec![OutputData::Object(12)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 10,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "https://twitter.com/xxxxxxxxx/status/0000223300009216128",
+                )]],
+            },
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 15,
+                data: vec![vec![OutputData::SignedInteger(0)]],
+            },
+            Archived::Class(Class {
+                name_index: 12,
+                version: 0,
+                parent_index: Some(16),
+            }),
+            Archived::Class(Class {
+                name_index: 13,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Type(15),
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMDataDetectedAttributeName")]],
+            },
+            Archived::Object {
+                class: 20,
+                data: vec![
+                    vec![OutputData::SignedInteger(604)],
+                    vec![OutputData::Array(&[
+                        98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
+                        118, 101, 114, 115, 105, 111, 110, 89, 36, 97, 114, 99, 104, 105, 118, 101,
+                        114, 84, 36, 116, 111, 112, 88, 36, 111, 98, 106, 101, 99, 116, 115, 18, 0,
+                        1, 134, 160, 95, 16, 15, 78, 83, 75, 101, 121, 101, 100, 65, 114, 99, 104,
+                        105, 118, 101, 114, 210, 8, 9, 13, 11, 87, 118, 101, 114, 115, 105, 111,
+                        110, 89, 100, 100, 45, 114, 101, 115, 117, 108, 116, 128, 11, 128, 1, 172,
+                        13, 14, 28, 36, 37, 38, 44, 45, 46, 50, 54, 58, 85, 36, 110, 117, 108, 108,
+                        215, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 26, 82, 77, 83,
+                        86, 36, 99, 108, 97, 115, 115, 82, 65, 82, 81, 84, 81, 80, 82, 83, 82, 82,
+                        86, 78, 128, 6, 128, 13, 128, 2, 128, 7, 16, 1, 128, 8, 212, 29, 30, 31,
+                        16, 32, 33, 34, 35, 95, 16, 18, 78, 83, 46, 114, 97, 110, 103, 101, 118,
+                        97, 108, 46, 108, 101, 110, 103, 116, 104, 95, 16, 20, 78, 83, 46, 114, 97,
+                        110, 103, 101, 118, 97, 108, 46, 108, 111, 99, 97, 116, 105, 111, 110, 90,
+                        78, 83, 46, 115, 112, 101, 99, 105, 97, 108, 128, 3, 128, 4, 16, 4, 128, 5,
+                        16, 56, 16, 0, 210, 39, 40, 41, 42, 90, 36, 99, 108, 97, 115, 115, 110, 97,
+                        109, 101, 88, 36, 99, 108, 97, 115, 115, 101, 115, 87, 78, 83, 86, 97, 108,
+                        117, 101, 162, 41, 43, 88, 78, 83, 79, 98, 106, 101, 99, 116, 95, 16, 56,
+                        104, 116, 116, 112, 115, 58, 47, 47, 116, 119, 105, 116, 116, 101, 114, 46,
+                        99, 111, 109, 47, 120, 120, 120, 120, 120, 120, 120, 120, 120, 47, 115,
+                        116, 97, 116, 117, 115, 47, 48, 48, 48, 48, 50, 50, 51, 51, 48, 48, 48, 48,
+                        57, 50, 49, 54, 49, 50, 56, 87, 72, 116, 116, 112, 85, 82, 76, 210, 47, 16,
+                        48, 49, 90, 78, 83, 46, 111, 98, 106, 101, 99, 116, 115, 160, 128, 9, 210,
+                        39, 40, 51, 52, 94, 78, 83, 77, 117, 116, 97, 98, 108, 101, 65, 114, 114,
+                        97, 121, 163, 51, 53, 43, 87, 78, 83, 65, 114, 114, 97, 121, 210, 39, 40,
+                        55, 56, 95, 16, 15, 68, 68, 83, 99, 97, 110, 110, 101, 114, 82, 101, 115,
+                        117, 108, 116, 162, 57, 43, 95, 16, 15, 68, 68, 83, 99, 97, 110, 110, 101,
+                        114, 82, 101, 115, 117, 108, 116, 16, 1, 0, 8, 0, 17, 0, 26, 0, 36, 0, 41,
+                        0, 50, 0, 55, 0, 73, 0, 78, 0, 86, 0, 96, 0, 98, 0, 100, 0, 113, 0, 119, 0,
+                        134, 0, 137, 0, 144, 0, 147, 0, 149, 0, 151, 0, 154, 0, 157, 0, 159, 0,
+                        161, 0, 163, 0, 165, 0, 167, 0, 169, 0, 178, 0, 199, 0, 222, 0, 233, 0,
+                        235, 0, 237, 0, 239, 0, 241, 0, 243, 0, 245, 0, 250, 1, 5, 1, 14, 1, 22, 1,
+                        25, 1, 34, 1, 93, 1, 101, 1, 106, 1, 117, 1, 118, 1, 120, 1, 125, 1, 140,
+                        1, 144, 1, 152, 1, 157, 1, 175, 1, 178, 1, 196, 0, 0, 0, 0, 0, 0, 2, 1, 0,
+                        0, 0, 0, 0, 0, 0, 59, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 198,
+                    ])],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 16,
+                version: 0,
+                parent_index: Some(21),
+            }),
+            Archived::Class(Class {
+                name_index: 17,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String(
+                    "__kIMBaseWritingDirectionAttributeName",
+                )]],
+            },
+            Archived::Object {
+                class: 15,
+                data: vec![vec![OutputData::SignedInteger(-1)]],
+            },
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    #[test]
+    fn test_parse_text_weird() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/WeirdText");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        // Skip the header for now
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            vec![Type::Object],
+            vec![Type::String("NSMutableAttributedString")],
+            vec![Type::String("NSAttributedString")],
+            vec![Type::String("NSObject")],
+            vec![Type::String("NSMutableString")],
+            vec![Type::String("NSString")],
+            vec![Type::Utf8String],
+            vec![Type::SignedInt, Type::UnsignedInt],
+            vec![Type::String("NSDictionary")],
+            vec![Type::SignedInt],
+            vec![Type::String("NSNumber")],
+            vec![Type::String("NSValue")],
+            vec![Type::EmbeddedData],
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: vec![
+                    vec![OutputData::Object(4)],
+                    vec![
+                        OutputData::SignedInteger(1),
+                        OutputData::UnsignedInteger(21),
+                    ],
+                    vec![OutputData::Object(7)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Class(Class {
+                name_index: 3,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 5,
+                data: vec![vec![OutputData::String("𝖍𝖊𝖑𝖑𝖔 𝖜𝖔𝖗𝖑𝖉")]],
+            },
+            Archived::Class(Class {
+                name_index: 4,
+                version: 1,
+                parent_index: Some(6),
+            }),
+            Archived::Class(Class {
+                name_index: 5,
+                version: 1,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 8,
+                data: vec![
+                    vec![OutputData::SignedInteger(1)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                ],
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+            },
+            Archived::Object {
+                class: 11,
+                data: vec![vec![OutputData::SignedInteger(0)]],
+            },
+            Archived::Class(Class {
+                name_index: 10,
+                version: 0,
+                parent_index: Some(12),
+            }),
+            Archived::Class(Class {
+                name_index: 11,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Type(9),
         ];
 
         assert_eq!(typedstream.type_table, expected_types);
