@@ -36,7 +36,7 @@ pub fn read_exact_bytes(data: &[u8], n: usize) -> Result<&[u8]> {
 /// Returns [`TypedStreamError::OutOfBounds`] when `idx >= data.len()`.
 ///
 /// # Examples
-/// ```no_run
+/// ```rust
 /// use crabstep::deserializer::read::read_byte_at;
 ///
 /// let data = [0xFF];
@@ -58,14 +58,13 @@ pub fn read_byte_at(data: &[u8], idx: usize) -> Result<&u8> {
 /// Returns [`TypedStreamError::InvalidPointer`] if the byte is less than `REFERENCE_TAG`.
 ///
 /// # Examples
-/// ```no_run
+/// ```rust
 /// use crabstep::constants::REFERENCE_TAG;
 /// use crabstep::deserializer::read::read_pointer;
 ///
-/// let raw = REFERENCE_TAG + 3;
-/// let consumed = read_pointer(&raw).unwrap();
+/// let consumed = read_pointer(&0x94).unwrap();
 ///
-/// assert_eq!(consumed.value, 3);
+/// assert_eq!(consumed.value, 2);
 /// assert_eq!(consumed.bytes_consumed, 1);
 /// ```
 pub fn read_pointer(pointer: &u8) -> Result<Consumed<u64>> {
