@@ -8,8 +8,6 @@ pub type Result<T> = std::result::Result<T, TypedStreamError>;
 /// Errors that can occur while deserializing a typed stream.
 #[derive(Debug)]
 pub enum TypedStreamError {
-    /// The stream ended unexpectedly.
-    UnexpectedEnd,
     /// A start tag without a matching end tag was found.
     UnmatchedStart,
     /// An end tag without a matching start tag was found.
@@ -33,7 +31,6 @@ pub enum TypedStreamError {
 impl Display for TypedStreamError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TypedStreamError::UnexpectedEnd => write!(f, "Unexpected end of stream"),
             TypedStreamError::UnmatchedStart => write!(f, "Unmatched start in stream"),
             TypedStreamError::UnmatchedEnd => write!(f, "Unmatched end in stream"),
             TypedStreamError::OutOfBounds(n, len) => write!(
