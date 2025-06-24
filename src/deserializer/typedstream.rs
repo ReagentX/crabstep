@@ -88,16 +88,10 @@ impl<'a> TypedStreamDeserializer<'a> {
 
         // while self.position <= self.data.len() {
         let found_type = self.read_type(false)?;
-        println!(
-            "Found type at: {:?}: {:?}",
-            found_type,
-            self.type_table.get(found_type.unwrap())
-        );
 
         if let Some(type_index) = found_type {
             // Read the types at the specified index
             obj = self.read_types(type_index)?;
-            println!("End of object: {obj:?}");
         }
 
         match obj
@@ -153,14 +147,9 @@ impl<'a> TypedStreamDeserializer<'a> {
 
     /// [`Archivable`] data can be embedded on a class or in a C String marked as [`Type::EmbeddedData`]
     fn read_embedded_type(&mut self) -> Result<Option<usize>> {
-        println!("Reading embedded data at position: 0x{:x}", self.position);
         match *self.consume_current_byte()? {
             START => {
                 // 0x84 indicates the start of embedded data
-                println!(
-                    "Found embedded data start at position: 0x{:x}",
-                    self.position
-                );
                 self.read_type(true)
             }
             EMPTY => Ok(None),
@@ -177,7 +166,6 @@ impl<'a> TypedStreamDeserializer<'a> {
 
     fn read_string(&mut self) -> Result<usize> {
         let current_byte = *self.consume_current_byte()?;
-        println!("Reading string at position: 0x{:x}", self.position);
         match current_byte {
             START => {
                 let string_data = read_string(&self.data[self.position..])?;
@@ -186,10 +174,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                     .push(vec![Type::new_string(string_data.value)]);
                 Ok(self.type_table.len() - 1)
             }
-            EMPTY => {
-                println!("Found empty string at position: 0x{:x}", self.position - 1);
-                Err(TypedStreamError::EmptyString)
-            }
+            EMPTY => Err(TypedStreamError::EmptyString),
             ptr => {
                 let pointer = read_pointer(&ptr)?.map(|v| v as usize);
                 if let Some(Type::String(_)) = self
@@ -206,8 +191,6 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     fn read_class(&mut self) -> Result<Option<usize>> {
-        println!("Reading class at position: 0x{:x}", self.position);
-
         // index of the first START we encounter (the bottom-most child)
         let mut first_new: Option<usize> = None;
         // index of the most recently pushed class (current “child”)
@@ -218,7 +201,6 @@ impl<'a> TypedStreamDeserializer<'a> {
         loop {
             match *self.consume_current_byte()? {
                 START => {
-                    println!("new at 0x{:x}", self.position);
                     let name_idx = self.read_string()?;
                     let version = self.read_unsigned_int()?;
 
@@ -241,12 +223,10 @@ impl<'a> TypedStreamDeserializer<'a> {
                     prev_new = Some(idx);
                 }
                 EMPTY => {
-                    println!("final class found!");
                     final_parent = None;
                     break;
                 }
                 ptr => {
-                    println!("pointer");
                     let pointer = read_pointer(&ptr)?;
 
                     final_parent = Some(pointer.value as usize);
@@ -274,8 +254,6 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     fn read_object(&mut self) -> Result<usize> {
-        println!("Reading object type at position: 0x{:x}", self.position);
-
         match *read_byte_at(self.data, self.position)? {
             START => {
                 let placeholder_index = self.object_table.len();
@@ -293,11 +271,6 @@ impl<'a> TypedStreamDeserializer<'a> {
                         && *read_byte_at(self.data, self.position)? != END
                     {
                         // Read the next type, which should be an object
-                        println!(
-                            "inside object: 0x{:x} -> {:x}",
-                            self.position,
-                            read_byte_at(self.data, self.position)?
-                        );
                         if let Some(next_index) = self.read_type(false)? {
                             // Recursively read the types for this object
                             if let Some(data) = self.read_types(next_index)? {
@@ -313,11 +286,9 @@ impl<'a> TypedStreamDeserializer<'a> {
                         }
                     }
                 }
-                println!("End of object found at position: 0x{:x}", self.position);
                 Ok(placeholder_index)
             }
             ptr => {
-                println!("Reading object pointer at position: 0x{:x}", self.position);
                 let pointer = read_pointer(&ptr)?;
                 Ok(pointer.value as usize)
             }
@@ -403,20 +374,12 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// to avoid cloning large type vectors.
     fn read_type(&mut self, is_embedded_type: bool) -> Result<Option<usize>> {
         let byte = *self.consume_current_byte()?;
-        println!("Parsing byte: {:x} at {:x}", byte, self.position - 1);
 
         match byte {
             START => {
-                println!("Start type at position {:x}", self.position);
                 // Get the type of the object
                 let new_types = Type::read_new_type(&self.data[self.position..])?;
                 let new_type_index = self.type_table.len();
-                println!(
-                    "Parsed type of length {:?}: {:?}",
-                    new_types.value.len(),
-                    new_types.value
-                );
-
                 // Embedded data is stored as a String in the objects table
                 if is_embedded_type {
                     self.object_table.push(Archived::Type(new_type_index));
@@ -429,16 +392,9 @@ impl<'a> TypedStreamDeserializer<'a> {
                 self.position += new_types.bytes_consumed;
                 Ok(Some(self.type_table.len() - 1))
             }
-            EMPTY => {
-                println!("Empty type at position {:x}", self.position - 1);
-                Ok(None)
-            }
-            END => {
-                println!("End type at position {:x}", self.position - 1);
-                Ok(None)
-            }
+            EMPTY => Ok(None),
+            END => Ok(None),
             ptr => {
-                println!("Pointer type at position {:x}", self.position - 1);
                 let pointer = read_pointer(&ptr)?;
                 let ref_tag = pointer.value as usize;
 
