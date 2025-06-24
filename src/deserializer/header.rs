@@ -1,4 +1,4 @@
-//! Header validation for TypedStream format
+//! Header validation for `TypedStream` format
 
 use crate::{
     deserializer::{
