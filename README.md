@@ -1,10 +1,10 @@
 # crabstep
 
-`crabstep` is a Rust library that deserializes Apple's `typedstream` data into cross-platform Rust data structures.
+`crabstep` is a Rust library that deserializes Apple's `typedstream` data into cross-platform data structures.
 
 ## Overview
 
-The typedstream format is a binary serialization protocol designed for `C` and `Objective-C` data structures. It is primarily used in Apple's Foundation framework, specifically within the `NSArchiver` and `NSUnarchiver` classes.
+The `typedstream` format is a binary serialization protocol designed for `C` and `Objective-C` data structures. It is primarily used in Apple's `Foundation` framework, specifically within the `NSArchiver` and `NSUnarchiver` classes.
 
 ## Installation
 
