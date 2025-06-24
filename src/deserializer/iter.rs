@@ -1,5 +1,7 @@
 //! Iterators for resolving properties in an [`Archived::Object`]
 
+use std::slice::Iter;
+
 use crate::models::{archivable::Archived, class::Class, output_data::OutputData, types::Type};
 
 /// A single resolved property from an [`Archived::Object`].
@@ -26,11 +28,11 @@ pub enum Property<'a, 'b> {
 /// It is created from an `Archived` object and its associated type table.
 ///
 /// It is designed to traverse the properties of an object, allowing you to access nested objects and their properties recursively.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PropertyIterator<'a, 'b> {
     object_table: &'b [Archived<'a>],
     type_table: &'b [Vec<Type<'a>>],
-    property_groups: std::slice::Iter<'b, Vec<OutputData<'a>>>,
+    property_groups: Iter<'b, Vec<OutputData<'a>>>,
 }
 
 impl<'a, 'b> PropertyIterator<'a, 'b> {
