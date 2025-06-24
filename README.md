@@ -6,6 +6,14 @@
 
 The typedstream format is a binary serialization protocol designed for `C` and `Objective-C` data structures. It is primarily used in Apple's Foundation framework, specifically within the `NSArchiver` and `NSUnarchiver` classes.
 
+## Installation
+
+This library is available on [crates.io](https://crates.io/crates/crabstep).
+
+## Documentation
+
+Documentation is available on [docs.rs](https://docs.rs/crabstep).
+
 ### Quick Start
 
 ```rust,no_run
