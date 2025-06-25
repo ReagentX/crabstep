@@ -196,7 +196,7 @@ impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
 ///
 /// This function is intended for debugging purposes. Example output appears as follows:
 ///
-/// ```
+/// ```txt
 ///   Group:
 ///     Object: "NSMutableString"
 ///       Group:
