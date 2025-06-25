@@ -1,8 +1,8 @@
 //! Functions for reading numbers from a byte stream
 
 use crate::{
-    constants::{DECIMAL, END, I_16, I_32, REFERENCE_TAG},
     deserializer::{
+        constants::{DECIMAL, END, I_16, I_32, REFERENCE_TAG},
         consumed::Consumed,
         read::{read_byte_at, read_exact_bytes},
     },
@@ -177,9 +177,9 @@ pub fn read_double(data: &[u8]) -> Result<Consumed<f64>> {
 
 #[cfg(test)]
 mod int_tests {
-    use crate::{
+    use crate::deserializer::{
         constants::{I_16, I_32},
-        deserializer::number::{read_signed_int, read_unsigned_int},
+        number::{read_signed_int, read_unsigned_int},
     };
 
     #[test]
@@ -264,9 +264,9 @@ mod int_tests {
 
 #[cfg(test)]
 mod float_tests {
-    use crate::{
+    use crate::deserializer::{
         constants::{I_16, I_32},
-        deserializer::number::{read_double, read_float},
+        number::{read_double, read_float},
     };
 
     #[test]

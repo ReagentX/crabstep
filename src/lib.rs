@@ -2,13 +2,12 @@
 #![deny(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-pub mod constants;
 pub mod deserializer;
 pub mod error;
 pub mod models;
 
 pub use deserializer::{iter::PropertyIterator, typedstream::TypedStreamDeserializer};
-pub use models::{archivable::Archived, output_data::OutputData};
+pub use models::{archived::Archived, output_data::OutputData};
 
 #[cfg(test)]
 mod test_typedstream_deserializer {
@@ -16,8 +15,36 @@ mod test_typedstream_deserializer {
 
     use crate::{
         deserializer::{iter::print_resolved, typedstream::TypedStreamDeserializer},
-        models::{archivable::Archived, class::Class, output_data::OutputData, types::Type},
+        models::{archived::Archived, class::Class, output_data::OutputData, types::Type},
     };
+
+    #[test]
+    fn test_parse_text_iter() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/AttributedBodyTextOnly");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        let root_obj = typedstream.resolve_properties(root).unwrap();
+        let primitives = root_obj.primitives();
+
+        assert_eq!(
+            primitives,
+            vec![
+                &OutputData::String("Noter test"),
+                &OutputData::UnsignedInteger(10),
+                &OutputData::SignedInteger(1),
+                &OutputData::SignedInteger(0),
+                &OutputData::String("__kIMMessagePartAttributeName"),
+                &OutputData::SignedInteger(1)
+            ]
+        );
+    }
 
     #[test]
     fn test_parse_text_basic() {
@@ -29,7 +56,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -155,7 +181,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -276,7 +301,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -834,7 +858,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -1064,7 +1087,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -1302,7 +1324,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -1437,7 +1458,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -1651,7 +1671,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -1869,7 +1888,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -2052,7 +2070,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -2118,7 +2135,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -2335,7 +2351,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -2491,7 +2506,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -2697,7 +2711,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -2817,7 +2830,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -3037,7 +3049,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -3190,7 +3201,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize();
         assert!(root.is_err());
@@ -3206,7 +3216,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -3330,7 +3339,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -3458,7 +3466,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -3606,7 +3613,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -4228,7 +4234,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -4455,7 +4460,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -4636,7 +4640,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -4905,7 +4908,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -5141,7 +5143,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -5384,7 +5385,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -5639,7 +5639,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -5850,7 +5849,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -6020,7 +6018,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -6164,7 +6161,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -6309,7 +6305,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -6530,7 +6525,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");
@@ -6758,7 +6752,6 @@ mod test_typedstream_deserializer {
         let mut bytes = vec![];
         file.read_to_end(&mut bytes).unwrap();
 
-        // Skip the header for now
         let mut typedstream = TypedStreamDeserializer::new(&bytes);
         let root = typedstream.oxidize().unwrap();
         println!("\nResults:");

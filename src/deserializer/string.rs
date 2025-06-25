@@ -1,4 +1,4 @@
-//! Utilities for reading UTF-8 strings from a typed stream.
+//! Utilities for reading UTF-8 strings from a `typedstream`.
 
 use crate::{
     deserializer::{consumed::Consumed, number::read_unsigned_int},
@@ -7,7 +7,7 @@ use crate::{
 
 /// Read a UTF-8 string from the stream, prefixed by its length encoded as an unsigned integer.
 ///
-/// The function reads the length (1, 2, or 4 bytes as needed), then the UTF-8 bytes.
+/// The function reads the length (`1`, `2`, or `4` bytes as needed), then the UTF-8 bytes.
 /// Returns a slice to the string and total bytes consumed.
 ///
 /// # Errors
@@ -40,9 +40,9 @@ pub fn read_string(data: &[u8]) -> Result<Consumed<&str>> {
 
 #[cfg(test)]
 mod string_tests {
-    use crate::{
+    use crate::deserializer::{
         constants::{I_16, I_32},
-        deserializer::string::read_string,
+        string::read_string,
     };
 
     #[test]

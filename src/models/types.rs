@@ -1,8 +1,9 @@
 //! Type tags that denote the type of data stored in a `typedstream`
 
 use crate::{
-    constants::ARRAY,
-    deserializer::{consumed::Consumed, number::read_unsigned_int, read::read_exact_bytes},
+    deserializer::{
+        constants::ARRAY, consumed::Consumed, number::read_unsigned_int, read::read_exact_bytes,
+    },
     error::{Result, TypedStreamError},
 };
 

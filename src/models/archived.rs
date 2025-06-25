@@ -11,11 +11,10 @@ pub enum Archived<'a> {
     Object {
         /// Index into [`object_table`](crate::deserializer::typedstream::TypedStreamDeserializer::object_table) for this object’s class.
         class: usize,
-        /// Nested data groups for this object.
+        /// Nested data groups for this object. Each item represents a group of data that is logically related.
+        /// For example, a class may have multiple properties, each represented as a group of data.
         data: Vec<Vec<OutputData<'a>>>,
     },
-    /// Some data that is likely a property on the object described by the `typedstream` but not part of a class.
-    Data(Vec<OutputData<'a>>),
     /// A class referenced in the `typedstream`, usually part of an inheritance hierarchy that does not contain any data itself.
     Class(Class),
     /// A placeholder, only used when reserving a spot in the objects table for a reference to be filled with read class information.
