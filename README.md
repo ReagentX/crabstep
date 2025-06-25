@@ -42,7 +42,7 @@ typedstream.resolve_properties(root)
 
 ### Detailed examples
 
-This crate is heavily used by [`imessage-database`](https://crates.io/crates/imessage-database)'s [`body`](https://github.com/ReagentX/imessage-exporter/blob/develop/imessage-database/src/tables/messages/body.rs) module.
+This crate is heavily leveraged by [`imessage-database`](https://crates.io/crates/imessage-database)'s [`body`](https://github.com/ReagentX/imessage-exporter/blob/develop/imessage-database/src/tables/messages/body.rs) module.
 
 ## Origin
 
@@ -57,4 +57,4 @@ The format is derived from the data structure used by `NeXTSTEP`'s `NXTypedStrea
 
 ## Reverse Engineering
 
- A blog post describing the reverse engineering of `typedstream` is located [here](https://chrissardegna.com/blog/reverse-engineering-apples-typedstream-format/).
+ A blog post describing the reverse engineering of `typedstream` is available as [an in-depth article](https://chrissardegna.com/blog/reverse-engineering-apples-typedstream-format/).
