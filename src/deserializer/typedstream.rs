@@ -212,11 +212,11 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     fn read_class(&mut self) -> Result<Option<usize>> {
-        // index of the first START we encounter (the bottom-most child)
+        // Index of the first START we encounter (the bottom-most child)
         let mut first_new: Option<usize> = None;
-        // index of the most recently pushed class (current “child”)
+        // Index of the most recently pushed class (current “child”)
         let mut prev_new: Option<usize> = None;
-        // parent for the outer-most new class (set by EMPTY or a pointer)
+        // Parent for the outer-most new class (set by EMPTY or a pointer)
         let final_parent: Option<usize>;
 
         loop {
@@ -347,6 +347,7 @@ impl<'a> TypedStreamDeserializer<'a> {
         // Start reading types from the specified index in the type table
         let len = self.type_table[types_index].len();
         let mut out_v = Vec::with_capacity(len);
+
         for i in 0..len {
             // Read the next type from the type table
             match self.type_table[types_index][i] {
@@ -413,8 +414,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                 self.position += new_types.bytes_consumed;
                 Ok(Some(self.type_table.len() - 1))
             }
-            EMPTY => Ok(None),
-            END => Ok(None),
+            END | EMPTY => Ok(None),
             ptr => {
                 let pointer = read_pointer(&ptr)?;
                 let ref_tag = pointer.value as usize;
