@@ -57,3 +57,7 @@ The `typedstream` format is derived from the data structure used by `NeXTSTEP`'s
 ## Reverse Engineering
 
  A blog post describing the reverse engineering of `typedstream` is available as [an in-depth article](https://chrissardegna.com/blog/reverse-engineering-apples-typedstream-format/).
+
+## Ferris
+
+![Ferris the crab walking along a hexadecimal path](src/test_data/crabstep.png)
