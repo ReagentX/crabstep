@@ -32,10 +32,9 @@ file.read_to_end(&mut bytes).unwrap();
 
 // Oxidize the typedstream
 let mut typedstream = TypedStreamDeserializer::new(&bytes);
-let root = typedstream.oxidize().unwrap();
 
 // Iterate over the typedstream's properties
-typedstream.resolve_properties(root)
+typedstream.iter_root()
     .unwrap()
     .for_each(|prop| println!("{:#?}", prop))
 ```
