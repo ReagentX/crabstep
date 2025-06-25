@@ -193,6 +193,30 @@ impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
 ///     print_resolved(iter, 2);
 /// }
 /// ```
+///
+/// This function is intended for debugging purposes. Example output appears as follows:
+///
+/// ```
+///   Group:
+///     Object: "NSMutableString"
+///       Group:
+///         Primitive: String("Noter test")
+///   Group:
+///     Primitive: SignedInteger(1)
+///     Primitive: UnsignedInteger(10)
+///   Group:
+///     Object: "NSDictionary"
+///       Group:
+///         Primitive: SignedInteger(1)
+///       Group:
+///         Object: "NSString"
+///           Group:
+///             Primitive: String("__kIMMessagePartAttributeName")
+///       Group:
+///         Object: "NSNumber"
+///           Group:
+///             Primitive: SignedInteger(0)
+/// ```
 pub fn print_resolved(iter: PropertyIterator<'_, '_>, indent: usize) {
     for prop in iter {
         print_property(prop, indent);
@@ -207,7 +231,7 @@ pub fn print_resolved(iter: PropertyIterator<'_, '_>, indent: usize) {
 /// * `indent` - Number of spaces to indent each level.
 ///
 /// This function is intended for debugging purposes.
-pub fn print_property<'a, 'b: 'a>(prop: Property<'a, 'b>, indent: usize) {
+pub(crate) fn print_property<'a, 'b: 'a>(prop: Property<'a, 'b>, indent: usize) {
     match prop {
         Property::Object {
             class: _,
