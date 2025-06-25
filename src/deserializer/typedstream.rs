@@ -65,6 +65,26 @@ impl<'a> TypedStreamDeserializer<'a> {
         }
     }
 
+    /// Creates an iterator that resolves the properties of the root object in the `typedstream`.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
+    ///
+    /// let data: &[u8] = &[];
+    /// let mut deserializer = TypedStreamDeserializer::new(data);
+    ///
+    /// // Walk the object root, printing each primitive value
+    /// deserializer.iter_root().into_iter().for_each(|prop| {
+    ///    prop.primitives().into_iter().for_each(|data| println!("{data}"));
+    /// });
+    /// ```
+    pub fn iter_root(&mut self) -> Result<PropertyIterator<'a, '_>> {
+        let root = self.oxidize()?;
+        self.resolve_properties(root)
+    }
+
     /// Parse the typed stream, consuming header and objects, returning the index of the top-level archived object.
     ///
     /// # Errors
