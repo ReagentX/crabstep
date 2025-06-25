@@ -199,9 +199,15 @@ pub fn print_resolved(iter: PropertyIterator<'_, '_>, indent: usize) {
     }
 }
 
-/// Print a single `ResolvedProperty` with indentation, recursing for nested data.
-/// ```
-pub(crate) fn print_property<'a, 'b: 'a>(prop: Property<'a, 'b>, indent: usize) {
+/// Print a single `Property` with indentation, recursing for nested data.
+///
+/// # Arguments
+///
+/// * `prop` - The property to print.
+/// * `indent` - Number of spaces to indent each level.
+///
+/// This function is intended for debugging purposes.
+pub fn print_property<'a, 'b: 'a>(prop: Property<'a, 'b>, indent: usize) {
     match prop {
         Property::Object {
             class: _,
@@ -215,7 +221,7 @@ pub(crate) fn print_property<'a, 'b: 'a>(prop: Property<'a, 'b>, indent: usize) 
         }
         Property::Group(slice) => {
             println!("{:indent$}Group:", "", indent = indent);
-            // drill into every slot in the group
+            // Drill into every slot in the group
             for slot in slice {
                 print_property(slot, indent + 2);
             }
