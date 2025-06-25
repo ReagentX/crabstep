@@ -1,6 +1,8 @@
 //! Iterators for resolving properties in an [`Archived::Object`]
 
-use crate::models::{archivable::Archived, class::Class, output_data::OutputData, types::Type};
+use std::slice::Iter;
+
+use crate::models::{archived::Archived, class::Class, output_data::OutputData, types::Type};
 
 /// A single resolved property from an [`Archived::Object`].
 #[derive(Debug)]
@@ -26,11 +28,31 @@ pub enum Property<'a, 'b> {
 /// It is created from an `Archived` object and its associated type table.
 ///
 /// It is designed to traverse the properties of an object, allowing you to access nested objects and their properties recursively.
-#[derive(Debug)]
+///
+/// # Example
+///
+/// ```no_run
+/// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
+/// use crabstep::deserializer::iter::PropertyIterator;
+///
+/// // Create a new `TypedStreamDeserializer` and oxidize the data to get the root index.
+/// let data: &[u8] = &[];
+/// let mut deserializer = TypedStreamDeserializer::new(data);
+/// let root_idx = deserializer.oxidize().unwrap();
+///
+/// // This creates a `PropertyIterator` over the root object.
+/// let root_object = deserializer.resolve_properties(root_idx).unwrap();
+///
+/// // Create a property iterator for the root object.
+/// root_object.into_iter().for_each(|property| {
+///     println!("{:?}", property);
+/// });
+/// ```
+#[derive(Debug, Clone)]
 pub struct PropertyIterator<'a, 'b> {
     object_table: &'b [Archived<'a>],
     type_table: &'b [Vec<Type<'a>>],
-    property_groups: std::slice::Iter<'b, Vec<OutputData<'a>>>,
+    property_groups: Iter<'b, Vec<OutputData<'a>>>,
 }
 
 impl<'a, 'b> PropertyIterator<'a, 'b> {
@@ -52,6 +74,56 @@ impl<'a, 'b> PropertyIterator<'a, 'b> {
             type_table,
             property_groups: properties.iter(),
         })
+    }
+}
+
+impl<'a, 'b: 'a> PropertyIterator<'a, 'b> {
+    /// Collects only primitive data values from a `typedstream` using a depth-first-search over the deserialized object graph.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
+    ///
+    /// // Create a new `TypedStreamDeserializer` and oxidize the data to get the root index.
+    /// let data: &[u8] = &[];
+    /// let mut deserializer = TypedStreamDeserializer::new(data);
+    /// let root_idx = deserializer.oxidize().unwrap();
+    ///
+    /// // This creates a `PropertyIterator` over the root object.
+    /// let root_obj = deserializer.resolve_properties(root_idx).unwrap();
+    ///
+    /// // Emit the primitive values from the root object.
+    /// let primitives = root_obj.primitives();
+    /// primitives.into_iter().for_each(|primitive| {
+    ///     println!("{primitive}");
+    /// });
+    /// ```
+    #[must_use]
+    pub fn primitives(self) -> Vec<&'b OutputData<'a>> {
+        let mut primitives = Vec::new();
+        // Use an explicit stack for depth-first traversal
+        let mut stack: Vec<Property<'a, 'b>> = self.collect();
+        while let Some(prop) = stack.pop() {
+            match prop {
+                Property::Primitive(p) => primitives.push(p),
+                Property::Group(mut group) => {
+                    // push children in reverse to preserve order
+                    while let Some(child) = group.pop() {
+                        stack.push(child);
+                    }
+                }
+                Property::Object { data, .. } => {
+                    // data is a PropertyIterator; collect its items
+                    let mut nested: Vec<_> = data.collect();
+                    while let Some(child) = nested.pop() {
+                        stack.push(child);
+                    }
+                }
+            }
+        }
+        primitives.reverse();
+        primitives
     }
 }
 
@@ -99,13 +171,21 @@ impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
     }
 }
 
-/// Walk an entire `PropertyResolverIterator`, printing each property
-/// with `indent` spaces of indentation.
+/// Print a resolved [`PropertyIterator`] in a human-readable tree format for debugging.
+///
+/// This function recursively prints all properties with proper indentation to show the nested structure
+/// of the deserialized object graph.
+///
+/// # Arguments
+///
+/// * `iter` - The property iterator to print
+/// * `indent` - Number of spaces to indent each level (typically `2` or `4`)
 ///
 /// # Examples
 /// ```no_run
 /// use crabstep::deserializer::iter::print_resolved;
 /// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
+///
 /// let mut ds = TypedStreamDeserializer::new(&[]);
 /// let root = ds.oxidize().unwrap();
 ///
@@ -113,14 +193,44 @@ impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
 ///     print_resolved(iter, 2);
 /// }
 /// ```
+///
+/// This function is intended for debugging purposes. Example output appears as follows:
+///
+/// ```txt
+///   Group:
+///     Object: "NSMutableString"
+///       Group:
+///         Primitive: String("Noter test")
+///   Group:
+///     Primitive: SignedInteger(1)
+///     Primitive: UnsignedInteger(10)
+///   Group:
+///     Object: "NSDictionary"
+///       Group:
+///         Primitive: SignedInteger(1)
+///       Group:
+///         Object: "NSString"
+///           Group:
+///             Primitive: String("__kIMMessagePartAttributeName")
+///       Group:
+///         Object: "NSNumber"
+///           Group:
+///             Primitive: SignedInteger(0)
+/// ```
 pub fn print_resolved(iter: PropertyIterator<'_, '_>, indent: usize) {
     for prop in iter {
         print_property(prop, indent);
     }
 }
 
-/// Print a single `ResolvedProperty` with indentation, recursing for nested data.
-/// ```
+/// Print a single `Property` with indentation, recursing for nested data.
+///
+/// # Arguments
+///
+/// * `prop` - The property to print.
+/// * `indent` - Number of spaces to indent each level.
+///
+/// This function is intended for debugging purposes.
 pub(crate) fn print_property<'a, 'b: 'a>(prop: Property<'a, 'b>, indent: usize) {
     match prop {
         Property::Object {
@@ -135,7 +245,7 @@ pub(crate) fn print_property<'a, 'b: 'a>(prop: Property<'a, 'b>, indent: usize) 
         }
         Property::Group(slice) => {
             println!("{:indent$}Group:", "", indent = indent);
-            // drill into every slot in the group
+            // Drill into every slot in the group
             for slot in slice {
                 print_property(slot, indent + 2);
             }

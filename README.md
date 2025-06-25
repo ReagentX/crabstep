@@ -1,14 +1,18 @@
 # crabstep
 
-`crabstep` is a Rust library that deserializes Apple's `typedstream` data into cross-platform Rust data structures.
+`crabstep` is a Rust library that deserializes Apple's `typedstream` data into cross-platform data structures.
 
 ## Overview
 
-The typedstream format is a binary serialization protocol designed for `C` and `Objective-C` data structures. It is primarily used in Apple's Foundation framework, specifically within the `NSArchiver` and `NSUnarchiver` classes.
+The `typedstream` format is a binary serialization protocol designed for `C` and `Objective-C` data structures. It is primarily used in Apple's `Foundation` framework, specifically within the `NSArchiver` and `NSUnarchiver` classes.
 
-## ⚠️ Warning
+## Installation
 
-This library is in alpha state; the API surface may change.
+This library is available on [crates.io](https://crates.io/crates/crabstep).
+
+## Documentation
+
+Documentation is available on [docs.rs](https://docs.rs/crabstep).
 
 ### Quick Start
 
@@ -26,23 +30,22 @@ let mut file = File::open(typedstream_path).unwrap();
 let mut bytes = vec![];
 file.read_to_end(&mut bytes).unwrap();
 
-// Oxidize the typedstream
+// Create a deserializer
 let mut typedstream = TypedStreamDeserializer::new(&bytes);
-let root = typedstream.oxidize().unwrap();
 
 // Iterate over the typedstream's properties
-typedstream.resolve_properties(root)
+typedstream.iter_root()
     .unwrap()
     .for_each(|prop| println!("{:#?}", prop))
 ```
 
 ### Detailed examples
 
-This crate is heavily used by [`imessage-database`](https://crates.io/crates/imessage-database)'s [`body`](https://github.com/ReagentX/imessage-exporter/blob/develop/imessage-database/src/tables/messages/body.rs) module.
+This crate is heavily leveraged by [`imessage-database`](https://crates.io/crates/imessage-database)'s [`body`](https://github.com/ReagentX/imessage-exporter/blob/develop/imessage-database/src/tables/messages/body.rs) module.
 
 ## Origin
 
-The format is derived from the data structure used by `NeXTSTEP`'s `NXTypedStream` APIs.
+The `typedstream` format is derived from the data structure used by `NeXTSTEP`'s `NXTypedStream` APIs.
 
 ## Features
 
@@ -53,4 +56,8 @@ The format is derived from the data structure used by `NeXTSTEP`'s `NXTypedStrea
 
 ## Reverse Engineering
 
- A blog post describing the reverse engineering of `typedstream` is located [here](https://chrissardegna.com/blog/reverse-engineering-apples-typedstream-format/).
+ A blog post describing the reverse engineering of `typedstream` is available as [an in-depth article](https://chrissardegna.com/blog/reverse-engineering-apples-typedstream-format/).
+
+## Ferris
+
+![Ferris the crab walking along a hexadecimal path](src/test_data/crabstep.png)

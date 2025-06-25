@@ -1,8 +1,7 @@
 //! This module provides functions to read data from a byte slice
 
 use crate::{
-    constants::REFERENCE_TAG,
-    deserializer::consumed::Consumed,
+    deserializer::{constants::REFERENCE_TAG, consumed::Consumed},
     error::{Result, TypedStreamError},
 };
 
@@ -61,8 +60,7 @@ pub fn read_byte_at(data: &[u8], idx: usize) -> Result<&u8> {
 ///
 /// # Examples
 /// ```rust
-/// use crabstep::constants::REFERENCE_TAG;
-/// use crabstep::deserializer::read::read_pointer;
+/// use crabstep::{deserializer::{read::read_pointer, constants::REFERENCE_TAG}};
 ///
 /// let consumed = read_pointer(&0x94).unwrap();
 ///

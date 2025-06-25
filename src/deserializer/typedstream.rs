@@ -1,5 +1,5 @@
 /*!
- Logic used to deserialize data from a `typedstream`, focussing specifically on [`NSAttributedString`](https://developer.apple.com/documentation/foundation/nsattributedstring).
+ Logic used to deserialize data from a `typedstream`.
 
  A writeup about the reverse engineering of `typedstream` can be found [here](https://chrissardegna.com/blog/reverse-engineering-apples-typedstream-format/).
 */
@@ -7,8 +7,8 @@
 use std::collections::HashSet;
 
 use crate::{
-    constants::{EMPTY, END, START},
     deserializer::{
+        constants::{EMPTY, END, START},
         header::validate_header,
         iter::PropertyIterator,
         number::{read_double, read_float, read_signed_int, read_unsigned_int},
@@ -16,7 +16,7 @@ use crate::{
         string::read_string,
     },
     error::{Result, TypedStreamError},
-    models::{archivable::Archived, class::Class, output_data::OutputData, types::Type},
+    models::{archived::Archived, class::Class, output_data::OutputData, types::Type},
 };
 
 /// Contains logic and data used to deserialize data from a `typedstream`.
@@ -37,7 +37,7 @@ pub struct TypedStreamDeserializer<'a> {
     /// The first time a [`Type`] is seen, it is present in the stream literally,
     /// but afterwards are only referenced by index in order of appearance.
     pub type_table: Vec<Vec<Type<'a>>>,
-    /// As we parse the `typedstream`, build a table of seen archivable data to reference in the future
+    /// As we parse the `typedstream`, build a table of seen [`Archived`] data to reference in the future
     pub object_table: Vec<Archived<'a>>,
     /// We want to copy embedded types the first time they are seen, even if the types were resolved through references
     pub(crate) seen_embedded_types: HashSet<usize>,
@@ -65,7 +65,27 @@ impl<'a> TypedStreamDeserializer<'a> {
         }
     }
 
-    /// Parse the typed stream, consuming header and objects, returning the index of the top-level archived object.
+    /// Creates an iterator that resolves the properties of the root object in the `typedstream`.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
+    ///
+    /// let data: &[u8] = &[];
+    /// let mut deserializer = TypedStreamDeserializer::new(data);
+    ///
+    /// // Walk the object root, printing each primitive value
+    /// deserializer.iter_root().into_iter().for_each(|prop| {
+    ///    prop.primitives().into_iter().for_each(|data| println!("{data}"));
+    /// });
+    /// ```
+    pub fn iter_root(&mut self) -> Result<PropertyIterator<'a, '_>> {
+        let root = self.oxidize()?;
+        self.resolve_properties(root)
+    }
+
+    /// Parse the `typedstream`, consuming header and objects, returning the index of the top-level archived object.
     ///
     /// # Errors
     ///
@@ -88,25 +108,19 @@ impl<'a> TypedStreamDeserializer<'a> {
 
         // while self.position <= self.data.len() {
         let found_type = self.read_type(false)?;
-        println!(
-            "Found type at: {:?}: {:?}",
-            found_type,
-            self.type_table.get(found_type.unwrap())
-        );
 
         if let Some(type_index) = found_type {
             // Read the types at the specified index
             obj = self.read_types(type_index)?;
-            println!("End of object: {obj:?}");
         }
 
         match obj
-            .ok_or(TypedStreamError::UnmatchedEnd)?
+            .ok_or(TypedStreamError::InvalidObject)?
             .first()
-            .ok_or(TypedStreamError::UnmatchedEnd)?
+            .ok_or(TypedStreamError::InvalidObject)?
         {
             OutputData::Object(idx) => Ok(*idx),
-            _ => Err(TypedStreamError::UnmatchedEnd),
+            _ => Err(TypedStreamError::InvalidObject),
         }
     }
 
@@ -153,14 +167,9 @@ impl<'a> TypedStreamDeserializer<'a> {
 
     /// [`Archivable`] data can be embedded on a class or in a C String marked as [`Type::EmbeddedData`]
     fn read_embedded_type(&mut self) -> Result<Option<usize>> {
-        println!("Reading embedded data at position: 0x{:x}", self.position);
         match *self.consume_current_byte()? {
             START => {
                 // 0x84 indicates the start of embedded data
-                println!(
-                    "Found embedded data start at position: 0x{:x}",
-                    self.position
-                );
                 self.read_type(true)
             }
             EMPTY => Ok(None),
@@ -177,7 +186,6 @@ impl<'a> TypedStreamDeserializer<'a> {
 
     fn read_string(&mut self) -> Result<usize> {
         let current_byte = *self.consume_current_byte()?;
-        println!("Reading string at position: 0x{:x}", self.position);
         match current_byte {
             START => {
                 let string_data = read_string(&self.data[self.position..])?;
@@ -186,10 +194,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                     .push(vec![Type::new_string(string_data.value)]);
                 Ok(self.type_table.len() - 1)
             }
-            EMPTY => {
-                println!("Found empty string at position: 0x{:x}", self.position - 1);
-                Err(TypedStreamError::EmptyString)
-            }
+            EMPTY => Err(TypedStreamError::EmptyString),
             ptr => {
                 let pointer = read_pointer(&ptr)?.map(|v| v as usize);
                 if let Some(Type::String(_)) = self
@@ -206,8 +211,6 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     fn read_class(&mut self) -> Result<Option<usize>> {
-        println!("Reading class at position: 0x{:x}", self.position);
-
         // index of the first START we encounter (the bottom-most child)
         let mut first_new: Option<usize> = None;
         // index of the most recently pushed class (current “child”)
@@ -218,7 +221,6 @@ impl<'a> TypedStreamDeserializer<'a> {
         loop {
             match *self.consume_current_byte()? {
                 START => {
-                    println!("new at 0x{:x}", self.position);
                     let name_idx = self.read_string()?;
                     let version = self.read_unsigned_int()?;
 
@@ -241,12 +243,10 @@ impl<'a> TypedStreamDeserializer<'a> {
                     prev_new = Some(idx);
                 }
                 EMPTY => {
-                    println!("final class found!");
                     final_parent = None;
                     break;
                 }
                 ptr => {
-                    println!("pointer");
                     let pointer = read_pointer(&ptr)?;
 
                     final_parent = Some(pointer.value as usize);
@@ -274,8 +274,6 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     fn read_object(&mut self) -> Result<usize> {
-        println!("Reading object type at position: 0x{:x}", self.position);
-
         match *read_byte_at(self.data, self.position)? {
             START => {
                 let placeholder_index = self.object_table.len();
@@ -293,11 +291,6 @@ impl<'a> TypedStreamDeserializer<'a> {
                         && *read_byte_at(self.data, self.position)? != END
                     {
                         // Read the next type, which should be an object
-                        println!(
-                            "inside object: 0x{:x} -> {:x}",
-                            self.position,
-                            read_byte_at(self.data, self.position)?
-                        );
                         if let Some(next_index) = self.read_type(false)? {
                             // Recursively read the types for this object
                             if let Some(data) = self.read_types(next_index)? {
@@ -313,11 +306,9 @@ impl<'a> TypedStreamDeserializer<'a> {
                         }
                     }
                 }
-                println!("End of object found at position: 0x{:x}", self.position);
                 Ok(placeholder_index)
             }
             ptr => {
-                println!("Reading object pointer at position: 0x{:x}", self.position);
                 let pointer = read_pointer(&ptr)?;
                 Ok(pointer.value as usize)
             }
@@ -403,20 +394,12 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// to avoid cloning large type vectors.
     fn read_type(&mut self, is_embedded_type: bool) -> Result<Option<usize>> {
         let byte = *self.consume_current_byte()?;
-        println!("Parsing byte: {:x} at {:x}", byte, self.position - 1);
 
         match byte {
             START => {
-                println!("Start type at position {:x}", self.position);
                 // Get the type of the object
                 let new_types = Type::read_new_type(&self.data[self.position..])?;
                 let new_type_index = self.type_table.len();
-                println!(
-                    "Parsed type of length {:?}: {:?}",
-                    new_types.value.len(),
-                    new_types.value
-                );
-
                 // Embedded data is stored as a String in the objects table
                 if is_embedded_type {
                     self.object_table.push(Archived::Type(new_type_index));
@@ -429,16 +412,9 @@ impl<'a> TypedStreamDeserializer<'a> {
                 self.position += new_types.bytes_consumed;
                 Ok(Some(self.type_table.len() - 1))
             }
-            EMPTY => {
-                println!("Empty type at position {:x}", self.position - 1);
-                Ok(None)
-            }
-            END => {
-                println!("End type at position {:x}", self.position - 1);
-                Ok(None)
-            }
+            EMPTY => Ok(None),
+            END => Ok(None),
             ptr => {
-                println!("Pointer type at position {:x}", self.position - 1);
                 let pointer = read_pointer(&ptr)?;
                 let ref_tag = pointer.value as usize;
 

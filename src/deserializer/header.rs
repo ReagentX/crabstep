@@ -1,4 +1,4 @@
-//! Header validation for TypedStream format
+//! Header validation for `TypedStream` format
 
 use crate::{
     deserializer::{
@@ -9,7 +9,7 @@ use crate::{
     error::{Result, TypedStreamError},
 };
 
-/// Validate the typed stream header for macOS/iOS format.
+/// Validate the `typedstream` header for macOS/iOS format.
 ///
 /// Reads version, signature, and system version, returning a [`Consumed<bool>`]
 /// indicating validity and bytes consumed.
@@ -59,7 +59,7 @@ pub fn validate_header(data: &[u8]) -> Result<Consumed<bool>> {
 mod header_tests {
     use std::{env::current_dir, fs::File, io::Read};
 
-    use crate::{constants::I_16, deserializer::header::validate_header};
+    use crate::deserializer::{constants::I_16, header::validate_header};
 
     #[test]
     fn can_validate_header() {

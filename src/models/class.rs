@@ -1,6 +1,6 @@
-//! This module defines the `Class` struct, which represents a class stored in the `typedstream`
+//! Represents a class stored in a `typedstream`
 
-/// Represents a class stored in the `typedstream`
+/// Represents a class stored in a `typedstream`
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Class {
     /// A reference to the class name stored in the [`type_table`](crate::deserializer::typedstream::TypedStreamDeserializer::type_table)
@@ -12,9 +12,11 @@ pub struct Class {
 }
 
 impl Class {
-    /// Creates a new class with the given name, version, and optional child
+    /// Creates a new class with the given name, version, and optional parent
+    ///
+    /// This method is used internally by the deserializer and is not part of the public API.
     #[must_use]
-    pub fn new(name: usize, version: u64, parent: Option<usize>) -> Self {
+    pub(crate) fn new(name: usize, version: u64, parent: Option<usize>) -> Self {
         Self {
             name_index: name,
             version,
