@@ -57,6 +57,52 @@ impl<'a, 'b> PropertyIterator<'a, 'b> {
     }
 }
 
+impl<'a, 'b: 'a> PropertyIterator<'a, 'b> {
+    /// Collects only primitive data values from a `typedstream` using a depth-first-search over the deserialized object graph.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
+    ///
+    /// let data: &[u8] = &[];
+    /// let mut deserializer = TypedStreamDeserializer::new(data);
+    /// let root_idx = deserializer.oxidize().unwrap();
+    /// let root_obj = deserializer.resolve_properties(root_idx).unwrap();
+    ///
+    /// // Emit the primitive values from the root object.
+    /// let primitives = root_obj.primitives();
+    /// primitives.into_iter().for_each(|primitive| {
+    ///     println!("{primitive}");
+    /// });
+    /// ```
+    pub fn primitives(self) -> Vec<&'b OutputData<'a>> {
+        let mut primitives = Vec::new();
+        // Use an explicit stack for depth-first traversal
+        let mut stack: Vec<Property<'a, 'b>> = self.collect();
+        while let Some(prop) = stack.pop() {
+            match prop {
+                Property::Primitive(p) => primitives.push(p),
+                Property::Group(mut group) => {
+                    // push children in reverse to preserve order
+                    while let Some(child) = group.pop() {
+                        stack.push(child);
+                    }
+                }
+                Property::Object { data, .. } => {
+                    // data is a PropertyIterator; collect its items
+                    let mut nested: Vec<_> = data.collect();
+                    while let Some(child) = nested.pop() {
+                        stack.push(child);
+                    }
+                }
+            }
+        }
+        primitives.reverse();
+        primitives
+    }
+}
+
 impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
     type Item = Property<'a, 'b>;
 
