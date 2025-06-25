@@ -30,7 +30,7 @@ let mut file = File::open(typedstream_path).unwrap();
 let mut bytes = vec![];
 file.read_to_end(&mut bytes).unwrap();
 
-// Oxidize the typedstream
+// Create a deserializer
 let mut typedstream = TypedStreamDeserializer::new(&bytes);
 
 // Iterate over the typedstream's properties
