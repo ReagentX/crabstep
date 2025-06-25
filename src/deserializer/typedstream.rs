@@ -4,8 +4,6 @@
  A writeup about the reverse engineering of `typedstream` can be found [here](https://chrissardegna.com/blog/reverse-engineering-apples-typedstream-format/).
 */
 
-use std::collections::HashSet;
-
 use crate::{
     deserializer::{
         constants::{EMPTY, END, START},
@@ -40,7 +38,7 @@ pub struct TypedStreamDeserializer<'a> {
     /// As we parse the `typedstream`, build a table of seen [`Archived`] data to reference in the future
     pub object_table: Vec<Archived<'a>>,
     /// We want to copy embedded types the first time they are seen, even if the types were resolved through references
-    pub(crate) seen_embedded_types: HashSet<usize>,
+    pub(crate) seen_embedded_types: Vec<usize>,
 }
 
 impl<'a> TypedStreamDeserializer<'a> {
@@ -61,7 +59,7 @@ impl<'a> TypedStreamDeserializer<'a> {
             position: 0,
             type_table: Vec::with_capacity(16),
             object_table: Vec::with_capacity(32),
-            seen_embedded_types: HashSet::with_capacity(8),
+            seen_embedded_types: Vec::with_capacity(8),
         }
     }
 
@@ -153,12 +151,15 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     /// Reads the next byte from the stream, advancing the position.
+    #[inline(always)]
     fn consume_current_byte(&mut self) -> Result<&u8> {
         let byte = read_byte_at(self.data, self.position)?;
         self.position += 1;
         Ok(byte)
     }
 
+    /// Reads an unsigned integer from the stream, advancing the position.
+    #[inline(always)]
     fn read_unsigned_int(&mut self) -> Result<u64> {
         let unsigned_int = read_unsigned_int(&self.data[self.position..])?;
         self.position += unsigned_int.bytes_consumed;
@@ -211,11 +212,11 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     fn read_class(&mut self) -> Result<Option<usize>> {
-        // index of the first START we encounter (the bottom-most child)
+        // Index of the first START we encounter (the bottom-most child)
         let mut first_new: Option<usize> = None;
-        // index of the most recently pushed class (current “child”)
+        // Index of the most recently pushed class (current “child”)
         let mut prev_new: Option<usize> = None;
-        // parent for the outer-most new class (set by EMPTY or a pointer)
+        // Parent for the outer-most new class (set by EMPTY or a pointer)
         let final_parent: Option<usize>;
 
         loop {
@@ -316,8 +317,8 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     /// Reads numeric types (signed, unsigned, float, double) and returns the corresponding `OutputData`
-    fn read_number(&mut self, ty: &Type<'a>) -> Result<OutputData<'a>> {
-        match ty {
+    fn read_number(&mut self, table_index: usize, type_index: usize) -> Result<OutputData<'a>> {
+        match self.type_table[table_index][type_index] {
             Type::SignedInt => {
                 let signed_int = read_signed_int(&self.data[self.position..])?;
                 self.position += signed_int.bytes_consumed;
@@ -343,12 +344,13 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     fn read_types(&mut self, types_index: usize) -> Result<Option<Vec<OutputData<'a>>>> {
-        // Clone types to avoid holding an immutable borrow on self during parsing
-        let types = self.type_table[types_index].clone();
-        let mut out_v = Vec::with_capacity(types.len());
+        // Start reading types from the specified index in the type table
+        let len = self.type_table[types_index].len();
+        let mut out_v = Vec::with_capacity(len);
 
-        for ty in types {
-            match ty {
+        for i in 0..len {
+            // Read the next type from the type table
+            match self.type_table[types_index][i] {
                 Type::Utf8String => {
                     let str_data = read_string(&self.data[self.position..])?;
                     self.position += str_data.bytes_consumed;
@@ -378,9 +380,9 @@ impl<'a> TypedStreamDeserializer<'a> {
                     // Read a single byte for unknown data
                     out_v.push(OutputData::Byte(byte));
                 }
-                // numeric types
+                // Handle all numeric types
                 Type::SignedInt | Type::UnsignedInt | Type::Float | Type::Double => {
-                    let val = self.read_number(&ty)?;
+                    let val = self.read_number(types_index, i)?;
                     out_v.push(val);
                 }
             }
@@ -400,20 +402,19 @@ impl<'a> TypedStreamDeserializer<'a> {
                 // Get the type of the object
                 let new_types = Type::read_new_type(&self.data[self.position..])?;
                 let new_type_index = self.type_table.len();
-                // Embedded data is stored as a String in the objects table
+                // Embedded data is stored as a Type in the objects table
                 if is_embedded_type {
                     self.object_table.push(Archived::Type(new_type_index));
                     // We only want to include the first embedded reference tag, not subsequent references to the same embed
                     self.seen_embedded_types
-                        .insert(self.object_table.len().saturating_sub(1));
+                        .push(self.object_table.len().saturating_sub(1));
                 }
 
                 self.type_table.push(new_types.value);
                 self.position += new_types.bytes_consumed;
                 Ok(Some(self.type_table.len() - 1))
             }
-            EMPTY => Ok(None),
-            END => Ok(None),
+            END | EMPTY => Ok(None),
             ptr => {
                 let pointer = read_pointer(&ptr)?;
                 let ref_tag = pointer.value as usize;
@@ -428,7 +429,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                         && self.type_table.get(ref_tag as usize).is_some()
                     {
                         self.object_table.push(Archived::Type(ref_tag));
-                        self.seen_embedded_types.insert(ref_tag);
+                        self.seen_embedded_types.push(ref_tag);
                     }
                 }
 
