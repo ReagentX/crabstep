@@ -12,7 +12,9 @@ pub struct Class {
 }
 
 impl Class {
-    /// Creates a new class with the given name, version, and optional child
+    /// Creates a new class with the given name, version, and optional parent
+    ///
+    /// This method is used internally by the deserializer and is not part of the public API.
     #[must_use]
     pub(crate) fn new(name: usize, version: u64, parent: Option<usize>) -> Self {
         Self {

@@ -99,6 +99,7 @@ impl<'a, 'b: 'a> PropertyIterator<'a, 'b> {
     ///     println!("{primitive}");
     /// });
     /// ```
+    #[must_use]
     pub fn primitives(self) -> Vec<&'b OutputData<'a>> {
         let mut primitives = Vec::new();
         // Use an explicit stack for depth-first traversal
@@ -170,13 +171,21 @@ impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
     }
 }
 
-/// Walk an entire `PropertyResolverIterator`, printing each property
-/// with `indent` spaces of indentation.
+/// Print a resolved [`PropertyIterator`] in a human-readable tree format for debugging.
+///
+/// This function recursively prints all properties with proper indentation to show the nested structure
+/// of the deserialized object graph.
+///
+/// # Arguments
+///
+/// * `iter` - The property iterator to print
+/// * `indent` - Number of spaces to indent each level (typically 2 or 4)
 ///
 /// # Examples
 /// ```no_run
 /// use crabstep::deserializer::iter::print_resolved;
 /// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
+///
 /// let mut ds = TypedStreamDeserializer::new(&[]);
 /// let root = ds.oxidize().unwrap();
 ///
