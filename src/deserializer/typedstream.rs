@@ -115,12 +115,12 @@ impl<'a> TypedStreamDeserializer<'a> {
         }
 
         match obj
-            .ok_or(TypedStreamError::UnmatchedEnd)?
+            .ok_or(TypedStreamError::InvalidObject)?
             .first()
-            .ok_or(TypedStreamError::UnmatchedEnd)?
+            .ok_or(TypedStreamError::InvalidObject)?
         {
             OutputData::Object(idx) => Ok(*idx),
-            _ => Err(TypedStreamError::UnmatchedEnd),
+            _ => Err(TypedStreamError::InvalidObject),
         }
     }
 

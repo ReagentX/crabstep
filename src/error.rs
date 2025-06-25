@@ -20,10 +20,8 @@ pub type Result<T> = std::result::Result<T, TypedStreamError>;
 /// Errors that can occur while deserializing a `typedstream`.
 #[derive(Debug)]
 pub enum TypedStreamError {
-    /// A start tag without a matching end tag was found.
-    UnmatchedStart,
-    /// An end tag without a matching start tag was found.
-    UnmatchedEnd,
+    /// An invalid object was encountered, such as an unmatched end marker.
+    InvalidObject,
     /// Attempted to access an index outside the stream bounds (requested, length).
     OutOfBounds(usize, usize),
     /// Error converting a slice into an array of fixed size.
@@ -38,15 +36,14 @@ pub enum TypedStreamError {
     InvalidArray(usize),
     /// Encountered an empty string where data was expected.
     EmptyString,
-    /// File read error, such as when reading from a file.
-    FileReadError(std::io::Error),
 }
 
 impl Display for TypedStreamError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TypedStreamError::UnmatchedStart => write!(f, "Unmatched start in stream"),
-            TypedStreamError::UnmatchedEnd => write!(f, "Unmatched end in stream"),
+            TypedStreamError::InvalidObject => {
+                write!(f, "Invalid object encountered in typedstream!")
+            }
             TypedStreamError::OutOfBounds(n, len) => write!(
                 f,
                 "Out of bounds access: tried to access byte {n} in a stream of length {len}"
@@ -65,7 +62,6 @@ impl Display for TypedStreamError {
                 write!(f, "Invalid array at index: {offset:x}")
             }
             TypedStreamError::EmptyString => write!(f, "Empty string encountered in typedstream"),
-            TypedStreamError::FileReadError(error) => write!(f, "File read error: {error}"),
         }
     }
 }
@@ -79,12 +75,6 @@ impl From<TryFromSliceError> for TypedStreamError {
 impl From<std::str::Utf8Error> for TypedStreamError {
     fn from(error: std::str::Utf8Error) -> Self {
         TypedStreamError::StringParseError(error)
-    }
-}
-
-impl From<std::io::Error> for TypedStreamError {
-    fn from(error: std::io::Error) -> Self {
-        TypedStreamError::FileReadError(error)
     }
 }
 
