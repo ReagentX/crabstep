@@ -179,7 +179,7 @@ impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
 /// # Arguments
 ///
 /// * `iter` - The property iterator to print
-/// * `indent` - Number of spaces to indent each level (typically 2 or 4)
+/// * `indent` - Number of spaces to indent each level (typically `2` or `4`)
 ///
 /// # Examples
 /// ```no_run
