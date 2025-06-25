@@ -45,7 +45,7 @@ This crate is heavily leveraged by [`imessage-database`](https://crates.io/crate
 
 ## Origin
 
-The format is derived from the data structure used by `NeXTSTEP`'s `NXTypedStream` APIs.
+The `typedstream` format is derived from the data structure used by `NeXTSTEP`'s `NXTypedStream` APIs.
 
 ## Features
 
