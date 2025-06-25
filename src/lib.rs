@@ -12,7 +12,7 @@ pub use models::{archivable::Archived, output_data::OutputData};
 
 #[cfg(test)]
 mod test_typedstream_deserializer {
-    use std::{env::current_dir, fs::File, io::Read, vec};
+    use std::{env::current_dir, fs::File, io::Read};
 
     use crate::{
         deserializer::{iter::print_resolved, typedstream::TypedStreamDeserializer},
