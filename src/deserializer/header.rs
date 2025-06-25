@@ -59,7 +59,7 @@ pub fn validate_header(data: &[u8]) -> Result<Consumed<bool>> {
 mod header_tests {
     use std::{env::current_dir, fs::File, io::Read};
 
-    use crate::{constants::I_16, deserializer::header::validate_header};
+    use crate::deserializer::{constants::I_16, header::validate_header};
 
     #[test]
     fn can_validate_header() {

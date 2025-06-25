@@ -2,7 +2,6 @@
 #![deny(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-pub mod constants;
 pub mod deserializer;
 pub mod error;
 pub mod models;

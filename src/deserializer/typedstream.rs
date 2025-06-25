@@ -7,8 +7,8 @@
 use std::collections::HashSet;
 
 use crate::{
-    constants::{EMPTY, END, START},
     deserializer::{
+        constants::{EMPTY, END, START},
         header::validate_header,
         iter::PropertyIterator,
         number::{read_double, read_float, read_signed_int, read_unsigned_int},

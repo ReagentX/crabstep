@@ -40,9 +40,9 @@ pub fn read_string(data: &[u8]) -> Result<Consumed<&str>> {
 
 #[cfg(test)]
 mod string_tests {
-    use crate::{
+    use crate::deserializer::{
         constants::{I_16, I_32},
-        deserializer::string::read_string,
+        string::read_string,
     };
 
     #[test]
