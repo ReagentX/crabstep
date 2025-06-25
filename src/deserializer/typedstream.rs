@@ -402,7 +402,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                 // Get the type of the object
                 let new_types = Type::read_new_type(&self.data[self.position..])?;
                 let new_type_index = self.type_table.len();
-                // Embedded data is stored as a String in the objects table
+                // Embedded data is stored as a Type in the objects table
                 if is_embedded_type {
                     self.object_table.push(Archived::Type(new_type_index));
                     // We only want to include the first embedded reference tag, not subsequent references to the same embed
