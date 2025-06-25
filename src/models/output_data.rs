@@ -20,3 +20,66 @@ pub enum OutputData<'a> {
     /// Reference to another object by index in the [`object_table`](crate::deserializer::typedstream::TypedStreamDeserializer::object_table).
     Object(usize),
 }
+
+impl<'a> OutputData<'a> {
+    /// Returns the inner string if this is a `String` variant.
+    pub fn as_str(&self) -> Option<&'a str> {
+        if let OutputData::String(s) = self {
+            Some(s)
+        } else {
+            None
+        }
+    }
+
+    /// Returns the inner signed integer if this is a `SignedInteger` variant.
+    pub fn as_i64(&self) -> Option<i64> {
+        if let OutputData::SignedInteger(i) = self {
+            Some(*i)
+        } else {
+            None
+        }
+    }
+
+    /// Returns the inner unsigned integer if this is an `UnsignedInteger` variant.
+    pub fn as_u64(&self) -> Option<u64> {
+        if let OutputData::UnsignedInteger(u) = self {
+            Some(*u)
+        } else {
+            None
+        }
+    }
+
+    /// Returns the inner float if this is a `Float` variant.
+    pub fn as_f32(&self) -> Option<f32> {
+        if let OutputData::Float(f) = self {
+            Some(*f)
+        } else {
+            None
+        }
+    }
+
+    /// Returns the inner double if this is a `Double` variant.
+    pub fn as_f64(&self) -> Option<f64> {
+        if let OutputData::Double(d) = self {
+            Some(*d)
+        } else {
+            None
+        }
+    }
+}
+
+// Implement Display for human-friendly formatting
+impl<'a> std::fmt::Display for OutputData<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OutputData::String(s) => write!(f, "{s}"),
+            OutputData::SignedInteger(i) => write!(f, "{i}"),
+            OutputData::UnsignedInteger(u) => write!(f, "{u}"),
+            OutputData::Float(fp) => write!(f, "{fp}"),
+            OutputData::Double(d) => write!(f, "{d}"),
+            OutputData::Byte(b) => write!(f, "0x{:02x}", b),
+            OutputData::Array(arr) => write!(f, "[{:02x?}]", arr),
+            OutputData::Object(idx) => write!(f, "Object({idx})"),
+        }
+    }
+}
