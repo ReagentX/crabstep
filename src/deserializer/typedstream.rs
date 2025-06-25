@@ -153,6 +153,7 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     /// Reads the next byte from the stream, advancing the position.
+    #[inline(always)]
     fn consume_current_byte(&mut self) -> Result<&u8> {
         let byte = read_byte_at(self.data, self.position)?;
         self.position += 1;
@@ -316,8 +317,8 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     /// Reads numeric types (signed, unsigned, float, double) and returns the corresponding `OutputData`
-    fn read_number(&mut self, ty: &Type<'a>) -> Result<OutputData<'a>> {
-        match ty {
+    fn read_number(&mut self, table_index: usize, type_index: usize) -> Result<OutputData<'a>> {
+        match self.type_table[table_index][type_index] {
             Type::SignedInt => {
                 let signed_int = read_signed_int(&self.data[self.position..])?;
                 self.position += signed_int.bytes_consumed;
@@ -343,12 +344,12 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     fn read_types(&mut self, types_index: usize) -> Result<Option<Vec<OutputData<'a>>>> {
-        // Clone types to avoid holding an immutable borrow on self during parsing
-        let types = self.type_table[types_index].clone();
-        let mut out_v = Vec::with_capacity(types.len());
-
-        for ty in types {
-            match ty {
+        // Start reading types from the specified index in the type table
+        let len = self.type_table[types_index].len();
+        let mut out_v = Vec::with_capacity(len);
+        for i in 0..len {
+            // Read the next type from the type table
+            match self.type_table[types_index][i] {
                 Type::Utf8String => {
                     let str_data = read_string(&self.data[self.position..])?;
                     self.position += str_data.bytes_consumed;
@@ -378,9 +379,9 @@ impl<'a> TypedStreamDeserializer<'a> {
                     // Read a single byte for unknown data
                     out_v.push(OutputData::Byte(byte));
                 }
-                // numeric types
+                // Handle all numeric types
                 Type::SignedInt | Type::UnsignedInt | Type::Float | Type::Double => {
-                    let val = self.read_number(&ty)?;
+                    let val = self.read_number(types_index, i)?;
                     out_v.push(val);
                 }
             }
