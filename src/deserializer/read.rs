@@ -22,6 +22,7 @@ use crate::{
 ///
 /// assert_eq!(slice, &[0x01, 0x02]);
 /// ```
+#[inline(always)]
 pub fn read_exact_bytes(data: &[u8], n: usize) -> Result<&[u8]> {
     let range = data
         .get(0..n)
@@ -45,6 +46,7 @@ pub fn read_exact_bytes(data: &[u8], n: usize) -> Result<&[u8]> {
 ///
 /// assert_eq!(*byte, 0xFF);
 /// ```
+#[inline(always)]
 pub fn read_byte_at(data: &[u8], idx: usize) -> Result<&u8> {
     data.get(idx)
         .ok_or(TypedStreamError::OutOfBounds(idx, data.len()))
@@ -67,6 +69,7 @@ pub fn read_byte_at(data: &[u8], idx: usize) -> Result<&u8> {
 /// assert_eq!(consumed.value, 2);
 /// assert_eq!(consumed.bytes_consumed, 1);
 /// ```
+#[inline(always)]
 pub fn read_pointer(pointer: &u8) -> Result<Consumed<u64>> {
     let result = u64::from(*pointer)
         .checked_sub(REFERENCE_TAG)
