@@ -28,6 +28,26 @@ pub enum Property<'a, 'b> {
 /// It is created from an `Archived` object and its associated type table.
 ///
 /// It is designed to traverse the properties of an object, allowing you to access nested objects and their properties recursively.
+///
+/// # Example
+///
+/// ```no_run
+/// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
+/// use crabstep::deserializer::iter::PropertyIterator;
+///
+/// // Create a new `TypedStreamDeserializer` and oxidize the data to get the root index.
+/// let data: &[u8] = &[];
+/// let mut deserializer = TypedStreamDeserializer::new(data);
+/// let root_idx = deserializer.oxidize().unwrap();
+///
+/// // This creates a `PropertyIterator` over the root object.
+/// let root_object = deserializer.resolve_properties(root_idx).unwrap();
+///
+/// // Create a property iterator for the root object.
+/// root_object.into_iter().for_each(|property| {
+///     println!("{:?}", property);
+/// });
+/// ```
 #[derive(Debug, Clone)]
 pub struct PropertyIterator<'a, 'b> {
     object_table: &'b [Archived<'a>],
@@ -65,9 +85,12 @@ impl<'a, 'b: 'a> PropertyIterator<'a, 'b> {
     /// ```no_run
     /// use crabstep::deserializer::typedstream::TypedStreamDeserializer;
     ///
+    /// // Create a new `TypedStreamDeserializer` and oxidize the data to get the root index.
     /// let data: &[u8] = &[];
     /// let mut deserializer = TypedStreamDeserializer::new(data);
     /// let root_idx = deserializer.oxidize().unwrap();
+    ///
+    /// // This creates a `PropertyIterator` over the root object.
     /// let root_obj = deserializer.resolve_properties(root_idx).unwrap();
     ///
     /// // Emit the primitive values from the root object.
