@@ -1,11 +1,23 @@
-//! Error types and result alias for typed stream deserialization
+//! Error types and result alias for `typedstream` deserialization
 
 use std::{array::TryFromSliceError, fmt::Display};
 
 /// A specialized [`Result`] type for `typedstream` operations.
+///
+/// # Examples
+///
+/// ```no_run
+/// use crabstep::error::Result;
+/// use crabstep::TypedStreamDeserializer;
+///
+/// fn get_root(data: &[u8]) -> Result<usize> {
+///    let mut deserializer = TypedStreamDeserializer::new(data);
+///    deserializer.oxidize()
+/// }
+/// ```
 pub type Result<T> = std::result::Result<T, TypedStreamError>;
 
-/// Errors that can occur while deserializing a typed stream.
+/// Errors that can occur while deserializing a `typedstream`.
 #[derive(Debug)]
 pub enum TypedStreamError {
     /// A start tag without a matching end tag was found.
@@ -18,7 +30,7 @@ pub enum TypedStreamError {
     SliceError(TryFromSliceError),
     /// Error parsing a string as UTF-8.
     StringParseError(std::str::Utf8Error),
-    /// The typed stream header was invalid.
+    /// The `typedstream` header was invalid.
     InvalidHeader,
     /// Encountered an invalid pointer value.
     InvalidPointer(u8),

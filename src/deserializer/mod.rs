@@ -1,4 +1,4 @@
-//! This module provides a deserializer for the `typedstream` format
+//! Provides a deserializer for the `typedstream` format
 
 pub mod constants;
 pub mod consumed;

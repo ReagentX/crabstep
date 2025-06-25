@@ -9,7 +9,7 @@ use crate::{
     error::{Result, TypedStreamError},
 };
 
-/// Validate the typed stream header for macOS/iOS format.
+/// Validate the `typedstream` header for macOS/iOS format.
 ///
 /// Reads version, signature, and system version, returning a [`Consumed<bool>`]
 /// indicating validity and bytes consumed.

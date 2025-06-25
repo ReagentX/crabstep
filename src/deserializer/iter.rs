@@ -2,7 +2,7 @@
 
 use std::slice::Iter;
 
-use crate::models::{archivable::Archived, class::Class, output_data::OutputData, types::Type};
+use crate::models::{archived::Archived, class::Class, output_data::OutputData, types::Type};
 
 /// A single resolved property from an [`Archived::Object`].
 #[derive(Debug)]

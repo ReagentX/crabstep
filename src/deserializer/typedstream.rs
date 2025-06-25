@@ -16,7 +16,7 @@ use crate::{
         string::read_string,
     },
     error::{Result, TypedStreamError},
-    models::{archivable::Archived, class::Class, output_data::OutputData, types::Type},
+    models::{archived::Archived, class::Class, output_data::OutputData, types::Type},
 };
 
 /// Contains logic and data used to deserialize data from a `typedstream`.
@@ -85,7 +85,7 @@ impl<'a> TypedStreamDeserializer<'a> {
         self.resolve_properties(root)
     }
 
-    /// Parse the typed stream, consuming header and objects, returning the index of the top-level archived object.
+    /// Parse the `typedstream`, consuming header and objects, returning the index of the top-level archived object.
     ///
     /// # Errors
     ///

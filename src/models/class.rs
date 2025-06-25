@@ -1,6 +1,6 @@
-//! This module defines the `Class` struct, which represents a class stored in the `typedstream`
+//! Represents a class stored in a `typedstream`
 
-/// Represents a class stored in the `typedstream`
+/// Represents a class stored in a `typedstream`
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Class {
     /// A reference to the class name stored in the [`type_table`](crate::deserializer::typedstream::TypedStreamDeserializer::type_table)

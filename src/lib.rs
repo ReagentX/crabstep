@@ -7,7 +7,7 @@ pub mod error;
 pub mod models;
 
 pub use deserializer::{iter::PropertyIterator, typedstream::TypedStreamDeserializer};
-pub use models::{archivable::Archived, output_data::OutputData};
+pub use models::{archived::Archived, output_data::OutputData};
 
 #[cfg(test)]
 mod test_typedstream_deserializer {
@@ -15,7 +15,7 @@ mod test_typedstream_deserializer {
 
     use crate::{
         deserializer::{iter::print_resolved, typedstream::TypedStreamDeserializer},
-        models::{archivable::Archived, class::Class, output_data::OutputData, types::Type},
+        models::{archived::Archived, class::Class, output_data::OutputData, types::Type},
     };
 
     #[test]
