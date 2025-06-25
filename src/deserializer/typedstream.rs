@@ -158,7 +158,7 @@ impl<'a> TypedStreamDeserializer<'a> {
         Ok(byte)
     }
 
-    /// Reads a signed integer from the stream, advancing the position.
+    /// Reads an unsigned integer from the stream, advancing the position.
     #[inline(always)]
     fn read_unsigned_int(&mut self) -> Result<u64> {
         let unsigned_int = read_unsigned_int(&self.data[self.position..])?;
