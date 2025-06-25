@@ -14,7 +14,7 @@ pub struct Class {
 impl Class {
     /// Creates a new class with the given name, version, and optional child
     #[must_use]
-    pub fn new(name: usize, version: u64, parent: Option<usize>) -> Self {
+    pub(crate) fn new(name: usize, version: u64, parent: Option<usize>) -> Self {
         Self {
             name_index: name,
             version,
