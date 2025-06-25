@@ -4,8 +4,6 @@
  A writeup about the reverse engineering of `typedstream` can be found [here](https://chrissardegna.com/blog/reverse-engineering-apples-typedstream-format/).
 */
 
-use std::collections::HashSet;
-
 use crate::{
     deserializer::{
         constants::{EMPTY, END, START},
@@ -40,7 +38,7 @@ pub struct TypedStreamDeserializer<'a> {
     /// As we parse the `typedstream`, build a table of seen [`Archived`] data to reference in the future
     pub object_table: Vec<Archived<'a>>,
     /// We want to copy embedded types the first time they are seen, even if the types were resolved through references
-    pub(crate) seen_embedded_types: HashSet<usize>,
+    pub(crate) seen_embedded_types: Vec<usize>,
 }
 
 impl<'a> TypedStreamDeserializer<'a> {
@@ -61,7 +59,7 @@ impl<'a> TypedStreamDeserializer<'a> {
             position: 0,
             type_table: Vec::with_capacity(16),
             object_table: Vec::with_capacity(32),
-            seen_embedded_types: HashSet::with_capacity(8),
+            seen_embedded_types: Vec::with_capacity(8),
         }
     }
 
@@ -406,7 +404,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                     self.object_table.push(Archived::Type(new_type_index));
                     // We only want to include the first embedded reference tag, not subsequent references to the same embed
                     self.seen_embedded_types
-                        .insert(self.object_table.len().saturating_sub(1));
+                        .push(self.object_table.len().saturating_sub(1));
                 }
 
                 self.type_table.push(new_types.value);
@@ -429,7 +427,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                         && self.type_table.get(ref_tag as usize).is_some()
                     {
                         self.object_table.push(Archived::Type(ref_tag));
-                        self.seen_embedded_types.insert(ref_tag);
+                        self.seen_embedded_types.push(ref_tag);
                     }
                 }
 
