@@ -1,5 +1,5 @@
 /*!
- Logic used to deserialize data from a `typedstream`, focussing specifically on [`NSAttributedString`](https://developer.apple.com/documentation/foundation/nsattributedstring).
+ Logic used to deserialize data from a `typedstream`.
 
  A writeup about the reverse engineering of `typedstream` can be found [here](https://chrissardegna.com/blog/reverse-engineering-apples-typedstream-format/).
 */
@@ -37,7 +37,7 @@ pub struct TypedStreamDeserializer<'a> {
     /// The first time a [`Type`] is seen, it is present in the stream literally,
     /// but afterwards are only referenced by index in order of appearance.
     pub type_table: Vec<Vec<Type<'a>>>,
-    /// As we parse the `typedstream`, build a table of seen archivable data to reference in the future
+    /// As we parse the `typedstream`, build a table of seen [`Archived`] data to reference in the future
     pub object_table: Vec<Archived<'a>>,
     /// We want to copy embedded types the first time they are seen, even if the types were resolved through references
     pub(crate) seen_embedded_types: HashSet<usize>,
