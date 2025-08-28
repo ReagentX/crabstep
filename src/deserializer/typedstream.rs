@@ -54,12 +54,18 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// ```
     #[must_use]
     pub fn new(data: &'a [u8]) -> Self {
+        // Estimate initial capacities based on data size to reduce reallocations
+        let estimated_size = data.len();
+        let type_capacity = (estimated_size / 64).clamp(16, 256);
+        let object_capacity = (estimated_size / 32).clamp(32, 512);
+        let embedded_capacity = (estimated_size / 128).clamp(8, 64);
+
         Self {
             data,
             position: 0,
-            type_table: Vec::with_capacity(16),
-            object_table: Vec::with_capacity(32),
-            seen_embedded_types: Vec::with_capacity(8),
+            type_table: Vec::with_capacity(type_capacity),
+            object_table: Vec::with_capacity(object_capacity),
+            seen_embedded_types: Vec::with_capacity(embedded_capacity),
         }
     }
 
@@ -274,7 +280,7 @@ impl<'a> TypedStreamDeserializer<'a> {
         Ok(Some(first_idx))
     }
 
-    fn read_object(&mut self) -> Result<usize> {
+    fn read_object(&mut self) -> Result<Option<usize>> {
         match *read_byte_at(self.data, self.position)? {
             START => {
                 let placeholder_index = self.object_table.len();
@@ -284,9 +290,12 @@ impl<'a> TypedStreamDeserializer<'a> {
                 self.position += 1;
 
                 if let Some(cls) = self.read_class()? {
+                    // Estimate initial capacity for object data to reduce reallocations
+                    let estimated_data_capacity =
+                        ((self.data.len() - self.position) / 64).clamp(8, 64);
                     self.object_table[placeholder_index] = Archived::Object {
                         class: cls,
-                        data: Vec::with_capacity(8),
+                        data: Vec::with_capacity(estimated_data_capacity),
                     };
                     while self.position < self.data.len()
                         && *read_byte_at(self.data, self.position)? != END
@@ -306,11 +315,15 @@ impl<'a> TypedStreamDeserializer<'a> {
                         }
                     }
                 }
-                Ok(placeholder_index)
+                Ok(Some(placeholder_index))
+            }
+            EMPTY => {
+                self.position += 1;
+                Ok(None)
             }
             ptr => {
                 let pointer = read_pointer(&ptr)?;
-                Ok(pointer.value as usize)
+                Ok(Some(pointer.value as usize))
             }
         }
     }
@@ -344,6 +357,7 @@ impl<'a> TypedStreamDeserializer<'a> {
 
     fn read_types(&mut self, types_index: usize) -> Result<Option<Vec<OutputData<'a>>>> {
         // Start reading types from the specified index in the type table
+
         let len = self.type_table[types_index].len();
         let mut out_v = Vec::with_capacity(len);
 
@@ -365,7 +379,11 @@ impl<'a> TypedStreamDeserializer<'a> {
                 Type::Object => {
                     let obj_idx = self.read_object()?;
                     self.position += 1;
-                    out_v.push(OutputData::Object(obj_idx));
+                    if let Some(obj_idx) = obj_idx {
+                        out_v.push(OutputData::Object(obj_idx));
+                    } else {
+                        out_v.push(OutputData::Null);
+                    }
                 }
                 Type::String(s) => {
                     out_v.push(OutputData::String(s));
@@ -418,21 +436,20 @@ impl<'a> TypedStreamDeserializer<'a> {
                 let pointer = read_pointer(&ptr)?;
                 let ref_tag = pointer.value as usize;
 
-                if ref_tag as usize >= self.type_table.len() {
+                // Optimize bounds checking
+                if ref_tag >= self.type_table.len() {
                     return Ok(None);
                 }
 
                 if is_embedded_type {
                     // We only want to include the first embedded reference tag, not subsequent references to the same embed
-                    if !self.seen_embedded_types.contains(&ref_tag)
-                        && self.type_table.get(ref_tag as usize).is_some()
-                    {
+                    if !self.seen_embedded_types.contains(&ref_tag) {
                         self.object_table.push(Archived::Type(ref_tag));
                         self.seen_embedded_types.push(ref_tag);
                     }
                 }
 
-                Ok(Some(ref_tag as usize))
+                Ok(Some(ref_tag))
             }
         }
     }

@@ -56,7 +56,7 @@ impl Display for TypedStreamError {
             }
             TypedStreamError::InvalidHeader => write!(f, "Invalid header in typedstream!"),
             TypedStreamError::InvalidPointer(pointer) => {
-                write!(f, "Invalid pointer: {pointer}")
+                write!(f, "Invalid pointer: {pointer:x}")
             }
             TypedStreamError::InvalidArray(offset) => {
                 write!(f, "Invalid array at index: {offset:x}")

@@ -6866,4 +6866,28 @@ mod test_typedstream_deserializer {
         assert_eq!(typedstream.type_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
+
+    #[test]
+    fn test_parse_large_with_null() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/HugeWithRefs");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+
+        // Unwrapping here means we resolved the object
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults: {root:?}");
+        // Unwrapping here means we resolved the properties
+        let root_obj = typedstream.resolve_properties(root).unwrap();
+        println!("\nResults: {root_obj:?}");
+
+        // This will only complete if the circular references are handled
+        let primitives = root_obj.primitives();
+        println!("\nPrimitive Values: {primitives:?}");
+    }
 }
