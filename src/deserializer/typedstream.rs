@@ -274,7 +274,7 @@ impl<'a> TypedStreamDeserializer<'a> {
         Ok(Some(first_idx))
     }
 
-    fn read_object(&mut self) -> Result<usize> {
+    fn read_object(&mut self) -> Result<Option<usize>> {
         match *read_byte_at(self.data, self.position)? {
             START => {
                 let placeholder_index = self.object_table.len();
@@ -284,9 +284,12 @@ impl<'a> TypedStreamDeserializer<'a> {
                 self.position += 1;
 
                 if let Some(cls) = self.read_class()? {
+                    // Estimate initial capacity for object data to reduce reallocations
+                    let estimated_data_capacity =
+                        ((self.data.len() - self.position) / 64).clamp(8, 64);
                     self.object_table[placeholder_index] = Archived::Object {
                         class: cls,
-                        data: Vec::with_capacity(8),
+                        data: Vec::with_capacity(estimated_data_capacity),
                     };
                     while self.position < self.data.len()
                         && *read_byte_at(self.data, self.position)? != END
@@ -306,11 +309,15 @@ impl<'a> TypedStreamDeserializer<'a> {
                         }
                     }
                 }
-                Ok(placeholder_index)
+                Ok(Some(placeholder_index))
+            }
+            EMPTY => {
+                self.position += 1;
+                Ok(None)
             }
             ptr => {
                 let pointer = read_pointer(&ptr)?;
-                Ok(pointer.value as usize)
+                Ok(Some(pointer.value as usize))
             }
         }
     }
@@ -365,7 +372,11 @@ impl<'a> TypedStreamDeserializer<'a> {
                 Type::Object => {
                     let obj_idx = self.read_object()?;
                     self.position += 1;
-                    out_v.push(OutputData::Object(obj_idx));
+                    if let Some(obj_idx) = obj_idx {
+                        out_v.push(OutputData::Object(obj_idx));
+                    } else {
+                        out_v.push(OutputData::Null);
+                    }
                 }
                 Type::String(s) => {
                     out_v.push(OutputData::String(s));
