@@ -54,12 +54,18 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// ```
     #[must_use]
     pub fn new(data: &'a [u8]) -> Self {
+        // Estimate initial capacities based on data size to reduce reallocations
+        let estimated_size = data.len();
+        let type_capacity = (estimated_size / 64).clamp(16, 256);
+        let object_capacity = (estimated_size / 32).clamp(32, 512);
+        let embedded_capacity = (estimated_size / 128).clamp(8, 64);
+
         Self {
             data,
             position: 0,
-            type_table: Vec::with_capacity(16),
-            object_table: Vec::with_capacity(32),
-            seen_embedded_types: Vec::with_capacity(8),
+            type_table: Vec::with_capacity(type_capacity),
+            object_table: Vec::with_capacity(object_capacity),
+            seen_embedded_types: Vec::with_capacity(embedded_capacity),
         }
     }
 
@@ -153,7 +159,13 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// Reads the next byte from the stream, advancing the position.
     #[inline(always)]
     fn consume_current_byte(&mut self) -> Result<&u8> {
-        let byte = read_byte_at(self.data, self.position)?;
+        if self.position >= self.data.len() {
+            return Err(crate::error::TypedStreamError::OutOfBounds(
+                1,
+                self.data.len(),
+            ));
+        }
+        let byte = &self.data[self.position];
         self.position += 1;
         Ok(byte)
     }
@@ -351,6 +363,7 @@ impl<'a> TypedStreamDeserializer<'a> {
 
     fn read_types(&mut self, types_index: usize) -> Result<Option<Vec<OutputData<'a>>>> {
         // Start reading types from the specified index in the type table
+
         let len = self.type_table[types_index].len();
         let mut out_v = Vec::with_capacity(len);
 
@@ -429,21 +442,20 @@ impl<'a> TypedStreamDeserializer<'a> {
                 let pointer = read_pointer(&ptr)?;
                 let ref_tag = pointer.value as usize;
 
-                if ref_tag as usize >= self.type_table.len() {
+                // Optimize bounds checking
+                if ref_tag >= self.type_table.len() {
                     return Ok(None);
                 }
 
                 if is_embedded_type {
                     // We only want to include the first embedded reference tag, not subsequent references to the same embed
-                    if !self.seen_embedded_types.contains(&ref_tag)
-                        && self.type_table.get(ref_tag as usize).is_some()
-                    {
+                    if !self.seen_embedded_types.contains(&ref_tag) {
                         self.object_table.push(Archived::Type(ref_tag));
                         self.seen_embedded_types.push(ref_tag);
                     }
                 }
 
-                Ok(Some(ref_tag as usize))
+                Ok(Some(ref_tag))
             }
         }
     }
