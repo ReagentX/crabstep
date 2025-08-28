@@ -80,6 +80,8 @@ impl<'a, 'b> PropertyIterator<'a, 'b> {
 impl<'a, 'b: 'a> PropertyIterator<'a, 'b> {
     /// Collects only primitive data values from a `typedstream` using a depth-first-search over the deserialized object graph.
     ///
+    /// Note: There is a max depth of 100 and a max item limit of 1,000,000.
+    ///
     /// # Examples
     ///
     /// ```no_run
@@ -101,23 +103,53 @@ impl<'a, 'b: 'a> PropertyIterator<'a, 'b> {
     /// ```
     #[must_use]
     pub fn primitives(self) -> Vec<&'b OutputData<'a>> {
+        self.primitives_with_limits(100, 1000000)
+    }
+
+    /// Collects primitive data values with safety limits to prevent infinite loops.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_depth` - Maximum depth to traverse (prevents infinite recursion on cycles)
+    /// * `max_items` - Maximum total items to process (prevents runaway expansion)
+    #[must_use]
+    pub fn primitives_with_limits(
+        self,
+        max_depth: usize,
+        max_items: usize,
+    ) -> Vec<&'b OutputData<'a>> {
         let mut primitives = Vec::new();
-        // Use an explicit stack for depth-first traversal
-        let mut stack: Vec<Property<'a, 'b>> = self.collect();
-        while let Some(prop) = stack.pop() {
+        let mut processed_items = 0;
+
+        // Use an explicit stack for depth-first traversal with depth tracking
+        let initial_props: Vec<Property<'a, 'b>> = self.collect();
+        let mut stack: Vec<(Property<'a, 'b>, usize)> =
+            initial_props.into_iter().map(|p| (p, 0)).collect();
+
+        while let Some((prop, depth)) = stack.pop() {
+            // Safety checks to prevent infinite expansion
+            if processed_items >= max_items {
+                break;
+            }
+            if depth >= max_depth {
+                continue;
+            }
+
+            processed_items += 1;
+
             match prop {
                 Property::Primitive(p) => primitives.push(p),
                 Property::Group(mut group) => {
                     // push children in reverse to preserve order
                     while let Some(child) = group.pop() {
-                        stack.push(child);
+                        stack.push((child, depth + 1));
                     }
                 }
                 Property::Object { data, .. } => {
                     // data is a PropertyIterator; collect its items
                     let mut nested: Vec<_> = data.collect();
                     while let Some(child) = nested.pop() {
-                        stack.push(child);
+                        stack.push((child, depth + 1));
                     }
                 }
             }
@@ -172,8 +204,10 @@ impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
 
 /// Print a resolved [`PropertyIterator`] in a human-readable tree format for debugging.
 ///
-/// This function recursively prints all properties with proper indentation to show the nested structure
-/// of the deserialized object graph.
+/// This function iteratively prints all properties with proper indentation to show the nested structure
+/// of the deserialized object graph. Uses an explicit stack to avoid stack overflow for large structures.
+///
+/// Note: There is a max depth of 100 and a max item limit of 1,000,000.
 ///
 /// # Arguments
 ///
@@ -217,40 +251,80 @@ impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
 ///             Primitive: SignedInteger(0)
 /// ```
 pub fn print_resolved(iter: PropertyIterator<'_, '_>, indent: usize) {
-    for prop in iter {
-        print_property(prop, indent);
-    }
+    print_resolved_with_limits(iter, indent, 100, 1000000);
 }
 
-/// Print a single `Property` with indentation, recursing for nested data.
+/// Print a resolved [`PropertyIterator`] with depth and item limits to prevent infinite expansion.
 ///
 /// # Arguments
 ///
-/// * `prop` - The property to print.
-/// * `indent` - Number of spaces to indent each level.
-///
-/// This function is intended for debugging purposes.
-pub(crate) fn print_property<'a, 'b: 'a>(prop: Property<'a, 'b>, indent: usize) {
-    match prop {
-        Property::Object {
-            class: _,
-            name,
-            data,
-        } => {
-            // Print the object itself
-            println!("{:indent$}Object: {:?}", "", name, indent = indent);
-            // Recurse into its children with increased indent
-            print_resolved(data, indent + 2);
+/// * `iter` - The property iterator to print
+/// * `indent` - Number of spaces to indent each level
+/// * `max_depth` - Maximum depth to traverse (prevents infinite recursion on cycles)
+/// * `max_items` - Maximum total items to print (prevents runaway output)
+fn print_resolved_with_limits(
+    iter: PropertyIterator<'_, '_>,
+    indent: usize,
+    max_depth: usize,
+    max_items: usize,
+) {
+    // Use an explicit stack to avoid recursion and potential stack overflow
+    let mut stack: Vec<(Property<'_, '_>, usize)> = Vec::new();
+    let mut items_printed = 0;
+
+    // Push all properties from the iterator onto the stack with their indent level
+    for prop in iter {
+        stack.push((prop, indent));
+    }
+
+    // Process the stack
+    while let Some((prop, current_indent)) = stack.pop() {
+        // Safety checks to prevent infinite expansion
+        if items_printed >= max_items {
+            println!(
+                "{:indent$}... (truncated after {max_items} items)",
+                "",
+                indent = current_indent
+            );
+            break;
         }
-        Property::Group(slice) => {
-            println!("{:indent$}Group:", "", indent = indent);
-            // Drill into every slot in the group
-            for slot in slice {
-                print_property(slot, indent + 2);
+
+        let depth = (current_indent - indent) / 2;
+        if depth >= max_depth {
+            println!(
+                "{:indent$}... (max depth {max_depth} reached)",
+                "",
+                indent = current_indent
+            );
+            continue;
+        }
+
+        items_printed += 1;
+
+        match prop {
+            Property::Object {
+                class: _,
+                name,
+                data,
+            } => {
+                // Print the object itself
+                println!("{:indent$}Object: {:?}", "", name, indent = current_indent);
+                // Push its children onto the stack with increased indent (in reverse order)
+                let children: Vec<_> = data.collect();
+                for child in children.into_iter().rev() {
+                    stack.push((child, current_indent + 2));
+                }
             }
-        }
-        Property::Primitive(p) => {
-            println!("{:indent$}Primitive: {:?}", "", p, indent = indent);
+            Property::Group(group) => {
+                println!("{:indent$}Group:", "", indent = current_indent);
+                // Push every slot in the group onto the stack with increased indent (in reverse order)
+                for slot in group.into_iter().rev() {
+                    stack.push((slot, current_indent + 2));
+                }
+            }
+            Property::Primitive(p) => {
+                println!("{:indent$}Primitive: {:?}", "", p, indent = current_indent);
+            }
         }
     }
 }
