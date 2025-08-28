@@ -19,6 +19,8 @@ pub enum OutputData<'a> {
     Array(&'a [u8]),
     /// Reference to another object by index in the [`object_table`](crate::deserializer::typedstream::TypedStreamDeserializer::object_table).
     Object(usize),
+    /// Represents a null value.
+    Null,
 }
 
 impl<'a> OutputData<'a> {
@@ -187,6 +189,7 @@ impl std::fmt::Display for OutputData<'_> {
             OutputData::Byte(b) => write!(f, "0x{b:02x}"),
             OutputData::Array(arr) => write!(f, "[{arr:02x?}]"),
             OutputData::Object(idx) => write!(f, "Object({idx})"),
+            OutputData::Null => write!(f, "Null"),
         }
     }
 }
