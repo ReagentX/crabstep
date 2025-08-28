@@ -93,7 +93,7 @@ impl<'a> Type<'a> {
         Self::String(str)
     }
 
-    pub(crate) fn get_array_length(types: &[u8]) -> Option<Vec<Type>> {
+    pub(crate) fn get_array_length(types: &'_ [u8]) -> Option<Vec<Type<'_>>> {
         if types.first() == Some(&0x5b) {
             let len =
                 types[1..]
@@ -109,7 +109,7 @@ impl<'a> Type<'a> {
         None
     }
 
-    pub(crate) fn read_new_type(data: &[u8]) -> Result<Consumed<Vec<Type>>> {
+    pub(crate) fn read_new_type(data: &'_ [u8]) -> Result<Consumed<Vec<Type<'_>>>> {
         // Get the type of the object
         let type_length = read_unsigned_int(data)?;
 

@@ -232,10 +232,10 @@ impl<'a> TypedStreamDeserializer<'a> {
 
                     // The class we just appended (*idx*) is the **parent** of the
                     // class we appended in the previous iteration (*prev_new*)
-                    if let Some(child_idx) = prev_new {
-                        if let Archived::Class(ref mut child_cls) = self.object_table[child_idx] {
-                            child_cls.parent_index = Some(idx);
-                        }
+                    if let Some(child_idx) = prev_new
+                        && let Archived::Class(ref mut child_cls) = self.object_table[child_idx]
+                    {
+                        child_cls.parent_index = Some(idx);
                     }
 
                     // remember the first class we ever pushed
@@ -264,10 +264,10 @@ impl<'a> TypedStreamDeserializer<'a> {
 
         // Patch the outer-most newly created class so that it points to the
         // already-existing parent (or to `None` if EMPTY terminated the list).
-        if let Some(outer_idx) = prev_new {
-            if let Archived::Class(ref mut outer_cls) = self.object_table[outer_idx] {
-                outer_cls.parent_index = final_parent;
-            }
+        if let Some(outer_idx) = prev_new
+            && let Archived::Class(ref mut outer_cls) = self.object_table[outer_idx]
+        {
+            outer_cls.parent_index = final_parent;
         }
 
         // Return the index of the bottom-most child we created first.
@@ -294,15 +294,14 @@ impl<'a> TypedStreamDeserializer<'a> {
                         // Read the next type, which should be an object
                         if let Some(next_index) = self.read_type(false)? {
                             // Recursively read the types for this object
-                            if let Some(data) = self.read_types(next_index)? {
-                                if let Some(Archived::Object {
+                            if let Some(data) = self.read_types(next_index)?
+                                && let Some(Archived::Object {
                                     class: _,
                                     data: data_vec,
                                 }) = self.object_table.get_mut(placeholder_index)
-                                {
-                                    // Add the data to the object
-                                    data_vec.push(data);
-                                }
+                            {
+                                // Add the data to the object
+                                data_vec.push(data);
                             }
                         }
                     }
