@@ -159,13 +159,7 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// Reads the next byte from the stream, advancing the position.
     #[inline(always)]
     fn consume_current_byte(&mut self) -> Result<&u8> {
-        if self.position >= self.data.len() {
-            return Err(crate::error::TypedStreamError::OutOfBounds(
-                1,
-                self.data.len(),
-            ));
-        }
-        let byte = &self.data[self.position];
+        let byte = read_byte_at(self.data, self.position)?;
         self.position += 1;
         Ok(byte)
     }
