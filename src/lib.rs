@@ -6886,6 +6886,8 @@ mod test_typedstream_deserializer {
         let root_obj = typedstream.resolve_properties(root).unwrap();
         println!("\nResults: {root_obj:?}");
 
-        print_resolved(root_obj, 4);
+        // This will only complete if the circular references are handled
+        let primitives = root_obj.primitives();
+        println!("\nPrimitive Values: {primitives:?}");
     }
 }
