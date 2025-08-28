@@ -142,26 +142,25 @@ impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
                         class: cls,
                         data: _,
                     }) = self.object_table.get(*idx)
+                        && let Some(Archived::Class(cls)) = self.object_table.get(*cls)
                     {
-                        if let Some(Archived::Class(cls)) = self.object_table.get(*cls) {
-                            let class_name = self
-                                .type_table
-                                .get(cls.name_index)
-                                .and_then(|types| types.first())
-                                .and_then(|t| match t {
-                                    Type::String(name) => Some(*name),
-                                    _ => None,
-                                })
-                                .unwrap_or("Unknown Class");
-                            // recurse into that object’s own data
-                            let sub_iter =
-                                PropertyIterator::new(self.object_table, self.type_table, *idx)?;
-                            resolved.push(Property::Object {
-                                class: cls,
-                                name: class_name,
-                                data: sub_iter,
-                            });
-                        }
+                        let class_name = self
+                            .type_table
+                            .get(cls.name_index)
+                            .and_then(|types| types.first())
+                            .and_then(|t| match t {
+                                Type::String(name) => Some(*name),
+                                _ => None,
+                            })
+                            .unwrap_or("Unknown Class");
+                        // recurse into that object’s own data
+                        let sub_iter =
+                            PropertyIterator::new(self.object_table, self.type_table, *idx)?;
+                        resolved.push(Property::Object {
+                            class: cls,
+                            name: class_name,
+                            data: sub_iter,
+                        });
                     }
                 }
                 prim => resolved.push(Property::Primitive(prim)),
