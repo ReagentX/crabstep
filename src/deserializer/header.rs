@@ -58,8 +58,8 @@ pub fn validate_header(data: &[u8]) -> Result<Consumed<bool>> {
 #[cfg(test)]
 mod header_tests {
     extern crate std;
-    use std::{env::current_dir, fs::File, io::Read,println};
-    use alloc::{vec};
+    use alloc::vec;
+    use std::{env::current_dir, fs::File, io::Read, println};
 
     use crate::deserializer::{constants::I_16, header::validate_header};
 
