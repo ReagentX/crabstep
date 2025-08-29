@@ -50,7 +50,7 @@ impl<T> Consumed<T> {
     }
 }
 
-impl<T> std::ops::Deref for Consumed<T> {
+impl<T> core::ops::Deref for Consumed<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -58,7 +58,7 @@ impl<T> std::ops::Deref for Consumed<T> {
     }
 }
 
-impl<T> std::ops::DerefMut for Consumed<T> {
+impl<T> core::ops::DerefMut for Consumed<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.value
     }
