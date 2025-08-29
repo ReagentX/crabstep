@@ -65,9 +65,10 @@ impl<'a, 'b> PropertyIterator<'a, 'b> {
     ) -> Option<Self> {
         let root_object = object_table.get(root_object_index)?;
 
-        let properties = if let Archived::Object { data, .. } = root_object {
-            data
-        } else {
+        let Archived::Object {
+            data: properties, ..
+        } = root_object
+        else {
             return None;
         };
 
@@ -105,7 +106,7 @@ impl<'a, 'b: 'a> PropertyIterator<'a, 'b> {
     /// ```
     #[must_use]
     pub fn primitives(self) -> Vec<&'b OutputData<'a>> {
-        self.primitives_with_limits(100, 1000000)
+        self.primitives_with_limits(100, 1_000_000)
     }
 
     /// Collects primitive data values with safety limits to prevent infinite loops.
@@ -254,7 +255,7 @@ impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
 /// ```
 #[cfg(any(feature = "std", test))]
 pub fn print_resolved(iter: PropertyIterator<'_, '_>, indent: usize) {
-    print_resolved_with_limits(iter, indent, 100, 1000000);
+    print_resolved_with_limits(iter, indent, 100, 1_000_000);
 }
 
 /// Print a resolved [`PropertyIterator`] with depth and item limits to prevent infinite expansion.

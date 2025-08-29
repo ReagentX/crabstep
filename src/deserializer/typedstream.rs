@@ -265,9 +265,8 @@ impl<'a> TypedStreamDeserializer<'a> {
         }
 
         // If we did not create any new classes, just return what we found.
-        let first_idx = match first_new {
-            None => return Ok(final_parent),
-            Some(i) => i,
+        let Some(first_idx) = first_new else {
+            return Ok(final_parent);
         };
 
         // Patch the outer-most newly created class so that it points to the

@@ -75,8 +75,8 @@ pub enum Type<'a> {
 impl<'a> Type<'a> {
     /// Convert a byte to a Type enum variant
     #[inline]
-    pub(crate) fn from_byte(byte: &u8) -> Self {
-        match *byte {
+    pub(crate) fn from_byte(byte: u8) -> Self {
+        match byte {
             0x40 => Self::Object,
             0x2B => Self::Utf8String,
             0x2A => Self::EmbeddedData,
@@ -128,7 +128,7 @@ impl<'a> Type<'a> {
         }
 
         Ok(Consumed::new(
-            type_bytes.iter().map(Type::from_byte).collect(),
+            type_bytes.iter().copied().map(Type::from_byte).collect(),
             type_length.bytes_consumed + type_bytes.len(),
         ))
     }
