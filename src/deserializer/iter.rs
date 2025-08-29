@@ -252,7 +252,7 @@ impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
 ///           Group:
 ///             Primitive: SignedInteger(0)
 /// ```
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", test))]
 pub fn print_resolved(iter: PropertyIterator<'_, '_>, indent: usize) {
     print_resolved_with_limits(iter, indent, 100, 1000000);
 }
@@ -265,14 +265,15 @@ pub fn print_resolved(iter: PropertyIterator<'_, '_>, indent: usize) {
 /// * `indent` - Number of spaces to indent each level
 /// * `max_depth` - Maximum depth to traverse (prevents infinite recursion on cycles)
 /// * `max_items` - Maximum total items to print (prevents runaway output)
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", test))]
 fn print_resolved_with_limits(
     iter: PropertyIterator<'_, '_>,
     indent: usize,
     max_depth: usize,
     max_items: usize,
 ) {
-    use std::{println};
+    extern crate std;
+    use std::println;
     // Use an explicit stack to avoid recursion and potential stack overflow
     let mut stack: Vec<(Property<'_, '_>, usize)> = Vec::new();
     let mut items_printed = 0;
