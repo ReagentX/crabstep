@@ -1,5 +1,7 @@
 //! Types that can be archived into a `typedstream`
 
+use alloc::vec::Vec;
+
 use crate::models::{class::Class, output_data::OutputData};
 
 /// Types of data that can be archived into the `typedstream`

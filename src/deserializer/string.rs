@@ -28,7 +28,7 @@ use crate::{
 pub fn read_string(data: &[u8]) -> Result<Consumed<&str>> {
     let length = read_unsigned_int(data)?;
     Ok(Consumed::new(
-        std::str::from_utf8(
+        core::str::from_utf8(
             data.get(length.bytes_consumed..(length.bytes_consumed + length.value as usize))
                 .ok_or({
                     crate::error::TypedStreamError::OutOfBounds(length.value as usize, data.len())
@@ -40,6 +40,8 @@ pub fn read_string(data: &[u8]) -> Result<Consumed<&str>> {
 
 #[cfg(test)]
 mod string_tests {
+    use alloc::vec::Vec;
+
     use crate::deserializer::{
         constants::{I_16, I_32},
         string::read_string,

@@ -1,6 +1,10 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 #![doc = include_str!("../README.md")]
+#![no_std]
+extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std;
 
 pub mod deserializer;
 pub mod error;
@@ -11,7 +15,9 @@ pub use models::{archived::Archived, output_data::OutputData};
 
 #[cfg(test)]
 mod test_typedstream_deserializer {
-    use std::{env::current_dir, fs::File, io::Read};
+    extern crate std;
+    use alloc::vec;
+    use std::{env::current_dir, fs::File, io::Read, println};
 
     use crate::{
         deserializer::{iter::print_resolved, typedstream::TypedStreamDeserializer},
