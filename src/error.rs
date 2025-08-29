@@ -1,6 +1,6 @@
 //! Error types and result alias for `typedstream` deserialization
 
-use std::{array::TryFromSliceError, fmt::Display};
+use core::{array::TryFromSliceError, fmt::Display};
 
 /// A specialized [`Result`] type for `typedstream` operations.
 ///
@@ -15,7 +15,7 @@ use std::{array::TryFromSliceError, fmt::Display};
 ///    deserializer.oxidize()
 /// }
 /// ```
-pub type Result<T> = std::result::Result<T, TypedStreamError>;
+pub type Result<T> = core::result::Result<T, TypedStreamError>;
 
 /// Errors that can occur while deserializing a `typedstream`.
 #[derive(Debug)]
@@ -27,7 +27,7 @@ pub enum TypedStreamError {
     /// Error converting a slice into an array of fixed size.
     SliceError(TryFromSliceError),
     /// Error parsing a string as UTF-8.
-    StringParseError(std::str::Utf8Error),
+    StringParseError(core::str::Utf8Error),
     /// The `typedstream` header was invalid.
     InvalidHeader,
     /// Encountered an invalid pointer value.
@@ -39,7 +39,7 @@ pub enum TypedStreamError {
 }
 
 impl Display for TypedStreamError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             TypedStreamError::InvalidObject => {
                 write!(f, "Invalid object encountered in typedstream!")
@@ -72,10 +72,10 @@ impl From<TryFromSliceError> for TypedStreamError {
     }
 }
 
-impl From<std::str::Utf8Error> for TypedStreamError {
-    fn from(error: std::str::Utf8Error) -> Self {
+impl From<core::str::Utf8Error> for TypedStreamError {
+    fn from(error: core::str::Utf8Error) -> Self {
         TypedStreamError::StringParseError(error)
     }
 }
 
-impl std::error::Error for TypedStreamError {}
+impl core::error::Error for TypedStreamError {}
