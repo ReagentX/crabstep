@@ -178,8 +178,8 @@ impl<'a> OutputData<'a> {
 }
 
 // Implement Display for human-friendly formatting
-impl std::fmt::Display for OutputData<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for OutputData<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             OutputData::String(s) => write!(f, "{s}"),
             OutputData::SignedInteger(i) => write!(f, "{i}"),

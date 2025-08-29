@@ -4,6 +4,8 @@
  A writeup about the reverse engineering of `typedstream` can be found [here](https://chrissardegna.com/blog/reverse-engineering-apples-typedstream-format/).
 */
 
+use alloc::{vec::Vec,vec};
+
 use crate::{
     deserializer::{
         constants::{EMPTY, END, START},

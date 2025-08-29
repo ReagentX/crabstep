@@ -12,3 +12,6 @@ keywords = ["typedstream", "macos", "ios", "apple"]
 categories = ["parsing", "parser-implementations", "database"]
 
 [dependencies]
+
+[features]
+std=[]

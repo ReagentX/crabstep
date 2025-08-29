@@ -1,11 +1,11 @@
 //! Type tags that denote the type of data stored in a `typedstream`
-
 use crate::{
     deserializer::{
         constants::ARRAY, consumed::Consumed, number::read_unsigned_int, read::read_exact_bytes,
     },
     error::{Result, TypedStreamError},
 };
+use alloc::{vec, vec::Vec};
 
 /// Represents primitive types of data that can be stored in a `typedstream`
 ///
