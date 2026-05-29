@@ -11,7 +11,11 @@ pub mod error;
 pub mod models;
 
 pub use deserializer::{iter::PropertyIterator, typedstream::TypedStreamDeserializer};
-pub use models::{archived::Archived, output_data::OutputData};
+pub use models::{
+    archived::{Archived, ObjectData},
+    output_data::OutputData,
+    types::TypeEntry,
+};
 
 #[cfg(test)]
 mod test_typedstream_deserializer {
@@ -21,7 +25,12 @@ mod test_typedstream_deserializer {
 
     use crate::{
         deserializer::{iter::print_resolved, typedstream::TypedStreamDeserializer},
-        models::{archived::Archived, class::Class, output_data::OutputData, types::Type},
+        models::{
+            archived::{Archived, ObjectData},
+            class::Class,
+            output_data::OutputData,
+            types::{Type, TypeEntry},
+        },
     };
 
     #[test]
@@ -83,32 +92,32 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![
                         OutputData::SignedInteger(1),
                         OutputData::UnsignedInteger(10),
                     ],
                     vec![OutputData::Object(7)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -127,7 +136,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String("Noter test")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("Noter test")]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -141,11 +150,11 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -154,11 +163,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -208,28 +219,28 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(3)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(6)],
                     vec![OutputData::Object(5)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -243,7 +254,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("Test 3")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("Test 3")]]),
             },
             Archived::Class(Class {
                 name_index: 3,
@@ -252,13 +263,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 6,
@@ -267,13 +278,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -288,11 +299,13 @@ mod test_typedstream_deserializer {
             Archived::Type(11),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
         ];
 
@@ -328,30 +341,30 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
-            vec![Type::String("NSURL")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSData")],
-            vec![Type::Array(649)],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSURL")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(649)]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(5)],
                     vec![OutputData::Object(7)],
@@ -418,7 +431,7 @@ mod test_typedstream_deserializer {
                         OutputData::UnsignedInteger(6),
                     ],
                     vec![OutputData::Object(53)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -437,9 +450,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "0123456789\nBold Italics Underline Strikethrough\u{a0}\u{a0}Big Small Shake Nod Explode Ripple Bloom Jitter",
-                )]],
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -453,7 +466,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(5)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -465,7 +478,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(23)],
                     vec![OutputData::Object(24)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -474,11 +487,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMTextUnderlineAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextUnderlineAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -493,25 +508,27 @@ mod test_typedstream_deserializer {
             Archived::Type(9),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Type(13),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMLinkAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMLinkAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 19,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(0)],
                     vec![OutputData::Object(20)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 14,
@@ -520,23 +537,27 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("tel:0123456789")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("tel:0123456789")]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMPhoneNumberAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMPhoneNumberAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 25,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(649)],
                     vec![OutputData::Array(&[
                         98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
@@ -577,7 +598,7 @@ mod test_typedstream_deserializer {
                         0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 74, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                         1, 213,
                     ])],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 16,
@@ -586,7 +607,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(6)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
@@ -600,17 +621,17 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(18)],
                     vec![OutputData::Object(21)],
                     vec![OutputData::Object(22)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMTextStrikethroughAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(5)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
@@ -622,22 +643,22 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(23)],
                     vec![OutputData::Object(24)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 19,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(0)],
                     vec![OutputData::Object(30)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("tel:0123456789")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("tel:0123456789")]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
@@ -645,15 +666,17 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(32)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMTextBoldAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextBoldAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(4)],
                     vec![OutputData::Object(32)],
                     vec![OutputData::Object(10)],
@@ -663,15 +686,17 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(15)],
                     vec![OutputData::Object(34)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMTextItalicAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextItalicAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(5)],
                     vec![OutputData::Object(32)],
                     vec![OutputData::Object(10)],
@@ -683,11 +708,11 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(10)],
                     vec![OutputData::Object(34)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(6)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
@@ -701,21 +726,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
                     vec![OutputData::Object(21)],
                     vec![OutputData::Object(22)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
@@ -723,19 +748,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(39)],
                     vec![OutputData::Object(40)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMTextEffectAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextEffectAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(5)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(5)]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
@@ -743,15 +770,15 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(39)],
                     vec![OutputData::Object(42)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(11)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(11)]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
@@ -759,15 +786,15 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(39)],
                     vec![OutputData::Object(44)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(9)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(9)]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
@@ -775,15 +802,15 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(39)],
                     vec![OutputData::Object(46)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(8)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(8)]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
@@ -791,15 +818,15 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(39)],
                     vec![OutputData::Object(48)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(12)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(12)]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
@@ -807,15 +834,15 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(39)],
                     vec![OutputData::Object(50)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(4)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(4)]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
@@ -823,15 +850,15 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(39)],
                     vec![OutputData::Object(52)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(6)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(6)]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
@@ -839,11 +866,11 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(39)],
                     vec![OutputData::Object(54)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(10)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(10)]]),
             },
         ];
 
@@ -885,34 +912,34 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSMutableData")],
-            vec![Type::String("NSData")],
-            vec![Type::Array(635)],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::String("NSURL")],
-            vec![Type::SignedInt],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSMutableData")]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(635)]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::String("NSURL")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(3)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(6)],
                     vec![OutputData::Object(5)],
                     vec![OutputData::SignedInteger(2), OutputData::UnsignedInteger(4)],
                     vec![OutputData::Object(22)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -926,7 +953,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("0123456789")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("0123456789")]]),
             },
             Archived::Class(Class {
                 name_index: 3,
@@ -935,7 +962,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(4)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
@@ -945,7 +972,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(17)],
                     vec![OutputData::Object(20)],
                     vec![OutputData::Object(21)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 6,
@@ -954,11 +981,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMPhoneNumberAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMPhoneNumberAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(635)],
                     vec![OutputData::Array(&[
                         98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
@@ -998,7 +1027,7 @@ mod test_typedstream_deserializer {
                         199, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 73, 0, 0, 0, 0, 0, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 1, 201,
                     ])],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -1012,11 +1041,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Class(Class {
                 name_index: 11,
@@ -1031,14 +1062,16 @@ mod test_typedstream_deserializer {
             Archived::Type(7),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMLinkAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMLinkAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 18,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(0)],
                     vec![OutputData::Object(19)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 14,
@@ -1047,21 +1080,21 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("tel:0123456789")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("tel:0123456789")]]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMTextStrikethroughAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(4)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
@@ -1071,11 +1104,13 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(17)],
                     vec![OutputData::Object(23)],
                     vec![OutputData::Object(21)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMTextItalicAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextItalicAttributeName",
+                )]]),
             },
         ];
 
@@ -1114,37 +1149,37 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
-            vec![Type::SignedInt],
-            vec![Type::String("NSURL")],
-            vec![Type::String("NSData")],
-            vec![Type::Array(675)],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSURL")]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(675)]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![
                         OutputData::SignedInteger(1),
                         OutputData::UnsignedInteger(145),
                     ],
                     vec![OutputData::Object(7)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -1163,9 +1198,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "https://music.apple.com/us/lyrics/1329891623?ts=11.108&te=16.031&l=en&tk=2.v1.VsuX9f%2BaT1PyrgMgIT7ANQ%3D%3D&itsct=sharing_msg_lyrics&itscg=50401",
-                )]],
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -1179,7 +1214,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(5)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -1191,7 +1226,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(23)],
                     vec![OutputData::Object(24)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -1200,13 +1235,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -1221,23 +1256,27 @@ mod test_typedstream_deserializer {
             Archived::Type(13),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMLinkIsRichLinkAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMLinkIsRichLinkAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
             Archived::Type(14),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMLinkAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMLinkAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 19,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(0)],
                     vec![OutputData::Object(20)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 15,
@@ -1246,25 +1285,29 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "https://music.apple.com/us/lyrics/1329891623?ts=11.108&te=16.031&l=en&tk=2.v1.VsuX9f%2BaT1PyrgMgIT7ANQ%3D%3D&itsct=sharing_msg_lyrics&itscg=50401",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMDataDetectedAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMDataDetectedAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 25,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(675)],
                     vec![OutputData::Array(&[
                         98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
@@ -1307,7 +1350,7 @@ mod test_typedstream_deserializer {
                         1, 0, 0, 0, 0, 0, 0, 0, 58, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,
                         15,
                     ])],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 16,
@@ -1351,28 +1394,28 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(3)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(1)],
                     vec![OutputData::Object(5)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -1386,7 +1429,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("￼")]], // U+FFFC "OBJECT REPLACEMENT CHARACTER"
+                data: ObjectData::from_groups(vec![vec![OutputData::String("￼")]]), // U+FFFC "OBJECT REPLACEMENT CHARACTER"
             },
             Archived::Class(Class {
                 name_index: 3,
@@ -1395,7 +1438,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
@@ -1403,7 +1446,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(10)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 6,
@@ -1412,25 +1455,25 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMFileTransferGUIDAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "F0B18A15-E9A5-4B18-A38F-685B7B3FF037",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -1445,11 +1488,13 @@ mod test_typedstream_deserializer {
             Archived::Type(11),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
         ];
 
@@ -1485,27 +1530,27 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::String("NSData")],
-            vec![Type::Array(904)],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(904)]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![
                         OutputData::SignedInteger(1),
@@ -1518,7 +1563,7 @@ mod test_typedstream_deserializer {
                         OutputData::SignedInteger(1),
                         OutputData::UnsignedInteger(16),
                     ],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -1537,9 +1582,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "A single ChatGPT instance takes 5MW of power to run",
-                )]],
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -1553,11 +1598,11 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -1566,11 +1611,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -1585,21 +1632,23 @@ mod test_typedstream_deserializer {
             Archived::Type(9),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(15)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMDataDetectedAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMDataDetectedAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 17,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(904)],
                     vec![OutputData::Array(&[
                         98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
@@ -1654,7 +1703,7 @@ mod test_typedstream_deserializer {
                         0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 114, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                         0, 0, 0, 0, 0, 2, 132,
                     ])],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 13,
@@ -1698,27 +1747,27 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::Double],
-            vec![Type::SignedInt],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::Double]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(1)],
                     vec![OutputData::Object(7)],
@@ -1727,7 +1776,7 @@ mod test_typedstream_deserializer {
                         OutputData::UnsignedInteger(77),
                     ],
                     vec![OutputData::Object(26)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -1746,9 +1795,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "￼This is how the notes look to me fyi, in case it helps make sense of anything",
-                )]],
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -1762,7 +1811,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(6)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -1776,7 +1825,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(23)],
                     vec![OutputData::Object(24)],
                     vec![OutputData::Object(25)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -1785,25 +1834,25 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMFileTransferGUIDAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_0_2E5F12C3-E649-48AA-954D-3EA67C016BCC",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMInlineMediaHeightAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::Double(1139.0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::Double(1139.0)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -1818,65 +1867,73 @@ mod test_typedstream_deserializer {
             Archived::Type(13),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Type(14),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Type(9),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMFilenameAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMFilenameAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("Messages Image(785748029).png")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "Messages Image(785748029).png",
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMInlineMediaWidthAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::Double(952.0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::Double(952.0)]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(27)],
                     vec![OutputData::Object(17)],
                     vec![OutputData::Object(28)],
                     vec![OutputData::Object(29)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
         ];
 
@@ -1915,30 +1972,30 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(1)],
                     vec![OutputData::Object(7)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -1957,7 +2014,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String("￼")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("￼")]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -1971,7 +2028,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(6)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -1985,7 +2042,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(21)],
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(23)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -1994,25 +2051,25 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMFileTransferGUIDAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_0_BE588799-C4BC-47DF-A56D-7EE90C74911D",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMInlineMediaHeightAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(600)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(600)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -2027,41 +2084,45 @@ mod test_typedstream_deserializer {
             Archived::Type(13),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMFilenameAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMFilenameAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "brilliant-kids-test-answers-32-93042.jpeg",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMInlineMediaWidthAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(660)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(660)]]),
             },
         ];
 
@@ -2097,17 +2158,17 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![vec![OutputData::Object(3)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::Object(3)]]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -2121,7 +2182,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("")]]),
             },
             Archived::Class(Class {
                 name_index: 3,
@@ -2162,27 +2223,27 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::String("NSData")],
-            vec![Type::Array(535)],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(535)]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(6)],
                     vec![OutputData::Object(7)],
@@ -2191,7 +2252,7 @@ mod test_typedstream_deserializer {
                         OutputData::UnsignedInteger(46),
                     ],
                     vec![OutputData::Object(22)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -2210,9 +2271,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "000123 is your security code. Don't share your code.",
-                )]],
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -2226,7 +2287,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -2234,7 +2295,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(15)],
                     vec![OutputData::Object(19)],
                     vec![OutputData::Object(20)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -2243,11 +2304,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -2262,37 +2325,41 @@ mod test_typedstream_deserializer {
             Archived::Type(9),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMOneTimeCodeAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMOneTimeCodeAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(17)],
                     vec![OutputData::Object(18)],
                     vec![OutputData::Object(17)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("displayCode")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("displayCode")]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("000123")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("000123")]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("code")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("code")]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMDataDetectedAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMDataDetectedAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 21,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(535)],
                     vec![OutputData::Array(&[
                         98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
@@ -2326,7 +2393,7 @@ mod test_typedstream_deserializer {
                         1, 90, 1, 108, 1, 111, 1, 129, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0,
                         58, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 131,
                     ])],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 13,
@@ -2335,11 +2402,11 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
         ];
 
@@ -2378,24 +2445,24 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(3)],
                     vec![
                         OutputData::SignedInteger(1),
@@ -2404,7 +2471,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(5)],
                     vec![OutputData::SignedInteger(2), OutputData::UnsignedInteger(1)],
                     vec![OutputData::Object(14)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -2418,9 +2485,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "Reacted with a sticker to “Like I wonder if the stickers can be reactions ”￼",
-                )]],
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 3,
@@ -2429,13 +2496,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 6,
@@ -2444,13 +2511,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -2465,15 +2532,17 @@ mod test_typedstream_deserializer {
             Archived::Type(11),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(15)],
                     vec![OutputData::Object(16)],
@@ -2481,23 +2550,23 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(8)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(17)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMFileTransferGUIDAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "41C4376E-397E-4C42-84E2-B16F7801F638",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
         ];
 
@@ -2533,28 +2602,28 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::String("NSMutableData")],
-            vec![Type::String("NSData")],
-            vec![Type::Array(669)],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::String("NSMutableData")]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(669)]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![
                         OutputData::SignedInteger(1),
@@ -2564,7 +2633,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::SignedInteger(2), OutputData::UnsignedInteger(8)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(1)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -2583,7 +2652,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String("Hi. Right now or tomorrow?")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "Hi. Right now or tomorrow?",
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -2597,11 +2668,11 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -2610,11 +2681,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -2629,21 +2702,23 @@ mod test_typedstream_deserializer {
             Archived::Type(9),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(15)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(19)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMCalendarEventAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMCalendarEventAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 17,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(669)],
                     vec![OutputData::Array(&[
                         98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
@@ -2685,7 +2760,7 @@ mod test_typedstream_deserializer {
                         0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 78, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                         0, 0, 0, 1, 225,
                     ])],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 13,
@@ -2699,7 +2774,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
         ];
 
@@ -2738,27 +2815,27 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(3)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(4)],
                     vec![OutputData::Object(5)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -2772,7 +2849,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("Test")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("Test")]]),
             },
             Archived::Class(Class {
                 name_index: 3,
@@ -2781,13 +2858,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 6,
@@ -2796,13 +2873,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMTextStrikethroughAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -2817,11 +2894,13 @@ mod test_typedstream_deserializer {
             Archived::Type(7),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
         ];
 
@@ -2857,28 +2936,28 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSMutableData")],
-            vec![Type::String("NSData")],
-            vec![Type::Array(667)],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::String("NSURL")],
-            vec![Type::SignedInt],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSMutableData")]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(667)]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::String("NSURL")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(3)],
                     vec![
                         OutputData::SignedInteger(1),
@@ -2890,7 +2969,7 @@ mod test_typedstream_deserializer {
                         OutputData::UnsignedInteger(11),
                     ],
                     vec![OutputData::Object(20)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -2904,7 +2983,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("asdfghjklq@gmail.com might work")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "asdfghjklq@gmail.com might work",
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 3,
@@ -2913,7 +2994,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
@@ -2921,7 +3002,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(17)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 6,
@@ -2930,11 +3011,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMDataDetectedAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMDataDetectedAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(667)],
                     vec![OutputData::Array(&[
                         98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
@@ -2976,7 +3059,7 @@ mod test_typedstream_deserializer {
                         211, 1, 229, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 74, 0, 0, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 231,
                     ])],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -2990,11 +3073,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Class(Class {
                 name_index: 11,
@@ -3009,14 +3094,16 @@ mod test_typedstream_deserializer {
             Archived::Type(7),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMLinkAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMLinkAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 18,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(0)],
                     vec![OutputData::Object(19)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 14,
@@ -3025,19 +3112,23 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("mailto:asdfghjklq@gmail.com")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "mailto:asdfghjklq@gmail.com",
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(21)],
                     vec![OutputData::Object(12)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
         ];
 
@@ -3076,23 +3167,23 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(3)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(3)],
                     vec![OutputData::Object(5)],
@@ -3101,7 +3192,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(1)],
                     vec![OutputData::SignedInteger(3), OutputData::UnsignedInteger(9)],
                     vec![OutputData::Object(16)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -3115,7 +3206,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("🅱\u{fe0f}Bold_Underline")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "🅱\u{fe0f}Bold_Underline",
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 3,
@@ -3124,11 +3217,11 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 6,
@@ -3137,11 +3230,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -3156,39 +3251,45 @@ mod test_typedstream_deserializer {
             Archived::Type(7),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(13)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
                     vec![OutputData::Object(8)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMTextBoldAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextBoldAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(17)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
                     vec![OutputData::Object(8)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMTextUnderlineAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextUnderlineAttributeName",
+                )]]),
             },
         ];
 
@@ -3243,28 +3344,28 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(3)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(9)], // Changed 6 to 9 here
                     vec![OutputData::Object(5)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -3278,7 +3379,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("Big small")]], // Changed "Test 3" to "Big small"
+                data: ObjectData::from_groups(vec![vec![OutputData::String("Big small")]]), // Changed "Test 3" to "Big small"
             },
             Archived::Class(Class {
                 name_index: 3,
@@ -3287,13 +3388,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 6,
@@ -3302,13 +3403,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -3323,11 +3424,13 @@ mod test_typedstream_deserializer {
             Archived::Type(11),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
         ];
 
@@ -3366,32 +3469,32 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![
                         OutputData::SignedInteger(1),
                         OutputData::UnsignedInteger(2359),
                     ],
                     vec![OutputData::Object(7)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -3410,9 +3513,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "Sed nibh velit, sodales et facilisis ut, sodales id libero. Mauris nec venenatis lorem, ac vulputate lorem. Maecenas in faucibus dui. In hac habitasse platea dictumst. Integer commodo erat eu elit tincidunt malesuada. Ut tellus mi, eleifend a ligula vitae, eleifend malesuada nibh. Duis leo magna, porttitor eu viverra varius, laoreet eget urna. Duis faucibus eleifend pretium. Nulla nec orci rhoncus, tincidunt lorem non, viverra velit. Aliquam id tincidunt lacus, vel accumsan enim.\nProin id ultrices nunc. Integer id posuere tellus. Donec vitae lacinia elit. In diam est, scelerisque non lacus ultrices, consequat hendrerit ex. Proin ut felis mi. Fusce id ultrices mi. Duis sagittis justo quis sapien tincidunt faucibus. Suspendisse id feugiat risus, ac vestibulum neque. Sed sit amet mauris mauris.\nAenean pharetra, nisl eu maximus commodo, est leo volutpat tortor, sodales semper risus eros non lorem. Phasellus auctor erat quis ante tristique ultrices. Nam at eleifend ligula. Donec posuere lobortis ante quis pulvinar. Maecenas cursus nibh sit amet finibus ultrices. Etiam ut volutpat risus, in molestie velit. Curabitur ornare justo lacus, vitae consequat augue commodo eget. Praesent tincidunt, urna et posuere mattis, orci diam efficitur lorem, eu tincidunt tortor mi id velit. Morbi justo felis, placerat accumsan blandit vel, accumsan eu mauris. Aliquam mattis nisl sed pulvinar hendrerit. Fusce hendrerit fermentum tellus, sit amet lacinia ante viverra ac. Vivamus ultricies tristique congue. Aliquam varius, odio ut porta consectetur, justo est dignissim massa, id dapibus orci risus dignissim dolor. Aliquam viverra tincidunt neque vel euismod. Integer semper ultricies libero vel cursus. Vestibulum sapien eros, dictum id ultricies in, accumsan vel est.\nCurabitur et lacus quis mauris viverra accumsan a non dui. Donec efficitur ex vitae maximus facilisis. Suspendisse molestie lectus quis bibendum porta. Donec a tellus vehicula, iaculis libero non, tincidunt dolor. Curabitur sit amet felis quis magna euismod feugiat vel vitae magna. Proin tellus nunc, mollis quis ipsum ac, blandit tristique libero. Etiam sit amet hendrerit nisl. Mauris dapibus tortor vel enim interdum faucibus. Nulla facilisi. Nulla ut nulla sit amet leo accumsan convallis eget in tortor. Donec sit amet ullamcorper urna. Curabitur consectetur cursus sem nec accumsan.",
-                )]],
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -3426,11 +3529,11 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -3439,11 +3542,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -3493,32 +3598,32 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(5)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::SignedInteger(2), OutputData::UnsignedInteger(3)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(1)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -3537,7 +3642,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String("Test Dad ")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("Test Dad ")]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -3551,11 +3656,11 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -3564,11 +3669,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -3583,25 +3690,29 @@ mod test_typedstream_deserializer {
             Archived::Type(9),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(15)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(17)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMentionConfirmedMention")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMentionConfirmedMention",
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("+15558675309")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("+15558675309")]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
         ];
 
@@ -3640,26 +3751,26 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(1)],
                     vec![OutputData::Object(7)],
@@ -3729,7 +3840,7 @@ mod test_typedstream_deserializer {
                         OutputData::UnsignedInteger(1),
                     ],
                     vec![OutputData::Object(71)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -3748,7 +3859,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String("￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼",
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -3762,7 +3875,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -3770,7 +3883,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(15)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(17)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -3779,13 +3892,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -3800,27 +3913,29 @@ mod test_typedstream_deserializer {
             Archived::Type(13),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMFileTransferGUIDAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_0_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -3828,21 +3943,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(19)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(20)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_1_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(10)],
@@ -3850,31 +3965,33 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(24)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(25)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(2)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(2)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_2_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -3882,21 +3999,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(27)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(28)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(3)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(3)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_3_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -3904,21 +4021,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(30)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(31)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(4)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(4)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_4_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -3926,21 +4043,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(33)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(34)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(5)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(5)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_5_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -3948,21 +4065,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(36)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(37)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(6)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(6)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_6_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -3970,21 +4087,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(39)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(40)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(7)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(7)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_7_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -3992,21 +4109,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(42)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(43)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(8)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(8)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_8_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -4014,21 +4131,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(45)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(46)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(9)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(9)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_9_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -4036,21 +4153,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(48)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(49)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(10)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(10)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_10_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -4058,21 +4175,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(51)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(52)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(11)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(11)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_11_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -4080,21 +4197,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(54)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(55)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(12)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(12)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_12_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -4102,21 +4219,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(57)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(58)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(13)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(13)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_13_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -4124,21 +4241,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(60)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(61)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(14)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(14)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_14_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -4146,21 +4263,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(63)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(64)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(15)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(15)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_15_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -4168,21 +4285,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(66)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(67)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(16)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(16)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_16_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -4190,21 +4307,21 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(69)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(70)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(17)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(17)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_17_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -4212,17 +4329,17 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(72)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(73)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(18)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(18)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_18_48B9C973-3466-438C-BE72-E5B498D30772",
-                )]],
+                )]]),
             },
         ];
 
@@ -4261,25 +4378,25 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(1)],
                     vec![OutputData::Object(7)],
@@ -4293,7 +4410,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(24)],
                     vec![OutputData::SignedInteger(6), OutputData::UnsignedInteger(6)],
                     vec![OutputData::Object(27)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -4312,7 +4429,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String("￼test 1￼test 2 ￼test 3")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "￼test 1￼test 2 ￼test 3",
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -4326,13 +4445,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
                     vec![OutputData::Object(11)],
                     vec![OutputData::Object(12)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -4341,23 +4460,25 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMFileTransferGUIDAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_0_F0668F79-20C2-49C9-A87F-1B007ABB0CED",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -4372,83 +4493,85 @@ mod test_typedstream_deserializer {
             Archived::Type(9),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(17)],
                     vec![OutputData::Object(18)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(20)],
                     vec![OutputData::Object(11)],
                     vec![OutputData::Object(21)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_2_F0668F79-20C2-49C9-A87F-1B007ABB0CED",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(2)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(2)]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(11)],
                     vec![OutputData::Object(23)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(3)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(3)]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(25)],
                     vec![OutputData::Object(11)],
                     vec![OutputData::Object(26)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "at_4_F0668F79-20C2-49C9-A87F-1B007ABB0CED",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(4)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(4)]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(11)],
                     vec![OutputData::Object(28)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(5)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(5)]]),
             },
         ];
 
@@ -4487,25 +4610,25 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![
                         OutputData::SignedInteger(1),
@@ -4519,7 +4642,7 @@ mod test_typedstream_deserializer {
                         OutputData::UnsignedInteger(32),
                     ],
                     vec![OutputData::Object(19)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -4538,9 +4661,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "From arbitrary byte stream:\r￼To native Rust data structures:\r",
-                )]],
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -4554,11 +4677,11 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -4567,11 +4690,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -4586,49 +4711,53 @@ mod test_typedstream_deserializer {
             Archived::Type(9),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(15)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(17)],
                     vec![OutputData::Object(18)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMFileTransferGUIDAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "D0551D89-4E11-43D0-9A0E-06F19704E97B",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(20)],
                     vec![OutputData::Object(21)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(2)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(2)]]),
             },
         ];
 
@@ -4667,28 +4796,28 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
-            vec![Type::String("NSData")],
-            vec![Type::Array(820)],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(820)]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(1)],
                     vec![OutputData::Object(7)],
@@ -4699,7 +4828,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::SignedInteger(2), OutputData::UnsignedInteger(1)],
                     vec![OutputData::SignedInteger(4), OutputData::UnsignedInteger(2)],
                     vec![OutputData::Object(25)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -4718,7 +4847,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String("8:00 pm")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("8:00 pm")]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -4732,7 +4861,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(4)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -4742,7 +4871,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(18)],
                     vec![OutputData::Object(19)],
                     vec![OutputData::Object(20)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -4751,11 +4880,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMTextBoldAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextBoldAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -4770,30 +4901,34 @@ mod test_typedstream_deserializer {
             Archived::Type(9),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Type(13),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMCalendarEventAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMCalendarEventAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 21,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(820)],
                     vec![OutputData::Array(&[
                         98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
@@ -4843,7 +4978,7 @@ mod test_typedstream_deserializer {
                         2, 57, 2, 66, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 104, 0, 0, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 68,
                     ])],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 14,
@@ -4852,7 +4987,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(17)],
                     vec![OutputData::Object(18)],
@@ -4860,11 +4995,11 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(15)],
                     vec![OutputData::Object(19)],
                     vec![OutputData::Object(20)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(4)],
                     vec![OutputData::Object(19)],
                     vec![OutputData::Object(20)],
@@ -4874,15 +5009,17 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(18)],
                     vec![OutputData::Object(24)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMTextUnderlineAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextUnderlineAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(4)],
                     vec![OutputData::Object(19)],
                     vec![OutputData::Object(20)],
@@ -4892,11 +5029,13 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(18)],
                     vec![OutputData::Object(26)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMTextItalicAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextItalicAttributeName",
+                )]]),
             },
         ];
 
@@ -4935,30 +5074,30 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
-            vec![Type::String("NSURL")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSData")],
-            vec![Type::Array(649)],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSURL")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(649)]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![
                         OutputData::SignedInteger(1),
@@ -4970,7 +5109,7 @@ mod test_typedstream_deserializer {
                         OutputData::UnsignedInteger(10),
                     ],
                     vec![OutputData::Object(16)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -4989,7 +5128,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String("What about 0000000000")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "What about 0000000000",
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -5003,13 +5144,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -5018,13 +5159,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -5039,15 +5180,17 @@ mod test_typedstream_deserializer {
             Archived::Type(13),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(4)],
                     vec![OutputData::Object(17)],
                     vec![OutputData::Object(18)],
@@ -5057,18 +5200,20 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(10)],
                     vec![OutputData::Object(21)],
                     vec![OutputData::Object(22)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMLinkAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMLinkAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 19,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(0)],
                     vec![OutputData::Object(20)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 14,
@@ -5077,15 +5222,17 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("tel:0000000000")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("tel:0000000000")]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMPhoneNumberAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMPhoneNumberAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 23,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(649)],
                     vec![OutputData::Array(&[
                         98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
@@ -5126,7 +5273,7 @@ mod test_typedstream_deserializer {
                         0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 74, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                         1, 213,
                     ])],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 16,
@@ -5170,37 +5317,37 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
-            vec![Type::SignedInt],
-            vec![Type::String("NSData")],
-            vec![Type::Array(591)],
-            vec![Type::String("NSURL")],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(591)]),
+            TypeEntry::from_types(vec![Type::String("NSURL")]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![
                         OutputData::SignedInteger(1),
                         OutputData::UnsignedInteger(61),
                     ],
                     vec![OutputData::Object(7)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -5219,9 +5366,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "https://github.com/ReagentX/imessage-exporter/discussions/553",
-                )]],
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -5235,7 +5382,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(6)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -5249,7 +5396,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(23)],
                     vec![OutputData::Object(24)],
                     vec![OutputData::Object(25)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -5258,13 +5405,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -5279,20 +5426,24 @@ mod test_typedstream_deserializer {
             Archived::Type(13),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMLinkIsRichLinkAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMLinkIsRichLinkAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Type(14),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMDataDetectedAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMDataDetectedAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 19,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(591)],
                     vec![OutputData::Array(&[
                         98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
@@ -5330,7 +5481,7 @@ mod test_typedstream_deserializer {
                         164, 1, 167, 1, 185, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 58, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 187,
                     ])],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 15,
@@ -5339,30 +5490,36 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMTextEffectAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextEffectAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(5)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(5)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMLinkAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMLinkAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 26,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(0)],
                     vec![OutputData::Object(27)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 17,
@@ -5371,9 +5528,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "https://github.com/ReagentX/imessage-exporter/discussions/553",
-                )]],
+                )]]),
             },
         ];
 
@@ -5412,24 +5569,24 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(3)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(3)],
                     vec![OutputData::Object(5)],
@@ -5453,7 +5610,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::SignedInteger(6), OutputData::UnsignedInteger(1)],
                     vec![OutputData::SignedInteger(9), OutputData::UnsignedInteger(6)],
                     vec![OutputData::Object(29)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -5467,9 +5624,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "Big small shake nod explode ripple bloom jitter",
-                )]],
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 3,
@@ -5478,13 +5635,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 6,
@@ -5493,11 +5650,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMTextEffectAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextEffectAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(5)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(5)]]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -5512,122 +5671,126 @@ mod test_typedstream_deserializer {
             Archived::Type(11),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Type(7),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(18)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(11)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(11)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(20)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(9)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(9)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(8)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(8)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(24)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(12)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(12)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(26)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(4)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(4)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(28)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(6)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(6)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(30)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(10)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(10)]]),
             },
         ];
 
@@ -5666,23 +5829,23 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(3)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(4)],
                     vec![OutputData::Object(5)],
@@ -5702,7 +5865,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::SignedInteger(2), OutputData::UnsignedInteger(5)],
                     vec![OutputData::SignedInteger(6), OutputData::UnsignedInteger(4)],
                     vec![OutputData::Object(22)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -5716,9 +5879,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "Bold underline italic strikethrough all four",
-                )]],
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 3,
@@ -5727,13 +5890,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 6,
@@ -5742,11 +5905,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMTextBoldAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextBoldAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -5761,71 +5926,79 @@ mod test_typedstream_deserializer {
             Archived::Type(7),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(15)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(17)],
                     vec![OutputData::Object(8)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMTextUnderlineAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextUnderlineAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(19)],
                     vec![OutputData::Object(8)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMTextItalicAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextItalicAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(21)],
                     vec![OutputData::Object(8)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMTextStrikethroughAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(5)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
@@ -5837,7 +6010,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(8)],
                     vec![OutputData::Object(19)],
                     vec![OutputData::Object(8)],
-                ],
+                ]),
             },
         ];
 
@@ -5876,24 +6049,24 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(3)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(9)],
                     vec![OutputData::Object(5)],
@@ -5902,7 +6075,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::SignedInteger(3), OutputData::UnsignedInteger(6)],
                     vec![OutputData::Object(18)],
                     vec![OutputData::SignedInteger(2), OutputData::UnsignedInteger(7)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -5916,7 +6089,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("Underline normal jitter normal")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "Underline normal jitter normal",
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 3,
@@ -5925,7 +6100,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
@@ -5933,7 +6108,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(13)],
                     vec![OutputData::Object(14)],
                     vec![OutputData::Object(15)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 6,
@@ -5942,13 +6117,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -5963,34 +6138,38 @@ mod test_typedstream_deserializer {
             Archived::Type(11),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMTextUnderlineAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextUnderlineAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
             Archived::Type(7),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(2)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(13)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(3)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
@@ -5998,15 +6177,17 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(13)],
                     vec![OutputData::Object(19)],
                     vec![OutputData::Object(20)],
-                ],
+                ]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMTextEffectAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextEffectAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(10)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(10)]]),
             },
         ];
 
@@ -6045,30 +6226,30 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(3)],
                     vec![
                         OutputData::SignedInteger(1),
                         OutputData::UnsignedInteger(10),
                     ],
                     vec![OutputData::Object(5)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -6082,7 +6263,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("Everything")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("Everything")]]),
             },
             Archived::Class(Class {
                 name_index: 3,
@@ -6091,7 +6272,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(5)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
@@ -6103,7 +6284,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(8)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(8)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 6,
@@ -6112,11 +6293,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMTextBoldAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextBoldAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -6131,25 +6314,31 @@ mod test_typedstream_deserializer {
             Archived::Type(7),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMTextStrikethroughAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 9,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMTextUnderlineAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextUnderlineAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMTextItalicAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMTextItalicAttributeName",
+                )]]),
             },
         ];
 
@@ -6188,28 +6377,28 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(3)],
                     vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(1)],
                     vec![OutputData::Object(5)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -6223,7 +6412,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("￼")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("￼")]]),
             },
             Archived::Class(Class {
                 name_index: 3,
@@ -6232,7 +6421,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(4)],
                     vec![OutputData::Object(7)],
                     vec![OutputData::Object(8)],
@@ -6242,7 +6431,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(12)],
                     vec![OutputData::Object(16)],
                     vec![OutputData::Object(17)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 6,
@@ -6251,33 +6440,35 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMFileTransferGUIDAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "4C339597-EBBB-4978-9B87-521C0471A848",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("IMAudioTranscription")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "IMAudioTranscription",
+                )]]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("This is a test")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("This is a test")]]),
             },
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -6292,11 +6483,13 @@ mod test_typedstream_deserializer {
             Archived::Type(11),
             Archived::Object {
                 class: 4,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 13,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
         ];
 
@@ -6332,37 +6525,37 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSURL")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
-            vec![Type::String("NSData")],
-            vec![Type::Array(582)],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSURL")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(582)]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![
                         OutputData::SignedInteger(1),
                         OutputData::UnsignedInteger(34),
                     ],
                     vec![OutputData::Object(7)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -6381,9 +6574,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "https://github.com/ReagentX/Logria",
-                )]],
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -6397,7 +6590,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(4)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -6407,7 +6600,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(19)],
                     vec![OutputData::Object(20)],
                     vec![OutputData::Object(21)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -6416,14 +6609,16 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMLinkAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMLinkAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(0)],
                     vec![OutputData::Object(12)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -6432,17 +6627,19 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "https://github.com/ReagentX/Logria",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 15,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Class(Class {
                 name_index: 12,
@@ -6457,21 +6654,23 @@ mod test_typedstream_deserializer {
             Archived::Type(15),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 15,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMDataDetectedAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMDataDetectedAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 22,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(582)],
                     vec![OutputData::Array(&[
                         98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
@@ -6508,7 +6707,7 @@ mod test_typedstream_deserializer {
                         135, 1, 153, 1, 156, 1, 174, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0,
                         59, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 176,
                     ])],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 16,
@@ -6552,38 +6751,38 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSURL")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
-            vec![Type::SignedInt],
-            vec![Type::String("NSMutableData")],
-            vec![Type::String("NSData")],
-            vec![Type::Array(604)],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSURL")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSMutableData")]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(604)]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![
                         OutputData::SignedInteger(1),
                         OutputData::UnsignedInteger(56),
                     ],
                     vec![OutputData::Object(7)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -6602,9 +6801,9 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "https://twitter.com/xxxxxxxxx/status/0000223300009216128",
-                )]],
+                )]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -6618,7 +6817,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(4)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
@@ -6628,7 +6827,7 @@ mod test_typedstream_deserializer {
                     vec![OutputData::Object(19)],
                     vec![OutputData::Object(22)],
                     vec![OutputData::Object(23)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -6637,14 +6836,16 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMLinkAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMLinkAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(0)],
                     vec![OutputData::Object(12)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -6653,17 +6854,19 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "https://twitter.com/xxxxxxxxx/status/0000223300009216128",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 15,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Class(Class {
                 name_index: 12,
@@ -6678,11 +6881,13 @@ mod test_typedstream_deserializer {
             Archived::Type(15),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMDataDetectedAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMDataDetectedAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 20,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(604)],
                     vec![OutputData::Array(&[
                         98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
@@ -6720,7 +6925,7 @@ mod test_typedstream_deserializer {
                         1, 144, 1, 152, 1, 157, 1, 175, 1, 178, 1, 196, 0, 0, 0, 0, 0, 0, 2, 1, 0,
                         0, 0, 0, 0, 0, 0, 59, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 198,
                     ])],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 16,
@@ -6734,13 +6939,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String(
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
                     "__kIMBaseWritingDirectionAttributeName",
-                )]],
+                )]]),
             },
             Archived::Object {
                 class: 15,
-                data: vec![vec![OutputData::SignedInteger(-1)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
             },
         ];
 
@@ -6779,32 +6984,32 @@ mod test_typedstream_deserializer {
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
         let expected_types = vec![
-            vec![Type::Object],
-            vec![Type::String("NSMutableAttributedString")],
-            vec![Type::String("NSAttributedString")],
-            vec![Type::String("NSObject")],
-            vec![Type::String("NSMutableString")],
-            vec![Type::String("NSString")],
-            vec![Type::Utf8String],
-            vec![Type::SignedInt, Type::UnsignedInt],
-            vec![Type::String("NSDictionary")],
-            vec![Type::SignedInt],
-            vec![Type::String("NSNumber")],
-            vec![Type::String("NSValue")],
-            vec![Type::EmbeddedData],
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
         ];
 
         let expected_objects = vec![
             Archived::Object {
                 class: 1,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::Object(4)],
                     vec![
                         OutputData::SignedInteger(1),
                         OutputData::UnsignedInteger(21),
                     ],
                     vec![OutputData::Object(7)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 1,
@@ -6823,7 +7028,7 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 5,
-                data: vec![vec![OutputData::String("𝖍𝖊𝖑𝖑𝖔 𝖜𝖔𝖗𝖑𝖉")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String("𝖍𝖊𝖑𝖑𝖔 𝖜𝖔𝖗𝖑𝖉")]]),
             },
             Archived::Class(Class {
                 name_index: 4,
@@ -6837,11 +7042,11 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 8,
-                data: vec![
+                data: ObjectData::from_groups(vec![
                     vec![OutputData::SignedInteger(1)],
                     vec![OutputData::Object(9)],
                     vec![OutputData::Object(10)],
-                ],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -6850,11 +7055,13 @@ mod test_typedstream_deserializer {
             }),
             Archived::Object {
                 class: 6,
-                data: vec![vec![OutputData::String("__kIMMessagePartAttributeName")]],
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
             },
             Archived::Object {
                 class: 11,
-                data: vec![vec![OutputData::SignedInteger(0)]],
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
             },
             Archived::Class(Class {
                 name_index: 10,
