@@ -31,35 +31,42 @@ use crate::{
 /// assert_eq!(consumed.bytes_consumed, 1);
 /// ```
 pub fn read_signed_int(data: &[u8]) -> Result<Consumed<i64>> {
-    let current_byte = read_byte_at(data, 0)?;
-    let (value, consumed) = match *current_byte {
-        // The number is 2 bytes long
-        I_16 => {
-            let size = 2;
-            let value =
-                i16::from_le_bytes(<[u8; 2]>::try_from(read_exact_bytes(&data[1..], size)?)?);
-            (i64::from(value), size + 1)
-        }
-        // The number is 4 bytes long
-        I_32 => {
-            let size = 4;
-            let value =
-                i32::from_le_bytes(<[u8; 4]>::try_from(read_exact_bytes(&data[1..], size)?)?);
-            (i64::from(value), size + 1)
-        }
-        // The number is 1 byte long and is the current byte
-        _ => {
-            // If the current byte is greater than the REFERENCE_TAG, it indicates an index in the table of already-seen types.
-            if current_byte > &(REFERENCE_TAG as u8) && *read_byte_at(data, 1)? != END {
-                return read_signed_int(&data[1..]);
+    // Skip any leading reference tags iteratively rather than recursively so a
+    // crafted run of tag bytes cannot exhaust the stack. As in the original
+    // recursive form, skipped tag bytes are not counted in `bytes_consumed`.
+    let mut offset = 0;
+    loop {
+        let current_byte = read_byte_at(data, offset)?;
+        let rest = &data[offset + 1..];
+        let (value, consumed) = match *current_byte {
+            // The number is 2 bytes long
+            I_16 => {
+                let size = 2;
+                let value = i16::from_le_bytes(<[u8; 2]>::try_from(read_exact_bytes(rest, size)?)?);
+                (i64::from(value), size + 1)
             }
+            // The number is 4 bytes long
+            I_32 => {
+                let size = 4;
+                let value = i32::from_le_bytes(<[u8; 4]>::try_from(read_exact_bytes(rest, size)?)?);
+                (i64::from(value), size + 1)
+            }
+            // The number is 1 byte long and is the current byte
+            _ => {
+                // If the current byte is greater than the REFERENCE_TAG, it indicates an index in the table of already-seen types.
+                if current_byte > &(REFERENCE_TAG as u8) && *read_byte_at(data, offset + 1)? != END
+                {
+                    offset += 1;
+                    continue;
+                }
 
-            let value = i8::from_le_bytes([*current_byte]);
-            (i64::from(value), 1)
-        }
-    };
+                let value = i8::from_le_bytes([*current_byte]);
+                (i64::from(value), 1)
+            }
+        };
 
-    Ok(Consumed::new(value, consumed))
+        return Ok(Consumed::new(value, consumed));
+    }
 }
 
 /// Read an unsigned integer from the stream (u8, u16, or u32) and return its value and bytes consumed.
@@ -84,35 +91,40 @@ pub fn read_signed_int(data: &[u8]) -> Result<Consumed<i64>> {
 /// assert_eq!(consumed.bytes_consumed, 1);
 /// ```
 pub fn read_unsigned_int(data: &[u8]) -> Result<Consumed<u64>> {
-    let current_byte = read_byte_at(data, 0)?;
-    let (value, consumed) = match *current_byte {
-        // The number is 2 bytes long
-        I_16 => {
-            let size = 2;
-            let value =
-                u16::from_le_bytes(<[u8; 2]>::try_from(read_exact_bytes(&data[1..], size)?)?);
-            (u64::from(value), size + 1)
-        }
-        // The number is 4 bytes long
-        I_32 => {
-            let size = 4;
-            let value =
-                u32::from_le_bytes(<[u8; 4]>::try_from(read_exact_bytes(&data[1..], size)?)?);
-            (u64::from(value), size + 1)
-        }
-        // The number is 1 byte long
-        _ => {
-            // If the current byte is greater than the REFERENCE_TAG, it indicates an index in the table of already-seen types.
-            if current_byte > &(REFERENCE_TAG as u8) && *read_byte_at(data, 1)? != END {
-                return read_unsigned_int(&data[1..]);
+    // See `read_signed_int`: skip reference tags iteratively, not recursively.
+    let mut offset = 0;
+    loop {
+        let current_byte = read_byte_at(data, offset)?;
+        let rest = &data[offset + 1..];
+        let (value, consumed) = match *current_byte {
+            // The number is 2 bytes long
+            I_16 => {
+                let size = 2;
+                let value = u16::from_le_bytes(<[u8; 2]>::try_from(read_exact_bytes(rest, size)?)?);
+                (u64::from(value), size + 1)
             }
+            // The number is 4 bytes long
+            I_32 => {
+                let size = 4;
+                let value = u32::from_le_bytes(<[u8; 4]>::try_from(read_exact_bytes(rest, size)?)?);
+                (u64::from(value), size + 1)
+            }
+            // The number is 1 byte long
+            _ => {
+                // If the current byte is greater than the REFERENCE_TAG, it indicates an index in the table of already-seen types.
+                if current_byte > &(REFERENCE_TAG as u8) && *read_byte_at(data, offset + 1)? != END
+                {
+                    offset += 1;
+                    continue;
+                }
 
-            let value = u8::from_le_bytes([*current_byte]);
-            (u64::from(value), 1)
-        }
-    };
+                let value = u8::from_le_bytes([*current_byte]);
+                (u64::from(value), 1)
+            }
+        };
 
-    Ok(Consumed::new(value, consumed))
+        return Ok(Consumed::new(value, consumed));
+    }
 }
 
 /// Read a single-precision float (`f32`) from the byte stream.

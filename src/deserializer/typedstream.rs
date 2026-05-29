@@ -4,6 +4,8 @@
  A writeup about the reverse engineering of `typedstream` can be found [here](https://chrissardegna.com/blog/reverse-engineering-apples-typedstream-format/).
 */
 
+use alloc::vec::Vec;
+
 use crate::{
     deserializer::{
         constants::{EMPTY, END, START},
@@ -14,8 +16,36 @@ use crate::{
         string::read_string,
     },
     error::{Result, TypedStreamError},
-    models::{archived::Archived, class::Class, output_data::OutputData, types::Type},
+    models::{
+        archived::{Archived, ObjectData},
+        class::Class,
+        output_data::OutputData,
+        types::{Type, TypeEntry},
+    },
 };
+
+/// The decoded contents of a single data group, produced by
+/// [`TypedStreamDeserializer::read_types`]. The single-value case is kept out of
+/// a `Vec` so the common object shape costs no heap allocation.
+enum Group<'a> {
+    /// The group produced no values (e.g. an empty `EmbeddedData`).
+    Empty,
+    /// Exactly one value.
+    One(OutputData<'a>),
+    /// Two or more values.
+    Many(Vec<OutputData<'a>>),
+}
+
+impl<'a> Group<'a> {
+    /// The first value in the group, if any.
+    fn first(&self) -> Option<&OutputData<'a>> {
+        match self {
+            Group::Empty => None,
+            Group::One(value) => Some(value),
+            Group::Many(values) => values.first(),
+        }
+    }
+}
 
 /// Contains logic and data used to deserialize data from a `typedstream`.
 ///
@@ -34,7 +64,7 @@ pub struct TypedStreamDeserializer<'a> {
     ///
     /// The first time a [`Type`] is seen, it is present in the stream literally,
     /// but afterwards are only referenced by index in order of appearance.
-    pub type_table: Vec<Vec<Type<'a>>>,
+    pub type_table: Vec<TypeEntry<'a>>,
     /// As we parse the `typedstream`, build a table of seen [`Archived`] data to reference in the future
     pub object_table: Vec<Archived<'a>>,
     /// We want to copy embedded types the first time they are seen, even if the types were resolved through references
@@ -54,18 +84,15 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// ```
     #[must_use]
     pub fn new(data: &'a [u8]) -> Self {
-        // Estimate initial capacities based on data size to reduce reallocations
-        let estimated_size = data.len();
-        let type_capacity = (estimated_size / 64).clamp(16, 256);
-        let object_capacity = (estimated_size / 32).clamp(32, 512);
-        let embedded_capacity = (estimated_size / 128).clamp(8, 64);
-
+        // Table capacities are reserved in `oxidize`, once the header has
+        // validated. Constructing a deserializer over a non-`typedstream`
+        // buffer therefore allocates nothing.
         Self {
             data,
             position: 0,
-            type_table: Vec::with_capacity(type_capacity),
-            object_table: Vec::with_capacity(object_capacity),
-            seen_embedded_types: Vec::with_capacity(embedded_capacity),
+            type_table: Vec::new(),
+            object_table: Vec::new(),
+            seen_embedded_types: Vec::new(),
         }
     }
 
@@ -104,8 +131,22 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// let result = deserializer.oxidize();
     /// ```
     pub fn oxidize(&mut self) -> Result<usize> {
-        let mut obj = None;
+        let mut obj = Group::Empty;
         let validation = validate_header(self.data)?;
+
+        // Reserve table capacity now that the input is known to be a valid
+        // `typedstream`, so malformed/non-`typedstream` buffers that fail the
+        // header check never trigger a large reservation. The divisors reflect
+        // the measured worst-case density (~1 object / 16 bytes on
+        // distinct-object-heavy streams); the object table is the only one that
+        // grows large, so the others stay tight.
+        let estimated_size = self.data.len();
+        self.type_table
+            .reserve((estimated_size / 64).clamp(16, 256));
+        self.object_table
+            .reserve((estimated_size / 16).clamp(32, 8192));
+        self.seen_embedded_types
+            .reserve((estimated_size / 128).clamp(8, 64));
 
         // Advance by the number of bytes consumed by the header validation
         self.position += validation.bytes_consumed;
@@ -118,11 +159,7 @@ impl<'a> TypedStreamDeserializer<'a> {
             obj = self.read_types(type_index)?;
         }
 
-        match obj
-            .ok_or(TypedStreamError::InvalidObject)?
-            .first()
-            .ok_or(TypedStreamError::InvalidObject)?
-        {
+        match obj.first().ok_or(TypedStreamError::InvalidObject)? {
             OutputData::Object(idx) => Ok(*idx),
             _ => Err(TypedStreamError::InvalidObject),
         }
@@ -198,7 +235,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                 let string_data = read_string(&self.data[self.position..])?;
                 self.position += string_data.bytes_consumed;
                 self.type_table
-                    .push(vec![Type::new_string(string_data.value)]);
+                    .push(TypeEntry::One(Type::new_string(string_data.value)));
                 Ok(self.type_table.len() - 1)
             }
             EMPTY => Err(TypedStreamError::EmptyString),
@@ -263,9 +300,8 @@ impl<'a> TypedStreamDeserializer<'a> {
         }
 
         // If we did not create any new classes, just return what we found.
-        let first_idx = match first_new {
-            None => return Ok(final_parent),
-            Some(i) => i,
+        let Some(first_idx) = first_new else {
+            return Ok(final_parent);
         };
 
         // Patch the outer-most newly created class so that it points to the
@@ -290,30 +326,26 @@ impl<'a> TypedStreamDeserializer<'a> {
                 self.position += 1;
 
                 if let Some(cls) = self.read_class()? {
-                    // Estimate initial capacity for object data to reduce reallocations
-                    let estimated_data_capacity =
-                        ((self.data.len() - self.position) / 64).clamp(8, 64);
-                    self.object_table[placeholder_index] = Archived::Object {
-                        class: cls,
-                        data: Vec::with_capacity(estimated_data_capacity),
-                    };
+                    // Collect the object's groups locally. The overwhelming
+                    // majority of objects hold a single single-value group (an
+                    // NSString's text, an NSNumber's value, a reference to
+                    // another object), which `ObjectData` stores inline with no
+                    // heap allocation at all.
+                    let mut data = ObjectData::Empty;
                     while self.position < self.data.len()
                         && *read_byte_at(self.data, self.position)? != END
                     {
                         // Read the next type, which should be an object
                         if let Some(next_index) = self.read_type(false)? {
                             // Recursively read the types for this object
-                            if let Some(data) = self.read_types(next_index)?
-                                && let Some(Archived::Object {
-                                    class: _,
-                                    data: data_vec,
-                                }) = self.object_table.get_mut(placeholder_index)
-                            {
-                                // Add the data to the object
-                                data_vec.push(data);
+                            match self.read_types(next_index)? {
+                                Group::Empty => {}
+                                Group::One(value) => data.push_one(value),
+                                Group::Many(values) => data.push_many(values),
                             }
                         }
                     }
+                    self.object_table[placeholder_index] = Archived::Object { class: cls, data };
                 }
                 Ok(Some(placeholder_index))
             }
@@ -329,8 +361,8 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     /// Reads numeric types (signed, unsigned, float, double) and returns the corresponding `OutputData`
-    fn read_number(&mut self, table_index: usize, type_index: usize) -> Result<OutputData<'a>> {
-        match self.type_table[table_index][type_index] {
+    fn read_number(&mut self, ty: Type<'a>) -> Result<OutputData<'a>> {
+        match ty {
             Type::SignedInt => {
                 let signed_int = read_signed_int(&self.data[self.position..])?;
                 self.position += signed_int.bytes_consumed;
@@ -355,57 +387,78 @@ impl<'a> TypedStreamDeserializer<'a> {
         }
     }
 
-    fn read_types(&mut self, types_index: usize) -> Result<Option<Vec<OutputData<'a>>>> {
-        // Start reading types from the specified index in the type table
-
-        let len = self.type_table[types_index].len();
-        let mut out_v = Vec::with_capacity(len);
-
-        for i in 0..len {
-            // Read the next type from the type table
-            match self.type_table[types_index][i] {
-                Type::Utf8String => {
-                    let str_data = read_string(&self.data[self.position..])?;
-                    self.position += str_data.bytes_consumed;
-                    out_v.push(OutputData::String(str_data.value));
-                }
-                Type::EmbeddedData => {
-                    if let Some(idx) = self.read_embedded_type()? {
-                        self.position += 1;
-                        return self.read_types(idx);
-                    }
-                    return Ok(None);
-                }
-                Type::Object => {
-                    let obj_idx = self.read_object()?;
-                    self.position += 1;
-                    if let Some(obj_idx) = obj_idx {
-                        out_v.push(OutputData::Object(obj_idx));
-                    } else {
-                        out_v.push(OutputData::Null);
-                    }
-                }
-                Type::String(s) => {
-                    out_v.push(OutputData::String(s));
-                }
-                Type::Array(length) => {
-                    let array_data = read_exact_bytes(&self.data[self.position..], length)?;
-                    self.position += length;
-                    out_v.push(OutputData::Array(array_data));
-                }
-                Type::Unknown(byte) => {
-                    // Read a single byte for unknown data
-                    out_v.push(OutputData::Byte(byte));
-                }
-                // Handle all numeric types
-                Type::SignedInt | Type::UnsignedInt | Type::Float | Type::Double => {
-                    let val = self.read_number(types_index, i)?;
-                    out_v.push(val);
-                }
+    /// Decodes a single, already-resolved non-embedded type descriptor into one
+    /// [`OutputData`] value.
+    ///
+    /// [`Type::EmbeddedData`] is handled by the caller ([`Self::read_types`])
+    /// because it redirects to another type entry rather than producing a value.
+    #[inline]
+    fn read_value(&mut self, ty: Type<'a>) -> Result<OutputData<'a>> {
+        match ty {
+            Type::Utf8String => {
+                let str_data = read_string(&self.data[self.position..])?;
+                self.position += str_data.bytes_consumed;
+                Ok(OutputData::String(str_data.value))
             }
+            Type::Object => {
+                let obj_idx = self.read_object()?;
+                self.position += 1;
+                Ok(match obj_idx {
+                    Some(idx) => OutputData::Object(idx),
+                    None => OutputData::Null,
+                })
+            }
+            Type::String(s) => Ok(OutputData::String(s)),
+            Type::Array(length) => {
+                let array_data = read_exact_bytes(&self.data[self.position..], length)?;
+                self.position += length;
+                Ok(OutputData::Array(array_data))
+            }
+            Type::Unknown(byte) => Ok(OutputData::Byte(byte)),
+            // Handle all numeric types
+            Type::SignedInt | Type::UnsignedInt | Type::Float | Type::Double => {
+                self.read_number(ty)
+            }
+            // `EmbeddedData` is intercepted by `read_types` before reaching here.
+            Type::EmbeddedData => Err(TypedStreamError::InvalidObject),
+        }
+    }
+
+    /// Reads an `EmbeddedData` descriptor, redirecting to the embedded type
+    /// entry. Returns the group decoded from that entry, or [`Group::Empty`].
+    fn read_embedded(&mut self) -> Result<Group<'a>> {
+        if let Some(idx) = self.read_embedded_type()? {
+            self.position += 1;
+            self.read_types(idx)
+        } else {
+            Ok(Group::Empty)
+        }
+    }
+
+    /// Reads all type descriptors at `types_index` into a single data group.
+    fn read_types(&mut self, types_index: usize) -> Result<Group<'a>> {
+        let len = self.type_table[types_index].len();
+
+        // Common case: a single descriptor decodes to a single value with no Vec.
+        if len == 1 {
+            let ty = self.type_table[types_index][0];
+            return if matches!(ty, Type::EmbeddedData) {
+                self.read_embedded()
+            } else {
+                Ok(Group::One(self.read_value(ty)?))
+            };
         }
 
-        Ok(Some(out_v))
+        let mut out_v = Vec::with_capacity(len);
+        for i in 0..len {
+            let ty = self.type_table[types_index][i];
+            if matches!(ty, Type::EmbeddedData) {
+                return self.read_embedded();
+            }
+            out_v.push(self.read_value(ty)?);
+        }
+
+        Ok(Group::Many(out_v))
     }
 
     /// Gets the current type from the stream, either by reading it from the stream or reading it from
