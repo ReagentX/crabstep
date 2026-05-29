@@ -4,7 +4,12 @@ use core::slice::Iter;
 
 use alloc::vec::Vec;
 
-use crate::models::{archived::Archived, class::Class, output_data::OutputData, types::Type};
+use crate::models::{
+    archived::{Archived, ObjectData},
+    class::Class,
+    output_data::OutputData,
+    types::{Type, TypeEntry},
+};
 
 /// A single resolved property from an [`Archived::Object`].
 #[derive(Debug)]
@@ -19,10 +24,148 @@ pub enum Property<'a, 'b> {
         data: PropertyIterator<'a, 'b>,
     },
     /// A group of properties (primitives or nested objects).
-    Group(Vec<Property<'a, 'b>>),
+    Group(PropertyGroup<'a, 'b>),
     /// A primitive value (string, number, byte, etc.).
     Primitive(&'b OutputData<'a>),
 }
+
+/// A lazily-resolved group of [`Property`] values.
+///
+/// A group is just a borrowed slice of the deserialized [`OutputData`] plus the
+/// tables needed to resolve object references. Individual [`Property`] values
+/// are constructed on demand by [`get`](Self::get) / [`iter`](Self::iter), so
+/// iterating a stream performs **no per-group heap allocation** — the previous
+/// design materialized a `Vec<Property>` for every group, which dominated
+/// traversal cost.
+///
+/// It exposes a small, slice-like read API (`len`, `is_empty`, `get`, `first`,
+/// `iter`, and `IntoIterator`). Because items are resolved on demand, the
+/// accessors yield `Property` values *by value* rather than by reference.
+#[derive(Debug, Clone, Copy)]
+pub struct PropertyGroup<'a, 'b> {
+    items: &'b [OutputData<'a>],
+    object_table: &'b [Archived<'a>],
+    type_table: &'b [TypeEntry<'a>],
+}
+
+impl<'a, 'b: 'a> PropertyGroup<'a, 'b> {
+    /// The number of values in the group.
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
+
+    /// Whether the group has no values.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
+
+    /// Resolve the value at `index` into a [`Property`], if present.
+    #[must_use]
+    pub fn get(&self, index: usize) -> Option<Property<'a, 'b>> {
+        let item = self.items.get(index)?;
+        Some(self.resolve(item))
+    }
+
+    /// Resolve the first value into a [`Property`], if present.
+    #[must_use]
+    pub fn first(&self) -> Option<Property<'a, 'b>> {
+        self.get(0)
+    }
+
+    /// An iterator that resolves each value in the group on demand.
+    #[must_use]
+    pub fn iter(&self) -> PropertyGroupIter<'a, 'b> {
+        PropertyGroupIter {
+            group: *self,
+            front: 0,
+            back: self.items.len(),
+        }
+    }
+
+    /// Resolve a single stored value into a [`Property`]. Object references are
+    /// resolved against the object/type tables; everything else is a primitive.
+    fn resolve(&self, item: &'b OutputData<'a>) -> Property<'a, 'b> {
+        if let OutputData::Object(idx) = item
+            && let Some(Archived::Object { class: cls, .. }) = self.object_table.get(*idx)
+            && let Some(Archived::Class(cls)) = self.object_table.get(*cls)
+            && let Some(sub_iter) = PropertyIterator::new(self.object_table, self.type_table, *idx)
+        {
+            let class_name = self
+                .type_table
+                .get(cls.name_index)
+                .and_then(|types| types.first())
+                .and_then(|t| match t {
+                    Type::String(name) => Some(*name),
+                    _ => None,
+                })
+                .unwrap_or("Unknown Class");
+            return Property::Object {
+                class: cls,
+                name: class_name,
+                data: sub_iter,
+            };
+        }
+        Property::Primitive(item)
+    }
+}
+
+impl<'a, 'b: 'a> IntoIterator for PropertyGroup<'a, 'b> {
+    type Item = Property<'a, 'b>;
+    type IntoIter = PropertyGroupIter<'a, 'b>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl<'a, 'b: 'a> IntoIterator for &PropertyGroup<'a, 'b> {
+    type Item = Property<'a, 'b>;
+    type IntoIter = PropertyGroupIter<'a, 'b>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+/// Iterator over a [`PropertyGroup`], resolving each [`Property`] on demand.
+#[derive(Debug, Clone)]
+pub struct PropertyGroupIter<'a, 'b> {
+    group: PropertyGroup<'a, 'b>,
+    front: usize,
+    back: usize,
+}
+
+impl<'a, 'b: 'a> Iterator for PropertyGroupIter<'a, 'b> {
+    type Item = Property<'a, 'b>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.front >= self.back {
+            return None;
+        }
+        let item = self.group.get(self.front);
+        self.front += 1;
+        item
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.back - self.front;
+        (remaining, Some(remaining))
+    }
+}
+
+impl<'a, 'b: 'a> DoubleEndedIterator for PropertyGroupIter<'a, 'b> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.front >= self.back {
+            return None;
+        }
+        self.back -= 1;
+        self.group.get(self.back)
+    }
+}
+
+impl<'a, 'b: 'a> ExactSizeIterator for PropertyGroupIter<'a, 'b> {}
 
 /// An iterator that resolves the top-level properties of a single [`Archived::Object`].
 ///
@@ -53,29 +196,43 @@ pub enum Property<'a, 'b> {
 #[derive(Debug, Clone)]
 pub struct PropertyIterator<'a, 'b> {
     object_table: &'b [Archived<'a>],
-    type_table: &'b [Vec<Type<'a>>],
-    property_groups: Iter<'b, Vec<OutputData<'a>>>,
+    type_table: &'b [TypeEntry<'a>],
+    groups: GroupSource<'a, 'b>,
+}
+
+/// The source of an object's data groups during iteration. Mirrors
+/// [`ObjectData`] so the common single-value object can be walked without ever
+/// having allocated a backing `Vec`.
+#[derive(Debug, Clone)]
+enum GroupSource<'a, 'b> {
+    /// A single inline value that forms one group; yielded exactly once.
+    Inline(Option<&'b OutputData<'a>>),
+    /// An iterator over the object's group vectors.
+    Groups(Iter<'b, Vec<OutputData<'a>>>),
 }
 
 impl<'a, 'b> PropertyIterator<'a, 'b> {
     pub(crate) fn new(
         object_table: &'b [Archived<'a>],
-        type_table: &'b [Vec<Type<'a>>],
+        type_table: &'b [TypeEntry<'a>],
         root_object_index: usize,
     ) -> Option<Self> {
         let root_object = object_table.get(root_object_index)?;
 
-        let Archived::Object {
-            data: properties, ..
-        } = root_object
-        else {
+        let Archived::Object { data, .. } = root_object else {
             return None;
+        };
+
+        let groups = match data {
+            ObjectData::Empty => GroupSource::Inline(None),
+            ObjectData::Inline(value) => GroupSource::Inline(Some(value)),
+            ObjectData::Groups(groups) => GroupSource::Groups(groups.iter()),
         };
 
         Some(Self {
             object_table,
             type_table,
-            property_groups: properties.iter(),
+            groups,
         })
     }
 }
@@ -142,9 +299,9 @@ impl<'a, 'b: 'a> PropertyIterator<'a, 'b> {
 
             match prop {
                 Property::Primitive(p) => primitives.push(p),
-                Property::Group(mut group) => {
+                Property::Group(group) => {
                     // push children in reverse to preserve order
-                    while let Some(child) = group.pop() {
+                    for child in group.into_iter().rev() {
                         stack.push((child, depth + 1));
                     }
                 }
@@ -166,42 +323,19 @@ impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
     type Item = Property<'a, 'b>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let groups = self.property_groups.next()?;
+        // Yield the next group as a lazy view over its stored values. No
+        // allocation and no per-item resolution happens here; callers resolve
+        // individual `Property` values on demand via the `PropertyGroup` API.
+        let items: &'b [OutputData<'a>] = match &mut self.groups {
+            GroupSource::Inline(slot) => core::slice::from_ref(slot.take()?),
+            GroupSource::Groups(iter) => iter.next()?.as_slice(),
+        };
 
-        let mut resolved = Vec::with_capacity(groups.len());
-
-        for group in groups {
-            match group {
-                OutputData::Object(idx) => {
-                    if let Some(Archived::Object {
-                        class: cls,
-                        data: _,
-                    }) = self.object_table.get(*idx)
-                        && let Some(Archived::Class(cls)) = self.object_table.get(*cls)
-                    {
-                        let class_name = self
-                            .type_table
-                            .get(cls.name_index)
-                            .and_then(|types| types.first())
-                            .and_then(|t| match t {
-                                Type::String(name) => Some(*name),
-                                _ => None,
-                            })
-                            .unwrap_or("Unknown Class");
-                        // recurse into that object’s own data
-                        let sub_iter =
-                            PropertyIterator::new(self.object_table, self.type_table, *idx)?;
-                        resolved.push(Property::Object {
-                            class: cls,
-                            name: class_name,
-                            data: sub_iter,
-                        });
-                    }
-                }
-                prim => resolved.push(Property::Primitive(prim)),
-            }
-        }
-        Some(Property::Group(resolved))
+        Some(Property::Group(PropertyGroup {
+            items,
+            object_table: self.object_table,
+            type_table: self.type_table,
+        }))
     }
 }
 
