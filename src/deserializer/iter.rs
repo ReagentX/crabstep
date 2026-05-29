@@ -34,9 +34,7 @@ pub enum Property<'a, 'b> {
 /// A group is just a borrowed slice of the deserialized [`OutputData`] plus the
 /// tables needed to resolve object references. Individual [`Property`] values
 /// are constructed on demand by [`get`](Self::get) / [`iter`](Self::iter), so
-/// iterating a stream performs **no per-group heap allocation** — the previous
-/// design materialized a `Vec<Property>` for every group, which dominated
-/// traversal cost.
+/// iterating a stream performs no per-group heap allocation.
 ///
 /// It exposes a small, slice-like read API (`len`, `is_empty`, `get`, `first`,
 /// `iter`, and `IntoIterator`). Because items are resolved on demand, the

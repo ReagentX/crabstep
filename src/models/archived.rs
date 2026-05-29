@@ -8,8 +8,8 @@ use crate::models::{class::Class, output_data::OutputData};
 ///
 /// `typedstream` objects store their values in one or more *groups* (each group
 /// is the result of decoding one type descriptor). In practice the overwhelming
-/// majority of objects hold a single group containing a single value — an
-/// `NSString`'s text, an `NSNumber`'s number, a reference to another object — so
+/// majority of objects hold a single group containing a single value (an
+/// `NSString`'s text, an `NSNumber`'s number, a reference to another object) so
 /// that case is stored inline without any heap allocation. Only objects with
 /// multiple groups, or a group holding multiple values, fall back to the nested
 /// [`Vec`] representation.
