@@ -11,7 +11,10 @@ pub mod deserializer;
 pub mod error;
 pub mod models;
 
-pub use deserializer::{iter::PropertyIterator, typedstream::TypedStreamDeserializer};
+pub use deserializer::{
+    iter::{Property, PropertyIterator},
+    typedstream::TypedStreamDeserializer,
+};
 pub use models::{
     archived::{Archived, ObjectData},
     output_data::OutputData,
