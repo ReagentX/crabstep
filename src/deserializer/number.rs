@@ -2,7 +2,7 @@
 
 use crate::{
     deserializer::{
-        constants::{DECIMAL, END, I_16, I_32, REFERENCE_TAG},
+        constants::{DECIMAL, END, I_16, I_32, I_64, REFERENCE_TAG},
         consumed::Consumed,
         read::{read_byte_at, read_exact_bytes},
     },
@@ -50,6 +50,12 @@ pub fn read_signed_int(data: &[u8]) -> Result<Consumed<i64>> {
                 let size = 4;
                 let value = i32::from_le_bytes(<[u8; 4]>::try_from(read_exact_bytes(rest, size)?)?);
                 (i64::from(value), size + 1)
+            }
+            // The number is 8 bytes long
+            I_64 => {
+                let size = 8;
+                let value = i64::from_le_bytes(<[u8; 8]>::try_from(read_exact_bytes(rest, size)?)?);
+                (value, size + 1)
             }
             // The number is 1 byte long and is the current byte
             _ => {
@@ -109,6 +115,12 @@ pub fn read_unsigned_int(data: &[u8]) -> Result<Consumed<u64>> {
                 let value = u32::from_le_bytes(<[u8; 4]>::try_from(read_exact_bytes(rest, size)?)?);
                 (u64::from(value), size + 1)
             }
+            // The number is 8 bytes long
+            I_64 => {
+                let size = 8;
+                let value = u64::from_le_bytes(<[u8; 8]>::try_from(read_exact_bytes(rest, size)?)?);
+                (value, size + 1)
+            }
             // The number is 1 byte long
             _ => {
                 // If the current byte is greater than the REFERENCE_TAG, it indicates an index in the table of already-seen types.
@@ -149,7 +161,9 @@ pub fn read_float(data: &[u8]) -> Result<Consumed<f32>> {
     match *current_byte {
         DECIMAL => {
             let size = 4;
-            let value = f32::from_le_bytes(<[u8; 4]>::try_from(read_exact_bytes(data, size)?)?);
+            // Skip the DECIMAL tag byte; the IEEE-754 value follows it.
+            let value =
+                f32::from_le_bytes(<[u8; 4]>::try_from(read_exact_bytes(&data[1..], size)?)?);
             Ok(Consumed::new(value, size + 1))
         }
         I_16 | I_32 => Ok(read_signed_int(data)?.map(|v| v as f32)),
@@ -179,7 +193,9 @@ pub fn read_double(data: &[u8]) -> Result<Consumed<f64>> {
     match *current_byte {
         DECIMAL => {
             let size = 8;
-            let value = f64::from_le_bytes(<[u8; 8]>::try_from(read_exact_bytes(data, size)?)?);
+            // Skip the DECIMAL tag byte; the IEEE-754 value follows it.
+            let value =
+                f64::from_le_bytes(<[u8; 8]>::try_from(read_exact_bytes(&data[1..], size)?)?);
             Ok(Consumed::new(value, size + 1))
         }
         I_16 | I_32 => Ok(read_signed_int(data)?.map(|v| v as f64)),
@@ -272,12 +288,48 @@ mod int_tests {
 
         assert!(result.is_err());
     }
+
+    #[test]
+    fn can_read_signed_int_64() {
+        let data = [0x87, 0x00, 0x28, 0x6b, 0xee, 0x00, 0x00, 0x00, 0x00, 0x86];
+        let result = read_signed_int(&data).unwrap();
+
+        assert_eq!(result.value, 4_000_000_000);
+        assert_eq!(result.bytes_consumed, 9);
+    }
+
+    #[test]
+    fn can_read_signed_int_64_negative() {
+        let data = [0x87, 0x00, 0xe6, 0x8e, 0xe7, 0xfd, 0xff, 0xff, 0xff, 0x86];
+        let result = read_signed_int(&data).unwrap();
+
+        assert_eq!(result.value, -9_000_000_000);
+        assert_eq!(result.bytes_consumed, 9);
+    }
+
+    #[test]
+    fn can_read_unsigned_int_64() {
+        let data = [0x87, 0x00, 0x34, 0xe2, 0x30, 0x04, 0x00, 0x00, 0x00, 0x86];
+        let result = read_unsigned_int(&data).unwrap();
+
+        assert_eq!(result.value, 18_000_000_000);
+        assert_eq!(result.bytes_consumed, 9);
+    }
+
+    #[test]
+    fn cant_read_signed_int_64_too_short() {
+        // marker promises 8 bytes but only 4 are present
+        let data = [0x87, 0x00, 0x28, 0x6b, 0xee];
+        let result = read_signed_int(&data);
+
+        assert!(result.is_err());
+    }
 }
 
 #[cfg(test)]
 mod float_tests {
     use crate::deserializer::{
-        constants::{I_16, I_32},
+        constants::{DECIMAL, I_16, I_32},
         number::{read_double, read_float},
     };
 
@@ -333,5 +385,64 @@ mod float_tests {
 
         assert_eq!(result.value, 16843009.);
         assert_eq!(result.bytes_consumed, 5);
+    }
+
+    #[test]
+    fn can_read_decimal_float() {
+        // 0x83 + little-endian 3.5f32, from NSNumber(value: Float(3.5)); 0x86 = END.
+        let data = [DECIMAL, 0x00, 0x00, 0x60, 0x40, 0x86];
+        let result = read_float(&data).unwrap();
+
+        assert_eq!(result.value, 3.5);
+        assert_eq!(result.bytes_consumed, 5);
+    }
+
+    #[test]
+    fn can_read_decimal_float_one() {
+        // 0x83 + little-endian 1.0f32 (matches this module's doc example).
+        let data = [DECIMAL, 0x00, 0x00, 0x80, 0x3F];
+        let result = read_float(&data).unwrap();
+
+        assert_eq!(result.value, 1.0);
+        assert_eq!(result.bytes_consumed, 5);
+    }
+
+    #[test]
+    fn can_read_decimal_double() {
+        // 0x83 + little-endian 100.5 f64 (exactly representable), from
+        // NSNumber(value: 100.5); 0x86 = END.
+        let data = [
+            DECIMAL, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x59, 0x40, 0x86,
+        ];
+        let result = read_double(&data).unwrap();
+
+        assert_eq!(result.value, 100.5);
+        assert_eq!(result.bytes_consumed, 9);
+    }
+
+    #[test]
+    fn can_read_decimal_double_fractional_date() {
+        // NSDate(timeIntervalSinceReferenceDate: 700000000.523) — fractional dates
+        // archive their double with the DECIMAL tag (integral ones use I_32).
+        let data = [
+            DECIMAL, 0xaa, 0xf1, 0x42, 0x80, 0x93, 0xdc, 0xc4, 0x41, 0x86,
+        ];
+        let result = read_double(&data).unwrap();
+
+        assert!(
+            (result.value - 700_000_000.523).abs() < 1e-3,
+            "got {}",
+            result.value
+        );
+        assert_eq!(result.bytes_consumed, 9);
+    }
+
+    #[test]
+    fn cant_read_decimal_double_too_short() {
+        // tag promises 8 bytes but only 4 follow
+        let data = [DECIMAL, 0x9b, 0x91, 0x04, 0x8b];
+        let result = read_double(&data);
+
+        assert!(result.is_err());
     }
 }
