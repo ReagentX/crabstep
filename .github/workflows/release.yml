@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: rustup update stable && rustup default stable
-      - run: cargo test --verbose
+      - run: cargo test --verbose --all-features
       - run: |
           export VERSION=${{ github.event.release.tag_name }}
           sed -i "s/0.0.0/$VERSION/g" Cargo.toml
