@@ -24,7 +24,7 @@ NSDictionary NSMutableDictionary NSDictionaryNested \
 NSSet NSMutableSet \
 NSDate NSDateFractional \
 NSURL NSURLRelative \
-NestedStrings NestedData NestedAttributed"
+NestedStrings NestedData NestedAttributed NestedContainers"
 
 for k in $keys; do
     "$bin" "$k" "$out/$k" || echo "FAILED: $k"

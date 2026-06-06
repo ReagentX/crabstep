@@ -62,6 +62,20 @@ func make(_ key: String) -> Any? {
     case "NestedStrings":       return NSArray(array: [NSString(string: "imm"), NSMutableString(string: "mut")])
     case "NestedData":          return NSArray(array: [NSData(bytes: [0x01, 0x02] as [UInt8], length: 2), NSMutableData(bytes: [0x03, 0x04, 0x05] as [UInt8], length: 3)])
     case "NestedAttributed":    return NSArray(array: [NSAttributedString(string: "styled")])
+    case "NestedContainers":
+        // Nested containers (both cluster variants + an empty array) so the
+        // container accessors can be tested on objects wrapped in a group.
+        let md = NSMutableDictionary()
+        md.setObject(NSNumber(value: 8), forKey: NSString(string: "mk"))
+        return NSArray(array: [
+            NSArray(array: [NSNumber(value: 1), NSNumber(value: 2)]),
+            NSMutableArray(array: [NSNumber(value: 3)]),
+            NSArray(array: []),
+            NSDictionary(objects: [NSNumber(value: 9)], forKeys: [NSString(string: "k")]),
+            md,
+            NSSet(array: [NSString(string: "s")]),
+            NSMutableSet(array: [NSString(string: "ms")]),
+        ])
     default:                    return nil
     }
 }
