@@ -26,16 +26,18 @@ use crate::{
 // and a mutable variant (and the data cluster archives as both `NSData` and
 // `NSMutableData`); matching all variants in one place keeps the footgun
 // centralized.
+/// Denotes string data
 pub(crate) const STRING_CLASSES: &[&str] = &["NSString", "NSMutableString"];
+/// Denotes string data with attributes (e.g. font, color, …)
 pub(crate) const ATTRIBUTED_STRING_CLASSES: &[&str] =
     &["NSAttributedString", "NSMutableAttributedString"];
+/// Denotes raw bytes
 pub(crate) const DATA_CLASSES: &[&str] = &["NSData", "NSMutableData"];
-// Consumed by the container accessors added in Phase 3.
-#[allow(dead_code)]
+/// Denotes ordered collections of arbitrary objects.
 pub(crate) const ARRAY_CLASSES: &[&str] = &["NSArray", "NSMutableArray"];
-#[allow(dead_code)]
+/// Denotes unordered collections of arbitrary objects.
 pub(crate) const DICT_CLASSES: &[&str] = &["NSDictionary", "NSMutableDictionary"];
-#[allow(dead_code)]
+/// Denotes unordered collections of unique arbitrary objects.
 pub(crate) const SET_CLASSES: &[&str] = &["NSSet", "NSMutableSet"];
 
 /// Extract the backing UTF-8 of a string-cluster object: the first `String`
@@ -172,6 +174,41 @@ impl<'a, 'b: 'a> Property<'a, 'b> {
         }
     }
 
+    // MARK: Array
+    /// The elements of an `NSArray` / `NSMutableArray` as a lazy iterator. The
+    /// leading element-count group is skipped; each yielded [`Property`] is an
+    /// element on which the other accessors (`as_string`, `as_i64`, a nested
+    /// `as_array`, …) can be called.
+    #[must_use]
+    pub fn as_array(&self) -> Option<FoundationArray<'a, 'b>> {
+        let mut data = self.object_in_classes(ARRAY_CLASSES)?;
+        data.next(); // discard the count group
+        Some(FoundationArray { inner: data })
+    }
+
+    // MARK: Set
+    /// The members of an `NSSet` / `NSMutableSet` as a lazy iterator (unordered).
+    /// Shares [`FoundationArray`] with [`as_array`](Self::as_array): the count
+    /// group is skipped and each member is yielded as a [`Property`].
+    #[must_use]
+    pub fn as_set(&self) -> Option<FoundationArray<'a, 'b>> {
+        let mut data = self.object_in_classes(SET_CLASSES)?;
+        data.next(); // discard the count group
+        Some(FoundationArray { inner: data })
+    }
+
+    // MARK: Dictionary
+    /// The key/value pairs of an `NSDictionary` / `NSMutableDictionary` as a lazy
+    /// iterator. The leading count group is skipped and the remaining groups are
+    /// paired `(key, value)`; a trailing unpaired key (only reachable from
+    /// malformed data) is dropped.
+    #[must_use]
+    pub fn as_dictionary(&self) -> Option<FoundationDict<'a, 'b>> {
+        let mut data = self.object_in_classes(DICT_CLASSES)?;
+        data.next(); // discard the count group
+        Some(FoundationDict { inner: data })
+    }
+
     // MARK: Helpers
     /// If `self` is a group whose first item is an object whose class is in
     /// `classes`, return that object's data iterator.
@@ -206,6 +243,43 @@ impl<'a, 'b: 'a> Property<'a, 'b> {
             },
             _ => None,
         }
+    }
+}
+
+// MARK: Iterators
+/// A lazy iterator over the elements of an `NSArray` / `NSMutableArray` (or the
+/// members of an `NSSet` / `NSMutableSet`), produced by [`Property::as_array`] /
+/// [`Property::as_set`]. Each item is the element's group-level [`Property`], so
+/// the other accessors apply to it directly.
+#[derive(Debug, Clone)]
+pub struct FoundationArray<'a, 'b> {
+    inner: PropertyIterator<'a, 'b>,
+}
+
+impl<'a, 'b: 'a> Iterator for FoundationArray<'a, 'b> {
+    type Item = Property<'a, 'b>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
+}
+
+/// A lazy iterator over the `(key, value)` pairs of an `NSDictionary` /
+/// `NSMutableDictionary`, produced by [`Property::as_dictionary`]. Each key and
+/// value is a group-level [`Property`].
+#[derive(Debug, Clone)]
+pub struct FoundationDict<'a, 'b> {
+    inner: PropertyIterator<'a, 'b>,
+}
+
+impl<'a, 'b: 'a> Iterator for FoundationDict<'a, 'b> {
+    type Item = (Property<'a, 'b>, Property<'a, 'b>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let key = self.inner.next()?;
+        // A missing value means an unpaired trailing key (malformed data); drop it.
+        let value = self.inner.next()?;
+        Some((key, value))
     }
 }
 
@@ -464,5 +538,93 @@ mod tests {
             .filter_map(|group| group.as_data())
             .collect();
         assert!(datas.contains(&&[0x01, 0x02][..]), "{datas:?}"); // NSData value
+    }
+
+    // MARK: as_array / as_set
+
+    #[test]
+    fn as_array_yields_elements_both_variants_and_empty() {
+        // NestedContainers root holds NSArray[1,2], NSMutableArray[3], an empty
+        // NSArray, then non-array elements (dicts/sets) which as_array ignores.
+        let bytes = load("foundation/NestedContainers");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let arrays: Vec<Vec<i64>> = ts
+            .resolve_properties(root)
+            .unwrap()
+            .filter_map(|group| group.as_array())
+            .map(|array| array.filter_map(|el| el.as_i64()).collect())
+            .collect();
+
+        assert_eq!(arrays, vec![vec![1, 2], vec![3], vec![]]);
+    }
+
+    #[test]
+    fn as_set_yields_members_both_variants() {
+        let bytes = load("foundation/NestedContainers");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let sets: Vec<Vec<&str>> = ts
+            .resolve_properties(root)
+            .unwrap()
+            .filter_map(|group| group.as_set())
+            .map(|set| set.filter_map(|member| member.as_string()).collect())
+            .collect();
+
+        assert_eq!(sets, vec![vec!["s"], vec!["ms"]]);
+    }
+
+    // MARK: as_dictionary
+
+    #[test]
+    fn as_dictionary_yields_pairs_both_variants() {
+        // NestedContainers holds NSDictionary{k:9} and NSMutableDictionary{mk:8}.
+        let bytes = load("foundation/NestedContainers");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let entries: Vec<(&str, i64)> = ts
+            .resolve_properties(root)
+            .unwrap()
+            .filter_map(|group| group.as_dictionary())
+            .flat_map(|dict| {
+                dict.filter_map(|(key, value)| Some((key.as_string()?, value.as_i64()?)))
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+
+        assert_eq!(entries.len(), 2, "{entries:?}");
+        assert!(entries.contains(&("k", 9)), "{entries:?}");
+        assert!(entries.contains(&("mk", 8)), "{entries:?}");
+    }
+
+    #[test]
+    fn nested_array_inside_array() {
+        // NSArrayNested = [NSString "top", NSArray[1, 2]] — as_array on the nested
+        // element resolves the inner array.
+        let bytes = load("foundation/NSArrayNested");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let inner: Vec<Vec<i64>> = ts
+            .resolve_properties(root)
+            .unwrap()
+            .filter_map(|group| group.as_array())
+            .map(|array| array.filter_map(|el| el.as_i64()).collect())
+            .collect();
+
+        assert_eq!(inner, vec![vec![1, 2]]);
+    }
+
+    // MARK: container negatives
+
+    #[test]
+    fn container_accessors_reject_non_containers() {
+        let bytes = load("foundation/NumberInt");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let group = ts.resolve_properties(root).unwrap().next().unwrap();
+
+        assert!(group.as_array().is_none());
+        assert!(group.as_set().is_none());
+        assert!(group.as_dictionary().is_none());
     }
 }
