@@ -17,5 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: rustup update stable && rustup default stable
+      - run: cargo build --no-default-features
+      - run: cargo build --features std
+      - run: cargo build --features foundation
       - run: cargo clippy --all-targets --all-features
       - run: cargo test --verbose --all-features

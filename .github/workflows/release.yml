@@ -15,6 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: rustup update stable && rustup default stable
+      - run: cargo build --no-default-features
+      - run: cargo build --features std
+      - run: cargo build --features foundation
       - run: cargo test --verbose --all-features
       - run: |
           export VERSION=${{ github.event.release.tag_name }}
