@@ -23,7 +23,8 @@ NSArray NSMutableArray NSArrayEmpty NSArrayWithNull NSArrayNested \
 NSDictionary NSMutableDictionary NSDictionaryNested \
 NSSet NSMutableSet \
 NSDate NSDateFractional \
-NSURL NSURLRelative"
+NSURL NSURLRelative \
+NestedStrings NestedData NestedAttributed"
 
 for k in $keys; do
     "$bin" "$k" "$out/$k" || echo "FAILED: $k"

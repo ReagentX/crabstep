@@ -56,6 +56,12 @@ func make(_ key: String) -> Any? {
     // urls
     case "NSURL":               return NSURL(string: "https://example.com/path?q=1")
     case "NSURLRelative":       return NSURL(string: "page.html", relativeTo: URL(string: "https://example.com/dir/"))
+    // nested fixtures: accessors operate on objects wrapped in a group, so these
+    // place each cluster variant as an array element (a root object's groups are
+    // its contents, not a wrapper around it).
+    case "NestedStrings":       return NSArray(array: [NSString(string: "imm"), NSMutableString(string: "mut")])
+    case "NestedData":          return NSArray(array: [NSData(bytes: [0x01, 0x02] as [UInt8], length: 2), NSMutableData(bytes: [0x03, 0x04, 0x05] as [UInt8], length: 3)])
+    case "NestedAttributed":    return NSArray(array: [NSAttributedString(string: "styled")])
     default:                    return nil
     }
 }
