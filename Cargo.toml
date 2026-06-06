@@ -15,3 +15,4 @@ categories = ["parsing", "parser-implementations", "database"]
 
 [features]
 std=[]
+foundation=[]
