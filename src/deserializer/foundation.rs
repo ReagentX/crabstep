@@ -209,6 +209,62 @@ impl<'a, 'b: 'a> Property<'a, 'b> {
         Some(FoundationDict { inner: data })
     }
 
+    // MARK: Date
+    /// An `NSDate` as seconds since the Cocoa reference epoch (2001-01-01 00:00:00
+    /// UTC). Use [`as_unix_time`](Self::as_unix_time) for seconds since the Unix
+    /// epoch.
+    #[must_use]
+    pub fn as_date(&self) -> Option<f64> {
+        let mut data = self.object_in_classes(&["NSDate"])?;
+        match data.next()? {
+            Property::Group(group) => match group.first()? {
+                Property::Primitive(OutputData::Double(seconds)) => Some(*seconds),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    /// An `NSDate` as seconds since the Unix epoch (1970-01-01 00:00:00 UTC),
+    /// i.e. [`as_date`](Self::as_date)` + 978_307_200.0` (the offset between the
+    /// Unix and Cocoa reference epochs).
+    #[must_use]
+    pub fn as_unix_time(&self) -> Option<f64> {
+        self.as_date().map(|seconds| seconds + 978_307_200.0)
+    }
+
+    // MARK: URL
+    /// The string of an `NSURL`. For an absolute URL this is the full URL; for a
+    /// URL created relative to a base, it is the relative component (the base
+    /// `NSURL` remains reachable through the generic [`Property`] tree).
+    #[must_use]
+    pub fn as_url(&self) -> Option<&'a str> {
+        let data = self.object_in_classes(&["NSURL"])?;
+        for group in data {
+            if let Some(url) = group.as_string() {
+                return Some(url);
+            }
+        }
+        None
+    }
+
+    // MARK: Null
+    /// Whether this property is an `NSNull` instance or a nil object reference
+    /// ([`OutputData::Null`]).
+    #[must_use]
+    pub fn is_null(&self) -> bool {
+        match self {
+            Property::Object { name: "NSNull", .. } | Property::Primitive(OutputData::Null) => true,
+            Property::Group(group) => matches!(
+                group.first(),
+                Some(
+                    Property::Object { name: "NSNull", .. } | Property::Primitive(OutputData::Null)
+                )
+            ),
+            _ => false,
+        }
+    }
+
     // MARK: Helpers
     /// If `self` is a group whose first item is an object whose class is in
     /// `classes`, return that object's data iterator.
@@ -626,5 +682,78 @@ mod tests {
         assert!(group.as_array().is_none());
         assert!(group.as_set().is_none());
         assert!(group.as_dictionary().is_none());
+    }
+
+    // MARK: as_date / as_unix_time
+
+    #[test]
+    fn as_date_and_unix_time() {
+        // NestedScalars holds NSDate(timeIntervalSinceReferenceDate: 21692800).
+        let bytes = load("foundation/NestedScalars");
+
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let dates: Vec<f64> = ts
+            .resolve_properties(root)
+            .unwrap()
+            .filter_map(|group| group.as_date())
+            .collect();
+        assert_eq!(dates, vec![21692800.0]);
+
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let unix: Vec<f64> = ts
+            .resolve_properties(root)
+            .unwrap()
+            .filter_map(|group| group.as_unix_time())
+            .collect();
+        assert_eq!(unix, vec![1_000_000_000.0]);
+    }
+
+    // MARK: as_url
+
+    #[test]
+    fn as_url_absolute_and_relative() {
+        // NestedScalars holds an absolute NSURL then a relative one; the relative
+        // one yields its relative component.
+        let bytes = load("foundation/NestedScalars");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let urls: Vec<&str> = ts
+            .resolve_properties(root)
+            .unwrap()
+            .filter_map(|group| group.as_url())
+            .collect();
+
+        assert_eq!(urls, vec!["https://example.com/path?q=1", "page.html"]);
+    }
+
+    // MARK: is_null
+
+    #[test]
+    fn is_null_detects_nsnull() {
+        let bytes = load("foundation/NestedScalars");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let null_count = ts
+            .resolve_properties(root)
+            .unwrap()
+            .filter(|group| group.is_null())
+            .count();
+
+        assert_eq!(null_count, 1);
+    }
+
+    #[test]
+    fn scalar_accessors_reject_wrong_types() {
+        let bytes = load("foundation/NumberInt");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let group = ts.resolve_properties(root).unwrap().next().unwrap();
+
+        assert!(!group.is_null());
+        assert_eq!(group.as_date(), None);
+        assert_eq!(group.as_unix_time(), None);
+        assert_eq!(group.as_url(), None);
     }
 }
