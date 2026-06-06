@@ -3,6 +3,7 @@
 pub mod constants;
 pub mod consumed;
 #[cfg(feature = "foundation")]
+#[cfg_attr(docsrs, doc(cfg(feature = "foundation")))]
 pub mod foundation;
 pub mod header;
 pub mod iter;

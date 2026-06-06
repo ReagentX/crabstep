@@ -14,5 +14,9 @@ categories = ["parsing", "parser-implementations", "database"]
 [dependencies]
 
 [features]
-std=[]
-foundation=[]
+std = []
+foundation = []
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

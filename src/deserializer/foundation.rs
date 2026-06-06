@@ -8,7 +8,7 @@ its footguns, e.g. that the data cluster archives as both `NSData` and
 `NSMutableData`).
 
 This feature is purely for convenience: the parser and the [`Property`]/
-[`OutputData`](crate::models::output_data::OutputData) model are unchanged
+[`OutputData`] model are unchanged
 whether or not it is enabled, and any class not modeled here stays reachable
 through [`Property::Object`], so nothing is ever lost.
 
@@ -175,38 +175,95 @@ impl<'a, 'b: 'a> Property<'a, 'b> {
     }
 
     // MARK: Array
-    /// The elements of an `NSArray` / `NSMutableArray` as a lazy iterator. The
-    /// leading element-count group is skipped; each yielded [`Property`] is an
-    /// element on which the other accessors (`as_string`, `as_i64`, a nested
-    /// `as_array`, …) can be called.
+    /// The elements of an `NSArray` / `NSMutableArray` as a lazy [`FoundationArray`]
+    /// view (the leading element-count group is skipped). Supports `len` /
+    /// `get(index)` / `iter`; each element is a group-level [`Property`] on which
+    /// the other accessors (`as_string`, `as_i64`, a nested `as_array`, …) apply.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use crabstep::TypedStreamDeserializer;
+    ///
+    /// let bytes: &[u8] = &[]; // a typedstream payload
+    /// let mut typedstream = TypedStreamDeserializer::new(bytes);
+    /// let root = typedstream.oxidize().unwrap();
+    ///
+    /// for property in typedstream.resolve_properties(root).unwrap() {
+    ///     if let Some(array) = property.as_array() {
+    ///         println!("{} elements", array.len());
+    ///         for element in &array {
+    ///             println!("{:?}", element.as_string());
+    ///         }
+    ///     }
+    /// }
+    /// ```
     #[must_use]
     pub fn as_array(&self) -> Option<FoundationArray<'a, 'b>> {
-        let mut data = self.object_in_classes(ARRAY_CLASSES)?;
-        data.next(); // discard the count group
-        Some(FoundationArray { inner: data })
+        let (elements, len) = split_count(self.object_in_classes(ARRAY_CLASSES)?)?;
+        Some(FoundationArray { elements, len })
     }
 
     // MARK: Set
-    /// The members of an `NSSet` / `NSMutableSet` as a lazy iterator (unordered).
-    /// Shares [`FoundationArray`] with [`as_array`](Self::as_array): the count
-    /// group is skipped and each member is yielded as a [`Property`].
+    /// The members of an `NSSet` / `NSMutableSet` as a lazy [`FoundationArray`]
+    /// view (unordered). Shares the type with [`as_array`](Self::as_array): the
+    /// count group is skipped and each member is a group-level [`Property`].
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use crabstep::TypedStreamDeserializer;
+    ///
+    /// let bytes: &[u8] = &[];
+    /// let mut typedstream = TypedStreamDeserializer::new(bytes);
+    /// let root = typedstream.oxidize().unwrap();
+    ///
+    /// for property in typedstream.resolve_properties(root).unwrap() {
+    ///     if let Some(set) = property.as_set() {
+    ///         for member in &set {
+    ///             println!("{:?}", member.as_string());
+    ///         }
+    ///     }
+    /// }
+    /// ```
     #[must_use]
     pub fn as_set(&self) -> Option<FoundationArray<'a, 'b>> {
-        let mut data = self.object_in_classes(SET_CLASSES)?;
-        data.next(); // discard the count group
-        Some(FoundationArray { inner: data })
+        let (elements, len) = split_count(self.object_in_classes(SET_CLASSES)?)?;
+        Some(FoundationArray { elements, len })
     }
 
     // MARK: Dictionary
-    /// The key/value pairs of an `NSDictionary` / `NSMutableDictionary` as a lazy
-    /// iterator. The leading count group is skipped and the remaining groups are
-    /// paired `(key, value)`; a trailing unpaired key (only reachable from
-    /// malformed data) is dropped.
+    /// The entries of an `NSDictionary` / `NSMutableDictionary` as a lazy
+    /// [`FoundationDict`] view (the leading count group is skipped). Look up a
+    /// string key with [`get`](FoundationDict::get), or iterate the `(key, value)`
+    /// pairs; each key and value is a group-level [`Property`].
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use crabstep::TypedStreamDeserializer;
+    ///
+    /// let bytes: &[u8] = &[];
+    /// let mut typedstream = TypedStreamDeserializer::new(bytes);
+    /// let root = typedstream.oxidize().unwrap();
+    ///
+    /// for property in typedstream.resolve_properties(root).unwrap() {
+    ///     if let Some(dict) = property.as_dictionary() {
+    ///         // Look up a value by its string key.
+    ///         if let Some(part) = dict.get("__kIMMessagePartAttributeName") {
+    ///             println!("part index = {:?}", part.as_i64());
+    ///         }
+    ///         // Or iterate every entry.
+    ///         for (key, value) in &dict {
+    ///             println!("{:?} => {:?}", key.as_string(), value.as_i64());
+    ///         }
+    ///     }
+    /// }
+    /// ```
     #[must_use]
     pub fn as_dictionary(&self) -> Option<FoundationDict<'a, 'b>> {
-        let mut data = self.object_in_classes(DICT_CLASSES)?;
-        data.next(); // discard the count group
-        Some(FoundationDict { inner: data })
+        let (entries, len) = split_count(self.object_in_classes(DICT_CLASSES)?)?;
+        Some(FoundationDict { entries, len })
     }
 
     // MARK: Date
@@ -303,16 +360,113 @@ impl<'a, 'b: 'a> Property<'a, 'b> {
 }
 
 // MARK: Iterators
-/// A lazy iterator over the elements of an `NSArray` / `NSMutableArray` (or the
+/// Read the leading count group of a container's data, returning the remaining
+/// iterator (positioned at the first element/entry) and the declared count.
+fn split_count<'a, 'b: 'a>(
+    mut data: PropertyIterator<'a, 'b>,
+) -> Option<(PropertyIterator<'a, 'b>, usize)> {
+    let count = data.next()?;
+    let len = usize::try_from(count.as_i64().unwrap_or(0)).unwrap_or(0);
+    Some((data, len))
+}
+
+/// A lazy view over the elements of an `NSArray` / `NSMutableArray` (or the
 /// members of an `NSSet` / `NSMutableSet`), produced by [`Property::as_array`] /
-/// [`Property::as_set`]. Each item is the element's group-level [`Property`], so
-/// the other accessors apply to it directly.
+/// [`Property::as_set`]. Cheap to clone and queryable any number of times; each
+/// element is a group-level [`Property`], so the other accessors apply directly.
 #[derive(Debug, Clone)]
 pub struct FoundationArray<'a, 'b> {
+    elements: PropertyIterator<'a, 'b>,
+    len: usize,
+}
+
+impl<'a, 'b: 'a> FoundationArray<'a, 'b> {
+    /// The number of elements (from the archived count).
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    /// Whether the collection has no elements.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    /// A fresh iterator over the elements.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use crabstep::TypedStreamDeserializer;
+    /// # let bytes: &[u8] = &[];
+    /// # let mut typedstream = TypedStreamDeserializer::new(bytes);
+    /// # let root = typedstream.oxidize().unwrap();
+    /// # let property = typedstream.resolve_properties(root).unwrap().next().unwrap();
+    /// # let array = property.as_array().unwrap();
+    /// for element in array.iter() {
+    ///     println!("{:?}", element.as_string());
+    /// }
+    /// ```
+    #[must_use]
+    pub fn iter(&self) -> FoundationArrayIter<'a, 'b> {
+        FoundationArrayIter {
+            inner: self.elements.clone(),
+        }
+    }
+
+    /// The element at `index` (a linear `O(index)` walk).
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use crabstep::TypedStreamDeserializer;
+    /// # let bytes: &[u8] = &[];
+    /// # let mut typedstream = TypedStreamDeserializer::new(bytes);
+    /// # let root = typedstream.oxidize().unwrap();
+    /// # let property = typedstream.resolve_properties(root).unwrap().next().unwrap();
+    /// # let array = property.as_array().unwrap();
+    /// println!("{:?}", array.get(2).and_then(|element| element.as_i64()));
+    /// ```
+    #[must_use]
+    pub fn get(&self, index: usize) -> Option<Property<'a, 'b>> {
+        self.iter().nth(index)
+    }
+
+    /// The first element.
+    #[must_use]
+    pub fn first(&self) -> Option<Property<'a, 'b>> {
+        self.iter().next()
+    }
+}
+
+impl<'a, 'b: 'a> IntoIterator for FoundationArray<'a, 'b> {
+    type Item = Property<'a, 'b>;
+    type IntoIter = FoundationArrayIter<'a, 'b>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        FoundationArrayIter {
+            inner: self.elements,
+        }
+    }
+}
+
+impl<'a, 'b: 'a> IntoIterator for &FoundationArray<'a, 'b> {
+    type Item = Property<'a, 'b>;
+    type IntoIter = FoundationArrayIter<'a, 'b>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+/// The iterator yielded by [`FoundationArray::iter`] and its [`IntoIterator`] impl.
+#[derive(Debug, Clone)]
+pub struct FoundationArrayIter<'a, 'b> {
     inner: PropertyIterator<'a, 'b>,
 }
 
-impl<'a, 'b: 'a> Iterator for FoundationArray<'a, 'b> {
+impl<'a, 'b: 'a> Iterator for FoundationArrayIter<'a, 'b> {
     type Item = Property<'a, 'b>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -320,15 +474,148 @@ impl<'a, 'b: 'a> Iterator for FoundationArray<'a, 'b> {
     }
 }
 
-/// A lazy iterator over the `(key, value)` pairs of an `NSDictionary` /
-/// `NSMutableDictionary`, produced by [`Property::as_dictionary`]. Each key and
-/// value is a group-level [`Property`].
+/// A lazy view over the `(key, value)` pairs of an `NSDictionary` /
+/// `NSMutableDictionary`, produced by [`Property::as_dictionary`]. Cheap to clone
+/// and queryable any number of times; each key and value is a group-level
+/// [`Property`].
 #[derive(Debug, Clone)]
 pub struct FoundationDict<'a, 'b> {
+    entries: PropertyIterator<'a, 'b>,
+    len: usize,
+}
+
+impl<'a, 'b: 'a> FoundationDict<'a, 'b> {
+    /// The number of entries (from the archived count).
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    /// Whether the dictionary has no entries.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    /// A fresh iterator over the `(key, value)` pairs.
+    #[must_use]
+    pub fn iter(&self) -> FoundationDictIter<'a, 'b> {
+        FoundationDictIter {
+            inner: self.entries.clone(),
+        }
+    }
+
+    /// The value for a string `key`, or `None` if absent.
+    ///
+    /// This is a linear scan (`O(n)`); dictionaries archived in a `typedstream`
+    /// are typically small. Only string keys are matched — for other key types,
+    /// or to build an index for many lookups, use [`iter`](Self::iter).
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use crabstep::TypedStreamDeserializer;
+    /// # let bytes: &[u8] = &[];
+    /// # let mut typedstream = TypedStreamDeserializer::new(bytes);
+    /// # let root = typedstream.oxidize().unwrap();
+    /// # let property = typedstream.resolve_properties(root).unwrap().next().unwrap();
+    /// # let dict = property.as_dictionary().unwrap();
+    /// if let Some(value) = dict.get("__kIMMessagePartAttributeName") {
+    ///     println!("{:?}", value.as_i64());
+    /// }
+    /// ```
+    #[must_use]
+    pub fn get(&self, key: &str) -> Option<Property<'a, 'b>> {
+        self.iter()
+            .find_map(|(k, v)| (k.as_string() == Some(key)).then_some(v))
+    }
+
+    /// Whether the dictionary contains the given string `key`.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use crabstep::TypedStreamDeserializer;
+    /// # let bytes: &[u8] = &[];
+    /// # let mut typedstream = TypedStreamDeserializer::new(bytes);
+    /// # let root = typedstream.oxidize().unwrap();
+    /// # let property = typedstream.resolve_properties(root).unwrap().next().unwrap();
+    /// # let dict = property.as_dictionary().unwrap();
+    /// if dict.contains_key("__kIMMessagePartAttributeName") {
+    ///     // the message-part attribute is present
+    /// }
+    /// ```
+    #[must_use]
+    pub fn contains_key(&self, key: &str) -> bool {
+        self.get(key).is_some()
+    }
+
+    /// A fresh iterator over the keys.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use crabstep::TypedStreamDeserializer;
+    /// # let bytes: &[u8] = &[];
+    /// # let mut typedstream = TypedStreamDeserializer::new(bytes);
+    /// # let root = typedstream.oxidize().unwrap();
+    /// # let property = typedstream.resolve_properties(root).unwrap().next().unwrap();
+    /// # let dict = property.as_dictionary().unwrap();
+    /// for key in dict.keys() {
+    ///     println!("{:?}", key.as_string());
+    /// }
+    /// ```
+    pub fn keys(&self) -> impl Iterator<Item = Property<'a, 'b>> {
+        self.iter().map(|(k, _)| k)
+    }
+
+    /// A fresh iterator over the values.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use crabstep::TypedStreamDeserializer;
+    /// # let bytes: &[u8] = &[];
+    /// # let mut typedstream = TypedStreamDeserializer::new(bytes);
+    /// # let root = typedstream.oxidize().unwrap();
+    /// # let property = typedstream.resolve_properties(root).unwrap().next().unwrap();
+    /// # let dict = property.as_dictionary().unwrap();
+    /// for value in dict.values() {
+    ///     println!("{:?}", value.as_i64());
+    /// }
+    /// ```
+    pub fn values(&self) -> impl Iterator<Item = Property<'a, 'b>> {
+        self.iter().map(|(_, v)| v)
+    }
+}
+
+impl<'a, 'b: 'a> IntoIterator for FoundationDict<'a, 'b> {
+    type Item = (Property<'a, 'b>, Property<'a, 'b>);
+    type IntoIter = FoundationDictIter<'a, 'b>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        FoundationDictIter {
+            inner: self.entries,
+        }
+    }
+}
+
+impl<'a, 'b: 'a> IntoIterator for &FoundationDict<'a, 'b> {
+    type Item = (Property<'a, 'b>, Property<'a, 'b>);
+    type IntoIter = FoundationDictIter<'a, 'b>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+/// The iterator yielded by [`FoundationDict::iter`] and its [`IntoIterator`] impl.
+#[derive(Debug, Clone)]
+pub struct FoundationDictIter<'a, 'b> {
     inner: PropertyIterator<'a, 'b>,
 }
 
-impl<'a, 'b: 'a> Iterator for FoundationDict<'a, 'b> {
+impl<'a, 'b: 'a> Iterator for FoundationDictIter<'a, 'b> {
     type Item = (Property<'a, 'b>, Property<'a, 'b>);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -609,7 +896,7 @@ mod tests {
             .resolve_properties(root)
             .unwrap()
             .filter_map(|group| group.as_array())
-            .map(|array| array.filter_map(|el| el.as_i64()).collect())
+            .map(|array| array.into_iter().filter_map(|el| el.as_i64()).collect())
             .collect();
 
         assert_eq!(arrays, vec![vec![1, 2], vec![3], vec![]]);
@@ -624,7 +911,11 @@ mod tests {
             .resolve_properties(root)
             .unwrap()
             .filter_map(|group| group.as_set())
-            .map(|set| set.filter_map(|member| member.as_string()).collect())
+            .map(|set| {
+                set.into_iter()
+                    .filter_map(|member| member.as_string())
+                    .collect()
+            })
             .collect();
 
         assert_eq!(sets, vec![vec!["s"], vec!["ms"]]);
@@ -643,7 +934,8 @@ mod tests {
             .unwrap()
             .filter_map(|group| group.as_dictionary())
             .flat_map(|dict| {
-                dict.filter_map(|(key, value)| Some((key.as_string()?, value.as_i64()?)))
+                dict.into_iter()
+                    .filter_map(|(key, value)| Some((key.as_string()?, value.as_i64()?)))
                     .collect::<Vec<_>>()
             })
             .collect();
@@ -664,7 +956,7 @@ mod tests {
             .resolve_properties(root)
             .unwrap()
             .filter_map(|group| group.as_array())
-            .map(|array| array.filter_map(|el| el.as_i64()).collect())
+            .map(|array| array.into_iter().filter_map(|el| el.as_i64()).collect())
             .collect();
 
         assert_eq!(inner, vec![vec![1, 2]]);
@@ -755,5 +1047,70 @@ mod tests {
         assert_eq!(group.as_date(), None);
         assert_eq!(group.as_unix_time(), None);
         assert_eq!(group.as_url(), None);
+    }
+
+    // MARK: container views
+
+    #[test]
+    fn array_view_len_get_first() {
+        // First array element of NestedContainers is NSArray[1, 2].
+        let bytes = load("foundation/NestedContainers");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let array = ts
+            .resolve_properties(root)
+            .unwrap()
+            .find_map(|group| group.as_array())
+            .unwrap();
+
+        assert_eq!(array.len(), 2);
+        assert!(!array.is_empty());
+        assert_eq!(array.first().and_then(|e| e.as_i64()), Some(1));
+        assert_eq!(array.get(0).and_then(|e| e.as_i64()), Some(1));
+        assert_eq!(array.get(1).and_then(|e| e.as_i64()), Some(2));
+        assert!(array.get(2).is_none());
+    }
+
+    #[test]
+    fn array_view_empty() {
+        // NestedContainers also holds an empty NSArray.
+        let bytes = load("foundation/NestedContainers");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let empty = ts
+            .resolve_properties(root)
+            .unwrap()
+            .filter_map(|group| group.as_array())
+            .find(|array| array.is_empty())
+            .unwrap();
+
+        assert_eq!(empty.len(), 0);
+        assert!(empty.first().is_none());
+        assert_eq!(empty.iter().count(), 0);
+    }
+
+    #[test]
+    fn dict_view_get_contains_keys_values() {
+        // First dictionary of NestedContainers is NSDictionary { "k": 9 }.
+        let bytes = load("foundation/NestedContainers");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let dict = ts
+            .resolve_properties(root)
+            .unwrap()
+            .find_map(|group| group.as_dictionary())
+            .unwrap();
+
+        assert_eq!(dict.len(), 1);
+        assert!(!dict.is_empty());
+        assert_eq!(dict.get("k").and_then(|v| v.as_i64()), Some(9));
+        assert!(dict.get("missing").is_none());
+        assert!(dict.contains_key("k"));
+        assert!(!dict.contains_key("missing"));
+
+        let keys: Vec<&str> = dict.keys().filter_map(|k| k.as_string()).collect();
+        assert_eq!(keys, vec!["k"]);
+        let values: Vec<i64> = dict.values().filter_map(|v| v.as_i64()).collect();
+        assert_eq!(values, vec![9]);
     }
 }
