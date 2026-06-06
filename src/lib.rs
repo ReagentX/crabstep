@@ -7103,4 +7103,1161 @@ mod test_typedstream_deserializer {
         let primitives = root_obj.primitives();
         println!("\nPrimitive Values: {primitives:?}");
     }
+
+    #[test]
+    fn test_parse_text_address() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/Address");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSMutableData")]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(1187)]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::Object(3)],
+                    vec![
+                        OutputData::SignedInteger(1),
+                        OutputData::UnsignedInteger(37),
+                    ],
+                    vec![OutputData::Object(5)],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 4,
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "1 Apple Park Way, Cupertino, CA 95014",
+                )]]),
+            },
+            Archived::Class(Class {
+                name_index: 3,
+                version: 1,
+                parent_index: Some(2),
+            }),
+            Archived::Object {
+                class: 6,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(2)],
+                    vec![OutputData::Object(7)],
+                    vec![OutputData::Object(8)],
+                    vec![OutputData::Object(11)],
+                    vec![OutputData::Object(12)],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 6,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Object {
+                class: 4,
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMAddressAttributeName",
+                )]]),
+            },
+            Archived::Object {
+                class: 9,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(1187)],
+                    vec![OutputData::Array(&[
+                        98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
+                        118, 101, 114, 115, 105, 111, 110, 89, 36, 97, 114, 99, 104, 105, 118, 101,
+                        114, 84, 36, 116, 111, 112, 88, 36, 111, 98, 106, 101, 99, 116, 115, 18, 0,
+                        1, 134, 160, 95, 16, 15, 78, 83, 75, 101, 121, 101, 100, 65, 114, 99, 104,
+                        105, 118, 101, 114, 210, 8, 9, 10, 11, 87, 118, 101, 114, 115, 105, 111,
+                        110, 89, 100, 100, 45, 114, 101, 115, 117, 108, 116, 128, 46, 128, 1, 175,
+                        16, 47, 13, 14, 28, 36, 37, 38, 44, 45, 46, 54, 60, 64, 65, 66, 67, 72, 78,
+                        26, 82, 83, 84, 87, 90, 94, 100, 104, 105, 106, 107, 108, 114, 118, 119,
+                        120, 121, 122, 128, 132, 133, 134, 135, 141, 145, 146, 147, 148, 149, 85,
+                        36, 110, 117, 108, 108, 215, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+                        26, 27, 26, 82, 77, 83, 86, 36, 99, 108, 97, 115, 115, 82, 65, 82, 81, 84,
+                        81, 80, 82, 83, 82, 82, 86, 78, 128, 6, 128, 22, 128, 2, 128, 7, 16, 1,
+                        128, 8, 212, 29, 30, 31, 16, 32, 33, 34, 35, 95, 16, 18, 78, 83, 46, 114,
+                        97, 110, 103, 101, 118, 97, 108, 46, 108, 101, 110, 103, 116, 104, 95, 16,
+                        20, 78, 83, 46, 114, 97, 110, 103, 101, 118, 97, 108, 46, 108, 111, 99, 97,
+                        116, 105, 111, 110, 90, 78, 83, 46, 115, 112, 101, 99, 105, 97, 108, 128,
+                        3, 128, 4, 16, 4, 128, 5, 16, 37, 16, 0, 210, 39, 40, 41, 42, 90, 36, 99,
+                        108, 97, 115, 115, 110, 97, 109, 101, 88, 36, 99, 108, 97, 115, 115, 101,
+                        115, 87, 78, 83, 86, 97, 108, 117, 101, 162, 41, 43, 88, 78, 83, 79, 98,
+                        106, 101, 99, 116, 95, 16, 37, 49, 32, 65, 112, 112, 108, 101, 32, 80, 97,
+                        114, 107, 32, 87, 97, 121, 44, 32, 67, 117, 112, 101, 114, 116, 105, 110,
+                        111, 44, 32, 67, 65, 32, 57, 53, 48, 49, 52, 91, 70, 117, 108, 108, 65,
+                        100, 100, 114, 101, 115, 115, 210, 47, 16, 48, 53, 90, 78, 83, 46, 111, 98,
+                        106, 101, 99, 116, 115, 164, 49, 50, 51, 52, 128, 9, 128, 29, 128, 35, 128,
+                        40, 128, 21, 215, 15, 16, 17, 18, 19, 20, 21, 55, 23, 57, 58, 26, 59, 26,
+                        128, 12, 128, 22, 128, 10, 128, 13, 128, 14, 212, 29, 30, 31, 16, 61, 33,
+                        34, 35, 128, 11, 128, 4, 128, 5, 16, 16, 95, 16, 16, 49, 32, 65, 112, 112,
+                        108, 101, 32, 80, 97, 114, 107, 32, 87, 97, 121, 86, 83, 116, 114, 101,
+                        101, 116, 210, 47, 16, 68, 53, 162, 69, 70, 128, 15, 128, 23, 128, 21, 215,
+                        15, 16, 17, 18, 19, 20, 21, 73, 23, 75, 76, 26, 77, 26, 128, 18, 128, 22,
+                        128, 16, 128, 19, 128, 20, 212, 29, 30, 31, 16, 79, 33, 34, 35, 128, 17,
+                        128, 4, 128, 5, 81, 49, 92, 83, 116, 114, 101, 101, 116, 78, 117, 109, 98,
+                        101, 114, 210, 47, 16, 85, 53, 160, 128, 21, 210, 39, 40, 88, 89, 87, 78,
+                        83, 65, 114, 114, 97, 121, 162, 88, 43, 210, 39, 40, 91, 92, 95, 16, 15,
+                        68, 68, 83, 99, 97, 110, 110, 101, 114, 82, 101, 115, 117, 108, 116, 162,
+                        93, 43, 95, 16, 15, 68, 68, 83, 99, 97, 110, 110, 101, 114, 82, 101, 115,
+                        117, 108, 116, 215, 15, 16, 17, 18, 19, 20, 21, 95, 23, 97, 98, 26, 77, 26,
+                        128, 27, 128, 22, 128, 24, 128, 28, 128, 20, 212, 29, 30, 31, 16, 101, 102,
+                        34, 35, 128, 25, 128, 26, 128, 5, 16, 14, 16, 2, 94, 65, 112, 112, 108,
+                        101, 32, 80, 97, 114, 107, 32, 87, 97, 121, 90, 83, 116, 114, 101, 101,
+                        116, 78, 97, 109, 101, 215, 15, 16, 17, 18, 19, 20, 21, 109, 23, 111, 112,
+                        26, 77, 26, 128, 33, 128, 22, 128, 30, 128, 34, 128, 20, 212, 29, 30, 31,
+                        16, 115, 116, 34, 35, 128, 31, 128, 32, 128, 5, 16, 9, 16, 18, 89, 67, 117,
+                        112, 101, 114, 116, 105, 110, 111, 84, 67, 105, 116, 121, 215, 15, 16, 17,
+                        18, 19, 20, 21, 123, 23, 125, 126, 26, 77, 26, 128, 38, 128, 22, 128, 36,
+                        128, 39, 128, 20, 212, 29, 30, 31, 16, 102, 130, 34, 35, 128, 26, 128, 37,
+                        128, 5, 16, 29, 82, 67, 65, 85, 83, 116, 97, 116, 101, 215, 15, 16, 17, 18,
+                        19, 20, 21, 136, 23, 138, 139, 26, 77, 26, 128, 44, 128, 22, 128, 41, 128,
+                        45, 128, 20, 212, 29, 30, 31, 16, 142, 143, 34, 35, 128, 42, 128, 43, 128,
+                        5, 16, 5, 16, 32, 85, 57, 53, 48, 49, 52, 87, 90, 105, 112, 67, 111, 100,
+                        101, 16, 1, 0, 8, 0, 17, 0, 26, 0, 36, 0, 41, 0, 50, 0, 55, 0, 73, 0, 78,
+                        0, 86, 0, 96, 0, 98, 0, 100, 0, 150, 0, 156, 0, 171, 0, 174, 0, 181, 0,
+                        184, 0, 186, 0, 188, 0, 191, 0, 194, 0, 196, 0, 198, 0, 200, 0, 202, 0,
+                        204, 0, 206, 0, 215, 0, 236, 1, 3, 1, 14, 1, 16, 1, 18, 1, 20, 1, 22, 1,
+                        24, 1, 26, 1, 31, 1, 42, 1, 51, 1, 59, 1, 62, 1, 71, 1, 111, 1, 123, 1,
+                        128, 1, 139, 1, 144, 1, 146, 1, 148, 1, 150, 1, 152, 1, 154, 1, 169, 1,
+                        171, 1, 173, 1, 175, 1, 177, 1, 179, 1, 188, 1, 190, 1, 192, 1, 194, 1,
+                        196, 1, 215, 1, 222, 1, 227, 1, 230, 1, 232, 1, 234, 1, 236, 1, 251, 1,
+                        253, 1, 255, 2, 1, 2, 3, 2, 5, 2, 14, 2, 16, 2, 18, 2, 20, 2, 22, 2, 35, 2,
+                        40, 2, 41, 2, 43, 2, 48, 2, 56, 2, 59, 2, 64, 2, 82, 2, 85, 2, 103, 2, 118,
+                        2, 120, 2, 122, 2, 124, 2, 126, 2, 128, 2, 137, 2, 139, 2, 141, 2, 143, 2,
+                        145, 2, 147, 2, 162, 2, 173, 2, 188, 2, 190, 2, 192, 2, 194, 2, 196, 2,
+                        198, 2, 207, 2, 209, 2, 211, 2, 213, 2, 215, 2, 217, 2, 227, 2, 232, 2,
+                        247, 2, 249, 2, 251, 2, 253, 2, 255, 3, 1, 3, 10, 3, 12, 3, 14, 3, 16, 3,
+                        18, 3, 21, 3, 27, 3, 42, 3, 44, 3, 46, 3, 48, 3, 50, 3, 52, 3, 61, 3, 63,
+                        3, 65, 3, 67, 3, 69, 3, 71, 3, 77, 3, 85, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0,
+                        0, 0, 0, 0, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 87,
+                    ])],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(10),
+            }),
+            Archived::Class(Class {
+                name_index: 9,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Object {
+                class: 4,
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
+            },
+            Archived::Object {
+                class: 13,
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+            },
+            Archived::Class(Class {
+                name_index: 11,
+                version: 0,
+                parent_index: Some(14),
+            }),
+            Archived::Class(Class {
+                name_index: 12,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Type(7),
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    #[test]
+    fn test_parse_text_arabic() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/Arabic");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::Object(3)],
+                    vec![
+                        OutputData::SignedInteger(1),
+                        OutputData::UnsignedInteger(13),
+                    ],
+                    vec![OutputData::Object(5)],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 4,
+                data: ObjectData::from_groups(vec![vec![OutputData::String("أهلا\u{64b} بالعالم")]]),
+            },
+            Archived::Class(Class {
+                name_index: 3,
+                version: 1,
+                parent_index: Some(2),
+            }),
+            Archived::Object {
+                class: 6,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(1)],
+                    vec![OutputData::Object(7)],
+                    vec![OutputData::Object(8)],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 6,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Object {
+                class: 4,
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
+            },
+            Archived::Object {
+                class: 9,
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(10),
+            }),
+            Archived::Class(Class {
+                name_index: 9,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Type(7),
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    #[test]
+    fn test_parse_text_currency() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/Currency");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::Object(3)],
+                    vec![
+                        OutputData::SignedInteger(1),
+                        OutputData::UnsignedInteger(29),
+                    ],
+                    vec![OutputData::Object(5)],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 4,
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "Money: $1234.56, £20, 100 USD",
+                )]]),
+            },
+            Archived::Class(Class {
+                name_index: 3,
+                version: 1,
+                parent_index: Some(2),
+            }),
+            Archived::Object {
+                class: 6,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(1)],
+                    vec![OutputData::Object(7)],
+                    vec![OutputData::Object(8)],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 6,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Object {
+                class: 4,
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
+            },
+            Archived::Object {
+                class: 9,
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(10),
+            }),
+            Archived::Class(Class {
+                name_index: 9,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Type(7),
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    #[test]
+    fn test_parse_text_currency_temperature_volume_weight() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/CurrencyTemperatureVolumeWeight");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(764)]),
+            TypeEntry::from_types(vec![Type::Array(748)]),
+            TypeEntry::from_types(vec![Type::Array(760)]),
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::Object(4)],
+                    vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(6)],
+                    vec![OutputData::Object(7)],
+                    vec![OutputData::SignedInteger(2), OutputData::UnsignedInteger(3)],
+                    vec![OutputData::Object(14)],
+                    vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(2)],
+                    vec![OutputData::SignedInteger(3), OutputData::UnsignedInteger(2)],
+                    vec![OutputData::Object(18)],
+                    vec![
+                        OutputData::SignedInteger(1),
+                        OutputData::UnsignedInteger(11),
+                    ],
+                    vec![OutputData::SignedInteger(4), OutputData::UnsignedInteger(6)],
+                    vec![OutputData::Object(20)],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Class(Class {
+                name_index: 3,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 5,
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "$100\n\n75℉\n\n1L of water\n\n225lbs",
+                )]]),
+            },
+            Archived::Class(Class {
+                name_index: 4,
+                version: 1,
+                parent_index: Some(6),
+            }),
+            Archived::Class(Class {
+                name_index: 5,
+                version: 1,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 8,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(1)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
+            },
+            Archived::Object {
+                class: 11,
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+            },
+            Archived::Class(Class {
+                name_index: 10,
+                version: 0,
+                parent_index: Some(12),
+            }),
+            Archived::Class(Class {
+                name_index: 11,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Type(9),
+            Archived::Object {
+                class: 8,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(2)],
+                    vec![OutputData::Object(15)],
+                    vec![OutputData::Object(16)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                ]),
+            },
+            Archived::Object {
+                class: 6,
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMDataDetectedAttributeName",
+                )]]),
+            },
+            Archived::Object {
+                class: 17,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(764)],
+                    vec![OutputData::Array(&[
+                        98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
+                        118, 101, 114, 115, 105, 111, 110, 89, 36, 97, 114, 99, 104, 105, 118, 101,
+                        114, 84, 36, 116, 111, 112, 88, 36, 111, 98, 106, 101, 99, 116, 115, 18, 0,
+                        1, 134, 160, 95, 16, 15, 78, 83, 75, 101, 121, 101, 100, 65, 114, 99, 104,
+                        105, 118, 101, 114, 210, 8, 9, 10, 11, 87, 118, 101, 114, 115, 105, 111,
+                        110, 89, 100, 100, 45, 114, 101, 115, 117, 108, 116, 128, 24, 128, 1, 175,
+                        16, 25, 13, 14, 28, 36, 37, 38, 44, 45, 46, 52, 58, 62, 63, 64, 65, 68, 71,
+                        75, 83, 26, 87, 88, 89, 90, 91, 85, 36, 110, 117, 108, 108, 215, 15, 16,
+                        17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 26, 82, 77, 83, 86, 36, 99,
+                        108, 97, 115, 115, 82, 65, 82, 81, 84, 81, 80, 82, 83, 82, 82, 86, 78, 128,
+                        6, 128, 16, 128, 2, 128, 7, 16, 1, 128, 8, 212, 29, 30, 31, 16, 32, 33, 34,
+                        35, 95, 16, 18, 78, 83, 46, 114, 97, 110, 103, 101, 118, 97, 108, 46, 108,
+                        101, 110, 103, 116, 104, 95, 16, 20, 78, 83, 46, 114, 97, 110, 103, 101,
+                        118, 97, 108, 46, 108, 111, 99, 97, 116, 105, 111, 110, 90, 78, 83, 46,
+                        115, 112, 101, 99, 105, 97, 108, 128, 3, 128, 4, 16, 4, 128, 5, 16, 3, 16,
+                        6, 210, 39, 40, 41, 42, 90, 36, 99, 108, 97, 115, 115, 110, 97, 109, 101,
+                        88, 36, 99, 108, 97, 115, 115, 101, 115, 87, 78, 83, 86, 97, 108, 117, 101,
+                        162, 41, 43, 88, 78, 83, 79, 98, 106, 101, 99, 116, 99, 0, 55, 0, 53, 33,
+                        9, 94, 80, 104, 121, 115, 105, 99, 97, 108, 65, 109, 111, 117, 110, 116,
+                        210, 47, 16, 48, 51, 90, 78, 83, 46, 111, 98, 106, 101, 99, 116, 115, 162,
+                        49, 50, 128, 9, 128, 17, 128, 15, 215, 15, 16, 17, 18, 19, 20, 21, 53, 23,
+                        55, 56, 26, 57, 26, 128, 12, 128, 16, 128, 10, 128, 13, 128, 14, 212, 29,
+                        30, 31, 16, 59, 33, 34, 35, 128, 11, 128, 4, 128, 5, 16, 2, 82, 55, 53, 93,
+                        73, 110, 116, 101, 103, 114, 97, 108, 86, 97, 108, 117, 101, 210, 47, 16,
+                        66, 51, 160, 128, 15, 210, 39, 40, 69, 70, 87, 78, 83, 65, 114, 114, 97,
+                        121, 162, 69, 43, 210, 39, 40, 72, 73, 95, 16, 15, 68, 68, 83, 99, 97, 110,
+                        110, 101, 114, 82, 101, 115, 117, 108, 116, 162, 74, 43, 95, 16, 15, 68,
+                        68, 83, 99, 97, 110, 110, 101, 114, 82, 101, 115, 117, 108, 116, 216, 15,
+                        16, 76, 17, 18, 19, 20, 21, 77, 23, 79, 80, 81, 26, 57, 26, 81, 86, 128,
+                        21, 128, 16, 128, 23, 128, 18, 128, 22, 128, 14, 212, 29, 30, 31, 16, 84,
+                        85, 34, 35, 128, 19, 128, 20, 128, 5, 16, 8, 97, 33, 9, 84, 85, 110, 105,
+                        116, 90, 102, 97, 104, 114, 101, 110, 104, 101, 105, 116, 16, 1, 0, 8, 0,
+                        17, 0, 26, 0, 36, 0, 41, 0, 50, 0, 55, 0, 73, 0, 78, 0, 86, 0, 96, 0, 98,
+                        0, 100, 0, 128, 0, 134, 0, 149, 0, 152, 0, 159, 0, 162, 0, 164, 0, 166, 0,
+                        169, 0, 172, 0, 174, 0, 176, 0, 178, 0, 180, 0, 182, 0, 184, 0, 193, 0,
+                        214, 0, 237, 0, 248, 0, 250, 0, 252, 0, 254, 1, 0, 1, 2, 1, 4, 1, 9, 1, 20,
+                        1, 29, 1, 37, 1, 40, 1, 49, 1, 56, 1, 71, 1, 76, 1, 87, 1, 90, 1, 92, 1,
+                        94, 1, 96, 1, 111, 1, 113, 1, 115, 1, 117, 1, 119, 1, 121, 1, 130, 1, 132,
+                        1, 134, 1, 136, 1, 138, 1, 141, 1, 155, 1, 160, 1, 161, 1, 163, 1, 168, 1,
+                        176, 1, 179, 1, 184, 1, 202, 1, 205, 1, 223, 1, 240, 1, 242, 1, 244, 1,
+                        246, 1, 248, 1, 250, 1, 252, 1, 254, 2, 7, 2, 9, 2, 11, 2, 13, 2, 15, 2,
+                        18, 2, 23, 2, 34, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 92, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 36,
+                    ])],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 13,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 8,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(2)],
+                    vec![OutputData::Object(15)],
+                    vec![OutputData::Object(19)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                ]),
+            },
+            Archived::Object {
+                class: 17,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(748)],
+                    vec![OutputData::Array(&[
+                        98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
+                        118, 101, 114, 115, 105, 111, 110, 89, 36, 97, 114, 99, 104, 105, 118, 101,
+                        114, 84, 36, 116, 111, 112, 88, 36, 111, 98, 106, 101, 99, 116, 115, 18, 0,
+                        1, 134, 160, 95, 16, 15, 78, 83, 75, 101, 121, 101, 100, 65, 114, 99, 104,
+                        105, 118, 101, 114, 210, 8, 9, 10, 11, 87, 118, 101, 114, 115, 105, 111,
+                        110, 89, 100, 100, 45, 114, 101, 115, 117, 108, 116, 128, 23, 128, 1, 175,
+                        16, 24, 13, 14, 28, 36, 37, 38, 44, 45, 46, 52, 58, 26, 62, 63, 64, 67, 70,
+                        74, 82, 86, 87, 88, 89, 90, 85, 36, 110, 117, 108, 108, 215, 15, 16, 17,
+                        18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 26, 82, 77, 83, 86, 36, 99, 108,
+                        97, 115, 115, 82, 65, 82, 81, 84, 81, 80, 82, 83, 82, 82, 86, 78, 128, 6,
+                        128, 16, 128, 2, 128, 7, 16, 1, 128, 8, 212, 29, 30, 31, 16, 32, 33, 34,
+                        35, 95, 16, 18, 78, 83, 46, 114, 97, 110, 103, 101, 118, 97, 108, 46, 108,
+                        101, 110, 103, 116, 104, 95, 16, 20, 78, 83, 46, 114, 97, 110, 103, 101,
+                        118, 97, 108, 46, 108, 111, 99, 97, 116, 105, 111, 110, 90, 78, 83, 46,
+                        115, 112, 101, 99, 105, 97, 108, 128, 3, 128, 4, 16, 4, 128, 5, 16, 2, 16,
+                        11, 210, 39, 40, 41, 42, 90, 36, 99, 108, 97, 115, 115, 110, 97, 109, 101,
+                        88, 36, 99, 108, 97, 115, 115, 101, 115, 87, 78, 83, 86, 97, 108, 117, 101,
+                        162, 41, 43, 88, 78, 83, 79, 98, 106, 101, 99, 116, 82, 49, 76, 94, 80,
+                        104, 121, 115, 105, 99, 97, 108, 65, 109, 111, 117, 110, 116, 210, 47, 16,
+                        48, 51, 90, 78, 83, 46, 111, 98, 106, 101, 99, 116, 115, 162, 49, 50, 128,
+                        9, 128, 17, 128, 15, 215, 15, 16, 17, 18, 19, 20, 21, 53, 23, 55, 56, 26,
+                        57, 26, 128, 12, 128, 16, 128, 10, 128, 13, 128, 14, 212, 29, 30, 31, 16,
+                        59, 33, 34, 35, 128, 11, 128, 4, 128, 5, 81, 49, 93, 73, 110, 116, 101,
+                        103, 114, 97, 108, 86, 97, 108, 117, 101, 210, 47, 16, 65, 51, 160, 128,
+                        15, 210, 39, 40, 68, 69, 87, 78, 83, 65, 114, 114, 97, 121, 162, 68, 43,
+                        210, 39, 40, 71, 72, 95, 16, 15, 68, 68, 83, 99, 97, 110, 110, 101, 114,
+                        82, 101, 115, 117, 108, 116, 162, 73, 43, 95, 16, 15, 68, 68, 83, 99, 97,
+                        110, 110, 101, 114, 82, 101, 115, 117, 108, 116, 216, 15, 16, 75, 17, 18,
+                        19, 20, 21, 76, 23, 78, 79, 80, 26, 57, 26, 81, 86, 128, 20, 128, 16, 128,
+                        22, 128, 18, 128, 21, 128, 14, 212, 29, 30, 31, 16, 59, 84, 34, 35, 128,
+                        11, 128, 19, 128, 5, 16, 12, 81, 76, 84, 85, 110, 105, 116, 85, 108, 105,
+                        116, 101, 114, 16, 1, 0, 8, 0, 17, 0, 26, 0, 36, 0, 41, 0, 50, 0, 55, 0,
+                        73, 0, 78, 0, 86, 0, 96, 0, 98, 0, 100, 0, 127, 0, 133, 0, 148, 0, 151, 0,
+                        158, 0, 161, 0, 163, 0, 165, 0, 168, 0, 171, 0, 173, 0, 175, 0, 177, 0,
+                        179, 0, 181, 0, 183, 0, 192, 0, 213, 0, 236, 0, 247, 0, 249, 0, 251, 0,
+                        253, 0, 255, 1, 1, 1, 3, 1, 8, 1, 19, 1, 28, 1, 36, 1, 39, 1, 48, 1, 51, 1,
+                        66, 1, 71, 1, 82, 1, 85, 1, 87, 1, 89, 1, 91, 1, 106, 1, 108, 1, 110, 1,
+                        112, 1, 114, 1, 116, 1, 125, 1, 127, 1, 129, 1, 131, 1, 133, 1, 147, 1,
+                        152, 1, 153, 1, 155, 1, 160, 1, 168, 1, 171, 1, 176, 1, 194, 1, 197, 1,
+                        215, 1, 232, 1, 234, 1, 236, 1, 238, 1, 240, 1, 242, 1, 244, 1, 246, 1,
+                        255, 2, 1, 2, 3, 2, 5, 2, 7, 2, 9, 2, 14, 2, 20, 0, 0, 0, 0, 0, 0, 2, 1, 0,
+                        0, 0, 0, 0, 0, 0, 91, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 22,
+                    ])],
+                ]),
+            },
+            Archived::Object {
+                class: 8,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(2)],
+                    vec![OutputData::Object(15)],
+                    vec![OutputData::Object(21)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                ]),
+            },
+            Archived::Object {
+                class: 17,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(760)],
+                    vec![OutputData::Array(&[
+                        98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
+                        118, 101, 114, 115, 105, 111, 110, 89, 36, 97, 114, 99, 104, 105, 118, 101,
+                        114, 84, 36, 116, 111, 112, 88, 36, 111, 98, 106, 101, 99, 116, 115, 18, 0,
+                        1, 134, 160, 95, 16, 15, 78, 83, 75, 101, 121, 101, 100, 65, 114, 99, 104,
+                        105, 118, 101, 114, 210, 8, 9, 10, 11, 87, 118, 101, 114, 115, 105, 111,
+                        110, 89, 100, 100, 45, 114, 101, 115, 117, 108, 116, 128, 23, 128, 1, 175,
+                        16, 24, 13, 14, 28, 36, 37, 38, 44, 45, 46, 52, 58, 62, 63, 64, 65, 68, 71,
+                        75, 83, 87, 88, 89, 90, 91, 85, 36, 110, 117, 108, 108, 215, 15, 16, 17,
+                        18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 26, 82, 77, 83, 86, 36, 99, 108,
+                        97, 115, 115, 82, 65, 82, 81, 84, 81, 80, 82, 83, 82, 82, 86, 78, 128, 6,
+                        128, 16, 128, 2, 128, 7, 16, 1, 128, 8, 212, 29, 30, 31, 16, 32, 33, 34,
+                        35, 95, 16, 18, 78, 83, 46, 114, 97, 110, 103, 101, 118, 97, 108, 46, 108,
+                        101, 110, 103, 116, 104, 95, 16, 20, 78, 83, 46, 114, 97, 110, 103, 101,
+                        118, 97, 108, 46, 108, 111, 99, 97, 116, 105, 111, 110, 90, 78, 83, 46,
+                        115, 112, 101, 99, 105, 97, 108, 128, 3, 128, 4, 16, 4, 128, 5, 16, 6, 16,
+                        24, 210, 39, 40, 41, 42, 90, 36, 99, 108, 97, 115, 115, 110, 97, 109, 101,
+                        88, 36, 99, 108, 97, 115, 115, 101, 115, 87, 78, 83, 86, 97, 108, 117, 101,
+                        162, 41, 43, 88, 78, 83, 79, 98, 106, 101, 99, 116, 86, 50, 50, 53, 108,
+                        98, 115, 94, 80, 104, 121, 115, 105, 99, 97, 108, 65, 109, 111, 117, 110,
+                        116, 210, 47, 16, 48, 51, 90, 78, 83, 46, 111, 98, 106, 101, 99, 116, 115,
+                        162, 49, 50, 128, 9, 128, 17, 128, 15, 215, 15, 16, 17, 18, 19, 20, 21, 53,
+                        23, 55, 56, 26, 57, 26, 128, 12, 128, 16, 128, 10, 128, 13, 128, 14, 212,
+                        29, 30, 31, 16, 59, 33, 34, 35, 128, 11, 128, 4, 128, 5, 16, 3, 83, 50, 50,
+                        53, 93, 73, 110, 116, 101, 103, 114, 97, 108, 86, 97, 108, 117, 101, 210,
+                        47, 16, 66, 51, 160, 128, 15, 210, 39, 40, 69, 70, 87, 78, 83, 65, 114,
+                        114, 97, 121, 162, 69, 43, 210, 39, 40, 72, 73, 95, 16, 15, 68, 68, 83, 99,
+                        97, 110, 110, 101, 114, 82, 101, 115, 117, 108, 116, 162, 74, 43, 95, 16,
+                        15, 68, 68, 83, 99, 97, 110, 110, 101, 114, 82, 101, 115, 117, 108, 116,
+                        216, 15, 16, 76, 17, 18, 19, 20, 21, 77, 23, 79, 80, 81, 26, 57, 26, 81,
+                        86, 128, 20, 128, 16, 128, 22, 128, 18, 128, 21, 128, 14, 212, 29, 30, 31,
+                        16, 59, 85, 34, 35, 128, 11, 128, 19, 128, 5, 16, 27, 83, 108, 98, 115, 84,
+                        85, 110, 105, 116, 85, 112, 111, 117, 110, 100, 16, 1, 0, 8, 0, 17, 0, 26,
+                        0, 36, 0, 41, 0, 50, 0, 55, 0, 73, 0, 78, 0, 86, 0, 96, 0, 98, 0, 100, 0,
+                        127, 0, 133, 0, 148, 0, 151, 0, 158, 0, 161, 0, 163, 0, 165, 0, 168, 0,
+                        171, 0, 173, 0, 175, 0, 177, 0, 179, 0, 181, 0, 183, 0, 192, 0, 213, 0,
+                        236, 0, 247, 0, 249, 0, 251, 0, 253, 0, 255, 1, 1, 1, 3, 1, 8, 1, 19, 1,
+                        28, 1, 36, 1, 39, 1, 48, 1, 55, 1, 70, 1, 75, 1, 86, 1, 89, 1, 91, 1, 93,
+                        1, 95, 1, 110, 1, 112, 1, 114, 1, 116, 1, 118, 1, 120, 1, 129, 1, 131, 1,
+                        133, 1, 135, 1, 137, 1, 141, 1, 155, 1, 160, 1, 161, 1, 163, 1, 168, 1,
+                        176, 1, 179, 1, 184, 1, 202, 1, 205, 1, 223, 1, 240, 1, 242, 1, 244, 1,
+                        246, 1, 248, 1, 250, 1, 252, 1, 254, 2, 7, 2, 9, 2, 11, 2, 13, 2, 15, 2,
+                        19, 2, 24, 2, 30, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 92, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 32,
+                    ])],
+                ]),
+            },
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    #[test]
+    fn test_parse_text_flight() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/Flight");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(754)]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::Object(4)],
+                    vec![OutputData::SignedInteger(1), OutputData::UnsignedInteger(7)],
+                    vec![OutputData::Object(7)],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Class(Class {
+                name_index: 3,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 5,
+                data: ObjectData::from_groups(vec![vec![OutputData::String("AS 1111")]]),
+            },
+            Archived::Class(Class {
+                name_index: 4,
+                version: 1,
+                parent_index: Some(6),
+            }),
+            Archived::Class(Class {
+                name_index: 5,
+                version: 1,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 8,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(2)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(12)],
+                    vec![OutputData::Object(13)],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMDataDetectedAttributeName",
+                )]]),
+            },
+            Archived::Object {
+                class: 11,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(754)],
+                    vec![OutputData::Array(&[
+                        98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
+                        118, 101, 114, 115, 105, 111, 110, 89, 36, 97, 114, 99, 104, 105, 118, 101,
+                        114, 84, 36, 116, 111, 112, 88, 36, 111, 98, 106, 101, 99, 116, 115, 18, 0,
+                        1, 134, 160, 95, 16, 15, 78, 83, 75, 101, 121, 101, 100, 65, 114, 99, 104,
+                        105, 118, 101, 114, 210, 8, 9, 10, 11, 87, 118, 101, 114, 115, 105, 111,
+                        110, 89, 100, 100, 45, 114, 101, 115, 117, 108, 116, 128, 23, 128, 1, 175,
+                        16, 24, 13, 14, 28, 36, 37, 38, 44, 45, 46, 52, 58, 62, 63, 64, 65, 68, 71,
+                        75, 81, 34, 85, 86, 87, 88, 85, 36, 110, 117, 108, 108, 215, 15, 16, 17,
+                        18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 26, 82, 77, 83, 86, 36, 99, 108,
+                        97, 115, 115, 82, 65, 82, 81, 84, 81, 80, 82, 83, 82, 82, 86, 78, 128, 6,
+                        128, 16, 128, 2, 128, 7, 16, 1, 128, 8, 212, 29, 30, 31, 16, 32, 33, 34,
+                        35, 95, 16, 18, 78, 83, 46, 114, 97, 110, 103, 101, 118, 97, 108, 46, 108,
+                        101, 110, 103, 116, 104, 95, 16, 20, 78, 83, 46, 114, 97, 110, 103, 101,
+                        118, 97, 108, 46, 108, 111, 99, 97, 116, 105, 111, 110, 90, 78, 83, 46,
+                        115, 112, 101, 99, 105, 97, 108, 128, 3, 128, 4, 16, 4, 128, 5, 16, 7, 16,
+                        0, 210, 39, 40, 41, 42, 90, 36, 99, 108, 97, 115, 115, 110, 97, 109, 101,
+                        88, 36, 99, 108, 97, 115, 115, 101, 115, 87, 78, 83, 86, 97, 108, 117, 101,
+                        162, 41, 43, 88, 78, 83, 79, 98, 106, 101, 99, 116, 87, 65, 83, 32, 49, 49,
+                        49, 49, 95, 16, 17, 70, 108, 105, 103, 104, 116, 73, 110, 102, 111, 114,
+                        109, 97, 116, 105, 111, 110, 210, 47, 16, 48, 51, 90, 78, 83, 46, 111, 98,
+                        106, 101, 99, 116, 115, 162, 49, 50, 128, 9, 128, 17, 128, 15, 215, 15, 16,
+                        17, 18, 19, 20, 21, 53, 23, 55, 56, 26, 57, 26, 128, 12, 128, 16, 128, 10,
+                        128, 13, 128, 14, 212, 29, 30, 31, 16, 59, 33, 34, 35, 128, 11, 128, 4,
+                        128, 5, 16, 2, 82, 65, 83, 91, 65, 105, 114, 108, 105, 110, 101, 67, 111,
+                        100, 101, 210, 47, 16, 66, 51, 160, 128, 15, 210, 39, 40, 69, 70, 87, 78,
+                        83, 65, 114, 114, 97, 121, 162, 69, 43, 210, 39, 40, 72, 73, 95, 16, 15,
+                        68, 68, 83, 99, 97, 110, 110, 101, 114, 82, 101, 115, 117, 108, 116, 162,
+                        74, 43, 95, 16, 15, 68, 68, 83, 99, 97, 110, 110, 101, 114, 82, 101, 115,
+                        117, 108, 116, 215, 15, 16, 17, 18, 19, 20, 21, 76, 23, 78, 79, 26, 57, 26,
+                        128, 21, 128, 16, 128, 18, 128, 22, 128, 14, 212, 29, 30, 31, 16, 82, 83,
+                        34, 35, 128, 19, 128, 20, 128, 5, 16, 3, 84, 49, 49, 49, 49, 92, 70, 108,
+                        105, 103, 104, 116, 78, 117, 109, 98, 101, 114, 16, 1, 0, 8, 0, 17, 0, 26,
+                        0, 36, 0, 41, 0, 50, 0, 55, 0, 73, 0, 78, 0, 86, 0, 96, 0, 98, 0, 100, 0,
+                        127, 0, 133, 0, 148, 0, 151, 0, 158, 0, 161, 0, 163, 0, 165, 0, 168, 0,
+                        171, 0, 173, 0, 175, 0, 177, 0, 179, 0, 181, 0, 183, 0, 192, 0, 213, 0,
+                        236, 0, 247, 0, 249, 0, 251, 0, 253, 0, 255, 1, 1, 1, 3, 1, 8, 1, 19, 1,
+                        28, 1, 36, 1, 39, 1, 48, 1, 56, 1, 76, 1, 81, 1, 92, 1, 95, 1, 97, 1, 99,
+                        1, 101, 1, 116, 1, 118, 1, 120, 1, 122, 1, 124, 1, 126, 1, 135, 1, 137, 1,
+                        139, 1, 141, 1, 143, 1, 146, 1, 158, 1, 163, 1, 164, 1, 166, 1, 171, 1,
+                        179, 1, 182, 1, 187, 1, 205, 1, 208, 1, 226, 1, 241, 1, 243, 1, 245, 1,
+                        247, 1, 249, 1, 251, 2, 4, 2, 6, 2, 8, 2, 10, 2, 12, 2, 17, 2, 30, 0, 0, 0,
+                        0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 2, 32,
+                    ])],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 10,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
+            },
+            Archived::Object {
+                class: 14,
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+            },
+            Archived::Class(Class {
+                name_index: 12,
+                version: 0,
+                parent_index: Some(15),
+            }),
+            Archived::Class(Class {
+                name_index: 13,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Type(9),
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    #[test]
+    fn test_parse_text_tracking() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/Tracking");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+
+        let mut typedstream = TypedStreamDeserializer::new(&bytes);
+        let root = typedstream.oxidize().unwrap();
+        println!("\nResults:");
+        println!("Root object: {:x?}", typedstream.object_table[root]);
+        print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
+
+        println!("\nFound {:?} types:", typedstream.type_table.len());
+        typedstream
+            .type_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        println!("\nFound {:?} objects:", typedstream.object_table.len());
+        typedstream
+            .object_table
+            .iter()
+            .enumerate()
+            .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
+
+        let expected_types = vec![
+            TypeEntry::from_types(vec![Type::Object]),
+            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
+            TypeEntry::from_types(vec![Type::String("NSObject")]),
+            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
+            TypeEntry::from_types(vec![Type::String("NSString")]),
+            TypeEntry::from_types(vec![Type::Utf8String]),
+            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
+            TypeEntry::from_types(vec![Type::SignedInt]),
+            TypeEntry::from_types(vec![Type::String("NSData")]),
+            TypeEntry::from_types(vec![Type::Array(664)]),
+            TypeEntry::from_types(vec![Type::String("NSNumber")]),
+            TypeEntry::from_types(vec![Type::String("NSValue")]),
+            TypeEntry::from_types(vec![Type::EmbeddedData]),
+        ];
+
+        let expected_objects = vec![
+            Archived::Object {
+                class: 1,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::Object(4)],
+                    vec![
+                        OutputData::SignedInteger(1),
+                        OutputData::UnsignedInteger(18),
+                    ],
+                    vec![OutputData::Object(7)],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 1,
+                version: 0,
+                parent_index: Some(2),
+            }),
+            Archived::Class(Class {
+                name_index: 2,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Class(Class {
+                name_index: 3,
+                version: 0,
+                parent_index: None,
+            }),
+            Archived::Object {
+                class: 5,
+                data: ObjectData::from_groups(vec![vec![OutputData::String("1Z999AA10123456784")]]),
+            },
+            Archived::Class(Class {
+                name_index: 4,
+                version: 1,
+                parent_index: Some(6),
+            }),
+            Archived::Class(Class {
+                name_index: 5,
+                version: 1,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 8,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(2)],
+                    vec![OutputData::Object(9)],
+                    vec![OutputData::Object(10)],
+                    vec![OutputData::Object(12)],
+                    vec![OutputData::Object(13)],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 8,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMDataDetectedAttributeName",
+                )]]),
+            },
+            Archived::Object {
+                class: 11,
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::SignedInteger(664)],
+                    vec![OutputData::Array(&[
+                        98, 112, 108, 105, 115, 116, 48, 48, 212, 1, 2, 3, 4, 5, 6, 7, 12, 88, 36,
+                        118, 101, 114, 115, 105, 111, 110, 89, 36, 97, 114, 99, 104, 105, 118, 101,
+                        114, 84, 36, 116, 111, 112, 88, 36, 111, 98, 106, 101, 99, 116, 115, 18, 0,
+                        1, 134, 160, 95, 16, 15, 78, 83, 75, 101, 121, 101, 100, 65, 114, 99, 104,
+                        105, 118, 101, 114, 210, 8, 9, 10, 11, 87, 118, 101, 114, 115, 105, 111,
+                        110, 89, 100, 100, 45, 114, 101, 115, 117, 108, 116, 128, 15, 128, 1, 175,
+                        16, 16, 13, 14, 28, 36, 37, 38, 44, 45, 46, 51, 57, 61, 62, 65, 69, 73, 85,
+                        36, 110, 117, 108, 108, 215, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+                        26, 27, 26, 82, 77, 83, 86, 36, 99, 108, 97, 115, 115, 82, 65, 82, 81, 84,
+                        81, 80, 82, 83, 82, 82, 86, 78, 128, 6, 128, 14, 128, 2, 128, 7, 16, 1,
+                        128, 8, 212, 29, 30, 31, 16, 32, 33, 34, 35, 95, 16, 18, 78, 83, 46, 114,
+                        97, 110, 103, 101, 118, 97, 108, 46, 108, 101, 110, 103, 116, 104, 95, 16,
+                        20, 78, 83, 46, 114, 97, 110, 103, 101, 118, 97, 108, 46, 108, 111, 99, 97,
+                        116, 105, 111, 110, 90, 78, 83, 46, 115, 112, 101, 99, 105, 97, 108, 128,
+                        3, 128, 4, 16, 4, 128, 5, 16, 18, 16, 0, 210, 39, 40, 41, 42, 90, 36, 99,
+                        108, 97, 115, 115, 110, 97, 109, 101, 88, 36, 99, 108, 97, 115, 115, 101,
+                        115, 87, 78, 83, 86, 97, 108, 117, 101, 162, 41, 43, 88, 78, 83, 79, 98,
+                        106, 101, 99, 116, 95, 16, 18, 49, 90, 57, 57, 57, 65, 65, 49, 48, 49, 50,
+                        51, 52, 53, 54, 55, 56, 52, 94, 84, 114, 97, 99, 107, 105, 110, 103, 78,
+                        117, 109, 98, 101, 114, 210, 47, 16, 48, 50, 90, 78, 83, 46, 111, 98, 106,
+                        101, 99, 116, 115, 161, 49, 128, 9, 128, 13, 215, 15, 16, 17, 18, 19, 20,
+                        21, 22, 23, 54, 55, 26, 56, 26, 128, 6, 128, 14, 128, 10, 128, 11, 128, 12,
+                        212, 29, 30, 31, 16, 32, 33, 34, 35, 128, 3, 128, 4, 128, 5, 83, 85, 80,
+                        83, 210, 47, 16, 63, 50, 160, 128, 13, 210, 39, 40, 66, 67, 94, 78, 83, 77,
+                        117, 116, 97, 98, 108, 101, 65, 114, 114, 97, 121, 163, 66, 68, 43, 87, 78,
+                        83, 65, 114, 114, 97, 121, 210, 39, 40, 70, 71, 95, 16, 15, 68, 68, 83, 99,
+                        97, 110, 110, 101, 114, 82, 101, 115, 117, 108, 116, 162, 72, 43, 95, 16,
+                        15, 68, 68, 83, 99, 97, 110, 110, 101, 114, 82, 101, 115, 117, 108, 116,
+                        16, 1, 0, 8, 0, 17, 0, 26, 0, 36, 0, 41, 0, 50, 0, 55, 0, 73, 0, 78, 0, 86,
+                        0, 96, 0, 98, 0, 100, 0, 119, 0, 125, 0, 140, 0, 143, 0, 150, 0, 153, 0,
+                        155, 0, 157, 0, 160, 0, 163, 0, 165, 0, 167, 0, 169, 0, 171, 0, 173, 0,
+                        175, 0, 184, 0, 205, 0, 228, 0, 239, 0, 241, 0, 243, 0, 245, 0, 247, 0,
+                        249, 0, 251, 1, 0, 1, 11, 1, 20, 1, 28, 1, 31, 1, 40, 1, 61, 1, 76, 1, 81,
+                        1, 92, 1, 94, 1, 96, 1, 98, 1, 113, 1, 115, 1, 117, 1, 119, 1, 121, 1, 123,
+                        1, 132, 1, 134, 1, 136, 1, 138, 1, 142, 1, 147, 1, 148, 1, 150, 1, 155, 1,
+                        170, 1, 174, 1, 182, 1, 187, 1, 205, 1, 208, 1, 226, 0, 0, 0, 0, 0, 0, 2,
+                        1, 0, 0, 0, 0, 0, 0, 0, 74, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                        228,
+                    ])],
+                ]),
+            },
+            Archived::Class(Class {
+                name_index: 10,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Object {
+                class: 6,
+                data: ObjectData::from_groups(vec![vec![OutputData::String(
+                    "__kIMMessagePartAttributeName",
+                )]]),
+            },
+            Archived::Object {
+                class: 14,
+                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+            },
+            Archived::Class(Class {
+                name_index: 12,
+                version: 0,
+                parent_index: Some(15),
+            }),
+            Archived::Class(Class {
+                name_index: 13,
+                version: 0,
+                parent_index: Some(3),
+            }),
+            Archived::Type(9),
+        ];
+
+        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.object_table, expected_objects);
+    }
 }
