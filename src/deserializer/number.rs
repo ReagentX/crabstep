@@ -422,7 +422,7 @@ mod float_tests {
 
     #[test]
     fn can_read_decimal_double_fractional_date() {
-        // NSDate(timeIntervalSinceReferenceDate: 700000000.523) — fractional dates
+        // `NSDate(timeIntervalSinceReferenceDate: 700000000.523)``: fractional dates
         // archive their double with the DECIMAL tag (integral ones use I_32).
         let data = [
             DECIMAL, 0xaa, 0xf1, 0x42, 0x80, 0x93, 0xdc, 0xc4, 0x41, 0x86,
