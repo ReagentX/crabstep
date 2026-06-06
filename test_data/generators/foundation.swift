@@ -76,6 +76,15 @@ func make(_ key: String) -> Any? {
             NSSet(array: [NSString(string: "s")]),
             NSMutableSet(array: [NSString(string: "ms")]),
         ])
+    case "NestedScalars":
+        // NSDate / NSURL (absolute + relative) / NSNull as array elements, so the
+        // Phase 4 accessors can be tested on objects wrapped in a group.
+        return NSArray(array: [
+            NSDate(timeIntervalSinceReferenceDate: 21692800), // unix 1_000_000_000
+            NSURL(string: "https://example.com/path?q=1")!,
+            NSURL(string: "page.html", relativeTo: URL(string: "https://example.com/dir/"))!,
+            NSNull(),
+        ])
     default:                    return nil
     }
 }
