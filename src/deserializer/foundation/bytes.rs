@@ -7,7 +7,7 @@ use crate::models::output_data::OutputData;
 impl<'a, 'b: 'a> Property<'a, 'b> {
     /// The raw bytes of an `NSData` / `NSMutableData`.
     ///
-    /// crabstep does not interpret the bytes — they may be a `bplist00`, a
+    /// crabstep does not interpret the bytes, as they may be a `bplist00`, a
     /// compressed blob, an image, etc. The caller decides what they are.
     #[must_use]
     pub fn as_data(&self) -> Option<&'a [u8]> {

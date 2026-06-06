@@ -58,8 +58,8 @@ The `typedstream` format is derived from the data structure used by `NeXTSTEP`'s
 
 `crabstep` is `no_std` by default and requires no dependencies. The following optional features are purely additive:
 
-- `std` — enables `std`-only conveniences, such as `print_resolved` for debugging an object graph.
-- `foundation` — adds typed accessors on `Property` for common Apple Foundation classes (`as_string`, `as_data`, `as_array`, `as_dictionary`, `as_date`, `as_url`, and more), so consumers do not have to hand-roll class-name matching. See the `deserializer::foundation` module.
+- `std`: enables `std`-only conveniences, such as `print_resolved` for debugging an object graph.
+- `foundation`: adds typed accessors on `Property` for common Apple [Foundation](https://developer.apple.com/documentation/foundation) classes (`as_string`, `as_data`, `as_array`, `as_dictionary`, `as_date`, `as_url`, and more), so consumers do not have to hand-roll class-name matching. See the `deserializer::foundation` module.
 
 Enable a feature in your `Cargo.toml`:
 

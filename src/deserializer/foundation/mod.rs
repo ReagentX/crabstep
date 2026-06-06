@@ -14,9 +14,12 @@ or not it is enabled, and any class not modeled here stays reachable through
 [`Property::Object`](crate::deserializer::iter::Property::Object), so nothing is
 ever lost.
 
-Accessors are methods on a group-level
-[`Property`](crate::deserializer::iter::Property): the value yielded while
-iterating an object's properties. Each Foundation type lives in its own module.
+Accessors are methods on a [`Property`](crate::deserializer::iter::Property) —
+either a group yielded while iterating an object's properties, or an object
+obtained from [`TypedStreamDeserializer::root`](crate::TypedStreamDeserializer::root)
+/ [`resolve_object`](crate::TypedStreamDeserializer::resolve_object) when the value
+you want *is* the root (or a referenced) object. Each Foundation type lives in its
+own module.
 */
 
 mod array;

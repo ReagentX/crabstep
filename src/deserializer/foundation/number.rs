@@ -1,6 +1,6 @@
 //! `as_i64` / `as_u64` / `as_f64`: numeric `NSNumber`s (or bare primitives).
 
-use crate::deserializer::iter::Property;
+use crate::deserializer::iter::{Property, PropertyIterator};
 use crate::models::output_data::OutputData;
 
 impl<'a, 'b: 'a> Property<'a, 'b> {
@@ -42,24 +42,35 @@ impl<'a, 'b: 'a> Property<'a, 'b> {
     /// The underlying scalar value of a group that is either a bare primitive or
     /// an `NSNumber` wrapping one.
     fn scalar(&self) -> Option<&'b OutputData<'a>> {
-        let Property::Group(group) = self else {
-            return None;
-        };
-        match group.first()? {
+        match self {
             Property::Primitive(value) => Some(value),
             Property::Object {
                 name: "NSNumber",
-                mut data,
+                data,
                 ..
-            } => match data.next()? {
-                Property::Group(inner) => match inner.first()? {
-                    Property::Primitive(value) => Some(value),
-                    _ => None,
-                },
+            } => number_value(data.clone()),
+            Property::Group(group) => match group.first()? {
+                Property::Primitive(value) => Some(value),
+                Property::Object {
+                    name: "NSNumber",
+                    data,
+                    ..
+                } => number_value(data),
                 _ => None,
             },
             _ => None,
         }
+    }
+}
+
+/// The first primitive in an `NSNumber` object's first group.
+fn number_value<'a, 'b: 'a>(mut data: PropertyIterator<'a, 'b>) -> Option<&'b OutputData<'a>> {
+    match data.next()? {
+        Property::Group(inner) => match inner.first()? {
+            Property::Primitive(value) => Some(value),
+            _ => None,
+        },
+        _ => None,
     }
 }
 
@@ -69,6 +80,13 @@ mod tests {
 
     use crate::deserializer::foundation::test_support::load;
     use crate::deserializer::typedstream::TypedStreamDeserializer;
+
+    #[test]
+    fn root_object_resolves_as_i64() {
+        let bytes = load("foundation/NumberInt");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        assert_eq!(ts.root().unwrap().as_i64(), Some(42));
+    }
 
     #[test]
     fn as_f64_reads_decimal_double() {
