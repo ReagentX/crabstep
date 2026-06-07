@@ -174,6 +174,18 @@ mod tests {
     use crate::deserializer::typedstream::TypedStreamDeserializer;
 
     #[test]
+    fn root_object_resolves_as_array() {
+        // Root NSArray([NSString "a", NSNumber 1, NSString "b"]) via `root()`.
+        let bytes = load("foundation/NSArray");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.root().unwrap();
+        let array = root.as_array().unwrap();
+        assert_eq!(array.len(), 3);
+        let strings: Vec<&str> = array.iter().filter_map(|e| e.as_string()).collect();
+        assert_eq!(strings, vec!["a", "b"]);
+    }
+
+    #[test]
     fn as_array_yields_elements_both_variants_and_empty() {
         // NestedContainers root holds NSArray[1,2], NSMutableArray[3], an empty
         // NSArray, then non-array elements (dicts/sets) which as_array ignores.
@@ -211,8 +223,6 @@ mod tests {
 
     #[test]
     fn nested_array_inside_array() {
-        // NSArrayNested = [NSString "top", NSArray[1, 2]] — as_array on the nested
-        // element resolves the inner array.
         let bytes = load("foundation/NSArrayNested");
         let mut ts = TypedStreamDeserializer::new(&bytes);
         let root = ts.oxidize().unwrap();

@@ -36,6 +36,14 @@ mod tests {
     use crate::deserializer::typedstream::TypedStreamDeserializer;
 
     #[test]
+    fn root_object_resolves_as_date() {
+        // Root NSDate (timeIntervalSinceReferenceDate: 21692800) via `root()`.
+        let bytes = load("foundation/NSDate");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        assert_eq!(ts.root().unwrap().as_date(), Some(21692800.0));
+    }
+
+    #[test]
     fn as_date_and_unix_time() {
         // NestedScalars holds NSDate(timeIntervalSinceReferenceDate: 21692800).
         let bytes = load("foundation/NestedScalars");

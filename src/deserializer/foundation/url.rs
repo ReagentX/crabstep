@@ -26,6 +26,17 @@ mod tests {
     use crate::deserializer::typedstream::TypedStreamDeserializer;
 
     #[test]
+    fn root_object_resolves_as_url() {
+        // Root NSURL("https://example.com/path?q=1") via `root()`.
+        let bytes = load("foundation/NSURL");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        assert_eq!(
+            ts.root().unwrap().as_url(),
+            Some("https://example.com/path?q=1")
+        );
+    }
+
+    #[test]
     fn as_url_absolute_and_relative() {
         // NestedScalars holds an absolute NSURL then a relative one; the relative
         // one yields its relative component.

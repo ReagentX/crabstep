@@ -51,6 +51,13 @@ mod tests {
     use crate::deserializer::typedstream::TypedStreamDeserializer;
 
     #[test]
+    fn root_object_resolves_as_string() {
+        let bytes = load("foundation/NSString");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        assert_eq!(ts.root().unwrap().as_string(), Some("Hello, world"));
+    }
+
+    #[test]
     fn as_string_reads_both_string_variants() {
         // NSArray([NSString "imm", NSMutableString "mut"])
         let bytes = load("foundation/NestedStrings");
@@ -69,7 +76,6 @@ mod tests {
 
     #[test]
     fn as_string_reads_attributed_backing_text() {
-        // NSArray([NSAttributedString "styled"]) — exercises the scan path.
         let bytes = load("foundation/NestedAttributed");
         let mut ts = TypedStreamDeserializer::new(&bytes);
         let root = ts.oxidize().unwrap();

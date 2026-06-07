@@ -73,7 +73,7 @@ impl<'a, 'b: 'a> FoundationDict<'a, 'b> {
     /// The value for a string `key`, or `None` if absent.
     ///
     /// This is a linear scan (`O(n)`); dictionaries archived in a `typedstream`
-    /// are typically small. Only string keys are matched — for other key types,
+    /// are typically small. Only string keys are matched. For other key types,
     /// or to build an index for many lookups, use [`iter`](Self::iter).
     ///
     /// # Examples
@@ -197,6 +197,18 @@ mod tests {
 
     use crate::deserializer::foundation::test_support::load;
     use crate::deserializer::typedstream::TypedStreamDeserializer;
+
+    #[test]
+    fn root_object_resolves_as_dictionary() {
+        // Root NSDictionary { "k1": 1, "k2": "v" } via `root()`.
+        let bytes = load("foundation/NSDictionary");
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.root().unwrap();
+        let dict = root.as_dictionary().unwrap();
+        assert_eq!(dict.len(), 2);
+        assert_eq!(dict.get("k1").and_then(|v| v.as_i64()), Some(1));
+        assert_eq!(dict.get("k2").and_then(|v| v.as_string()), Some("v"));
+    }
 
     #[test]
     fn as_dictionary_yields_pairs_both_variants() {
