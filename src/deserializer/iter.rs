@@ -86,27 +86,42 @@ impl<'a, 'b: 'a> PropertyGroup<'a, 'b> {
     /// resolved against the object/type tables; everything else is a primitive.
     fn resolve(&self, item: &'b OutputData<'a>) -> Property<'a, 'b> {
         if let OutputData::Object(idx) = item
-            && let Some(Archived::Object { class: cls, .. }) = self.object_table.get(*idx)
-            && let Some(Archived::Class(cls)) = self.object_table.get(*cls)
-            && let Some(sub_iter) = PropertyIterator::new(self.object_table, self.type_table, *idx)
+            && let Some(object) = object_property(self.object_table, self.type_table, *idx)
         {
-            let class_name = self
-                .type_table
-                .get(cls.name_index)
-                .and_then(|types| types.first())
-                .and_then(|t| match t {
-                    Type::String(name) => Some(*name),
-                    _ => None,
-                })
-                .unwrap_or("Unknown Class");
-            return Property::Object {
-                class: cls,
-                name: class_name,
-                data: sub_iter,
-            };
+            return object;
         }
         Property::Primitive(item)
     }
+}
+
+/// Build a [`Property::Object`] for the object at `index` in the tables, or `None`
+/// if the index is not an object (or its class is missing). Shared by
+/// [`PropertyGroup`] resolution and the deserializer's object/root resolvers.
+pub(crate) fn object_property<'a, 'b: 'a>(
+    object_table: &'b [Archived<'a>],
+    type_table: &'b [TypeEntry<'a>],
+    index: usize,
+) -> Option<Property<'a, 'b>> {
+    let Some(Archived::Object { class: cls, .. }) = object_table.get(index) else {
+        return None;
+    };
+    let Some(Archived::Class(cls)) = object_table.get(*cls) else {
+        return None;
+    };
+    let data = PropertyIterator::new(object_table, type_table, index)?;
+    let name = type_table
+        .get(cls.name_index)
+        .and_then(|types| types.first())
+        .and_then(|t| match t {
+            Type::String(name) => Some(*name),
+            _ => None,
+        })
+        .unwrap_or("Unknown Class");
+    Some(Property::Object {
+        class: cls,
+        name,
+        data,
+    })
 }
 
 impl<'a, 'b: 'a> IntoIterator for PropertyGroup<'a, 'b> {

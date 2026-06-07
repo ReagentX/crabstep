@@ -10,7 +10,7 @@ use crate::{
     deserializer::{
         constants::{EMPTY, END, START},
         header::validate_header,
-        iter::PropertyIterator,
+        iter::{Property, PropertyIterator, object_property},
         number::{read_double, read_float, read_signed_int, read_unsigned_int},
         read::{read_byte_at, read_exact_bytes, read_pointer},
         string::read_string,
@@ -176,7 +176,8 @@ impl<'a> TypedStreamDeserializer<'a> {
     ///
     /// # Errors
     ///
-    /// Returns [`TypedStreamError::InvalidPointer`] if the index is not a valid object reference.
+    /// Returns [`TypedStreamError::OutOfBounds`] if the index is past the object
+    /// table, or [`TypedStreamError::InvalidObject`] if it is not an object.
     ///
     /// # Examples
     ///
@@ -189,8 +190,73 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// let iter = ts.resolve_properties(root).unwrap();
     /// ```
     pub fn resolve_properties(&self, root_object_index: usize) -> Result<PropertyIterator<'a, '_>> {
+        if root_object_index >= self.object_table.len() {
+            return Err(TypedStreamError::OutOfBounds(
+                root_object_index,
+                self.object_table.len(),
+            ));
+        }
         PropertyIterator::new(&self.object_table, &self.type_table, root_object_index)
-            .ok_or(TypedStreamError::InvalidPointer(root_object_index as u8))
+            .ok_or(TypedStreamError::InvalidObject)
+    }
+
+    /// Resolve the object at `object_index` into a group-level [`Property`].
+    ///
+    /// Unlike [`resolve_properties`](Self::resolve_properties) (which iterates an
+    /// object's *contents*), this returns the object itself, in the form the
+    /// `foundation` accessors expect. Use it when the value you want is an object
+    /// (for example the stream's root): `ts.resolve_object(root)?.as_dictionary()`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TypedStreamError::OutOfBounds`] if the index is past the object
+    /// table, or [`TypedStreamError::InvalidObject`] if it is not an object.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use crabstep::TypedStreamDeserializer;
+    ///
+    /// let mut ts = TypedStreamDeserializer::new(&[]);
+    /// let root = ts.oxidize().unwrap();
+    ///
+    /// // The object as a `Property`, ready for the `foundation` accessors.
+    /// let object = ts.resolve_object(root).unwrap();
+    /// ```
+    pub fn resolve_object(&self, object_index: usize) -> Result<Property<'_, '_>> {
+        if object_index >= self.object_table.len() {
+            return Err(TypedStreamError::OutOfBounds(
+                object_index,
+                self.object_table.len(),
+            ));
+        }
+        object_property(&self.object_table, &self.type_table, object_index)
+            .ok_or(TypedStreamError::InvalidObject)
+    }
+
+    /// Oxidize the stream and resolve its root object into a [`Property`].
+    ///
+    /// The object-level counterpart of [`iter_root`](Self::iter_root): use it when
+    /// the stream's root *is* the value you want (e.g. a root `NSDictionary`),
+    /// rather than a container whose contents you iterate.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`TypedStreamError`] if parsing fails or the root is invalid.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use crabstep::TypedStreamDeserializer;
+    ///
+    /// let mut ts = TypedStreamDeserializer::new(&[]);
+    ///
+    /// // Resolve the root object directly, without a separate `oxidize` call.
+    /// let root = ts.root().unwrap();
+    /// ```
+    pub fn root(&mut self) -> Result<Property<'_, '_>> {
+        let root = self.oxidize()?;
+        self.resolve_object(root)
     }
 
     /// Reads the next byte from the stream, advancing the position.

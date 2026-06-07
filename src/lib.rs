@@ -2,6 +2,7 @@
 #![deny(missing_docs)]
 #![doc = include_str!("../README.md")]
 #![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
@@ -10,7 +11,10 @@ pub mod deserializer;
 pub mod error;
 pub mod models;
 
-pub use deserializer::{iter::PropertyIterator, typedstream::TypedStreamDeserializer};
+pub use deserializer::{
+    iter::{Property, PropertyIterator},
+    typedstream::TypedStreamDeserializer,
+};
 pub use models::{
     archived::{Archived, ObjectData},
     output_data::OutputData,
@@ -32,6 +36,30 @@ mod test_typedstream_deserializer {
             types::{Type, TypeEntry},
         },
     };
+
+    #[test]
+    fn resolve_object_and_properties_reject_out_of_bounds() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/AttributedBodyTextOnly");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        ts.oxidize().unwrap();
+
+        // An index past the object table reports the full index via OutOfBounds,
+        // not a `usize`-to-`u8`-truncated InvalidPointer.
+        assert!(matches!(
+            ts.resolve_object(9999),
+            Err(crate::error::TypedStreamError::OutOfBounds(9999, _))
+        ));
+        assert!(matches!(
+            ts.resolve_properties(9999),
+            Err(crate::error::TypedStreamError::OutOfBounds(9999, _))
+        ));
+    }
 
     #[test]
     fn test_parse_text_iter() {
