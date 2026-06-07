@@ -38,6 +38,30 @@ mod test_typedstream_deserializer {
     };
 
     #[test]
+    fn resolve_object_and_properties_reject_out_of_bounds() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/AttributedBodyTextOnly");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        ts.oxidize().unwrap();
+
+        // An index past the object table reports the full index via OutOfBounds,
+        // not a `usize`-to-`u8`-truncated InvalidPointer.
+        assert!(matches!(
+            ts.resolve_object(9999),
+            Err(crate::error::TypedStreamError::OutOfBounds(9999, _))
+        ));
+        assert!(matches!(
+            ts.resolve_properties(9999),
+            Err(crate::error::TypedStreamError::OutOfBounds(9999, _))
+        ));
+    }
+
+    #[test]
     fn test_parse_text_iter() {
         let typedstream_path = current_dir()
             .unwrap()

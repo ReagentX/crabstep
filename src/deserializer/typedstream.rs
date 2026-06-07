@@ -176,7 +176,8 @@ impl<'a> TypedStreamDeserializer<'a> {
     ///
     /// # Errors
     ///
-    /// Returns [`TypedStreamError::InvalidPointer`] if the index is not a valid object reference.
+    /// Returns [`TypedStreamError::OutOfBounds`] if the index is past the object
+    /// table, or [`TypedStreamError::InvalidObject`] if it is not an object.
     ///
     /// # Examples
     ///
@@ -189,8 +190,14 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// let iter = ts.resolve_properties(root).unwrap();
     /// ```
     pub fn resolve_properties(&self, root_object_index: usize) -> Result<PropertyIterator<'a, '_>> {
+        if root_object_index >= self.object_table.len() {
+            return Err(TypedStreamError::OutOfBounds(
+                root_object_index,
+                self.object_table.len(),
+            ));
+        }
         PropertyIterator::new(&self.object_table, &self.type_table, root_object_index)
-            .ok_or(TypedStreamError::InvalidPointer(root_object_index as u8))
+            .ok_or(TypedStreamError::InvalidObject)
     }
 
     /// Resolve the object at `object_index` into a group-level [`Property`].
@@ -202,7 +209,8 @@ impl<'a> TypedStreamDeserializer<'a> {
     ///
     /// # Errors
     ///
-    /// Returns [`TypedStreamError::InvalidPointer`] if the index is not an object.
+    /// Returns [`TypedStreamError::OutOfBounds`] if the index is past the object
+    /// table, or [`TypedStreamError::InvalidObject`] if it is not an object.
     ///
     /// # Examples
     ///
@@ -216,8 +224,14 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// let object = ts.resolve_object(root).unwrap();
     /// ```
     pub fn resolve_object(&self, object_index: usize) -> Result<Property<'_, '_>> {
+        if object_index >= self.object_table.len() {
+            return Err(TypedStreamError::OutOfBounds(
+                object_index,
+                self.object_table.len(),
+            ));
+        }
         object_property(&self.object_table, &self.type_table, object_index)
-            .ok_or(TypedStreamError::InvalidPointer(object_index as u8))
+            .ok_or(TypedStreamError::InvalidObject)
     }
 
     /// Oxidize the stream and resolve its root object into a [`Property`].
