@@ -63,9 +63,11 @@ impl<'a, 'b: 'a> Property<'a, 'b> {
     }
 }
 
-/// The first primitive in an `NSNumber` object's first group.
-fn number_value<'a, 'b: 'a>(mut data: PropertyIterator<'a, 'b>) -> Option<&'b OutputData<'a>> {
-    match data.next()? {
+/// The primitive in the last group of an `NSNumber` object.
+///
+/// Group order: the `objCType` string, then the numeric value.
+fn number_value<'a, 'b: 'a>(data: PropertyIterator<'a, 'b>) -> Option<&'b OutputData<'a>> {
+    match data.last()? {
         Property::Group(inner) => match inner.first()? {
             Property::Primitive(value) => Some(value),
             _ => None,
@@ -90,11 +92,12 @@ mod tests {
 
     #[test]
     fn as_f64_reads_decimal_double() {
-        // NumberDouble root: bare-primitive path, exercises the B1 DECIMAL fix.
+        // NumberDouble: bare-primitive path; verify the DECIMAL read.
         let bytes = load("foundation/NumberDouble");
         let mut ts = TypedStreamDeserializer::new(&bytes);
         let root = ts.oxidize().unwrap();
-        let group = ts.resolve_properties(root).unwrap().next().unwrap();
+        // Root `NSNumber` groups: `objCType` first, numeric value last.
+        let group = ts.resolve_properties(root).unwrap().last().unwrap();
 
         assert_eq!(group.as_f64(), Some(100.5));
     }
@@ -104,18 +107,20 @@ mod tests {
         let bytes = load("foundation/NumberFloat");
         let mut ts = TypedStreamDeserializer::new(&bytes);
         let root = ts.oxidize().unwrap();
-        let group = ts.resolve_properties(root).unwrap().next().unwrap();
+        // Root `NSNumber` groups: `objCType` first, numeric value last.
+        let group = ts.resolve_properties(root).unwrap().last().unwrap();
 
         assert_eq!(group.as_f64(), Some(3.5));
     }
 
     #[test]
     fn as_i64_reads_large_negative() {
-        // NumberInt64 = -9_000_000_000: bare-primitive path, exercises the B2 fix.
+        // NumberInt64 = -9_000_000_000: bare-primitive path; 8-byte form.
         let bytes = load("foundation/NumberInt64");
         let mut ts = TypedStreamDeserializer::new(&bytes);
         let root = ts.oxidize().unwrap();
-        let group = ts.resolve_properties(root).unwrap().next().unwrap();
+        // Root `NSNumber` groups: `objCType` first, numeric value last.
+        let group = ts.resolve_properties(root).unwrap().last().unwrap();
 
         assert_eq!(group.as_i64(), Some(-9_000_000_000));
     }
@@ -126,7 +131,8 @@ mod tests {
         let bytes = load("foundation/NumberInt");
         let mut ts = TypedStreamDeserializer::new(&bytes);
         let root = ts.oxidize().unwrap();
-        let group = ts.resolve_properties(root).unwrap().next().unwrap();
+        // Root `NSNumber` groups: `objCType` first, numeric value last.
+        let group = ts.resolve_properties(root).unwrap().last().unwrap();
 
         assert_eq!(group.as_i64(), Some(42));
         assert_eq!(group.as_u64(), Some(42)); // non-negative signed coerces to u64
@@ -140,7 +146,8 @@ mod tests {
         let bytes = load("foundation/NumberInt64"); // -9_000_000_000
         let mut ts = TypedStreamDeserializer::new(&bytes);
         let root = ts.oxidize().unwrap();
-        let group = ts.resolve_properties(root).unwrap().next().unwrap();
+        // Root `NSNumber` groups: `objCType` first, numeric value last.
+        let group = ts.resolve_properties(root).unwrap().last().unwrap();
 
         assert_eq!(group.as_u64(), None);
     }
