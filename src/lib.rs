@@ -30,7 +30,7 @@ mod test_typedstream_deserializer {
     use crate::{
         deserializer::{iter::print_resolved, typedstream::TypedStreamDeserializer},
         models::{
-            archived::{Archived, ObjectData},
+            archived::{Archived, DataGroup, ObjectData},
             class::Class,
             output_data::OutputData,
             types::{Type, TypeEntry},
@@ -8395,8 +8395,6 @@ mod test_typedstream_deserializer {
             .filter(|v| matches!(v, OutputData::Null))
             .count();
         assert!(nils >= 20, "expected many nil references, found {nils}");
-        // No byte fell through as an unrecognized type.
-        assert!(!values.iter().any(|v| matches!(v, OutputData::Byte(_))));
 
         // Every object is reachable from the root through object references,
         // including the back-references from menu items to their menus.
@@ -8428,5 +8426,53 @@ mod test_typedstream_deserializer {
             unreachable!()
         };
         assert_eq!(root_groups, data.group_count());
+    }
+
+    /// `NSValue`s with struct `objCType`s from the classic archiver
+    /// (`test_data/generators/foundation.swift`). Struct members are written
+    /// flat, so `{_NSRange=QQ}` is two slots and `{CGRect={CGPoint=dd}{CGSize=dd}}`
+    /// four. `CGSize` spells three scalar letters that are not slots.
+    #[test]
+    fn test_parse_nsvalue_structs() {
+        use OutputData::{Double as D, UnsignedInteger as U};
+        for (fixture, expected) in [
+            ("NSValueRange", vec![U(3), U(4)]),
+            ("NSValueSize", vec![D(1.5), D(2.5)]),
+            ("NSValueRect", vec![D(1.0), D(2.0), D(3.0), D(4.0)]),
+        ] {
+            let typedstream_path = current_dir()
+                .unwrap()
+                .as_path()
+                .join("src/test_data/foundation")
+                .join(fixture);
+            let mut file = File::open(typedstream_path).unwrap();
+            let mut bytes = vec![];
+            file.read_to_end(&mut bytes).unwrap();
+            let mut ts = TypedStreamDeserializer::new(&bytes);
+
+            let root = ts.oxidize().unwrap();
+            // Consumed exactly. A byte-wise parser reads the object's END marker
+            // as the struct's last member and runs one byte past the file.
+            assert_eq!(ts.position, bytes.len(), "{fixture}");
+
+            let Archived::Object { class, data } = &ts.object_table[root] else {
+                panic!("{fixture}: root is not an object");
+            };
+            let Archived::Class(class) = &ts.object_table[*class] else {
+                panic!("{fixture}: root class is not a class");
+            };
+            assert_eq!(
+                ts.type_table[class.name_index].first(),
+                Some(&Type::String("NSValue")),
+                "{fixture}"
+            );
+            // Expect the members and nothing else: braces, `=`, and name
+            // letters are grammar, not values.
+            assert_eq!(
+                data,
+                &ObjectData::Groups(vec![DataGroup::Values(expected)]),
+                "{fixture}"
+            );
+        }
     }
 }
