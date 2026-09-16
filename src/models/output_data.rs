@@ -3,7 +3,7 @@
 /// Rust structures containing data stored in the `typedstream`
 #[derive(Debug, PartialEq)]
 pub enum OutputData<'a> {
-    /// Text data, denoted in the stream by [`Type::String`](crate::models::types::Type::String)
+    /// Text: a `+` string, a selector, a `char *`, or a class name.
     String(&'a str),
     /// Signed integer types are coerced into this container, denoted in the stream by [`Type::SignedInt`](crate::models::types::Type::SignedInt)
     SignedInteger(i64),
@@ -13,11 +13,11 @@ pub enum OutputData<'a> {
     Float(f32),
     /// Double precision floats, denoted in the stream by [`Type::Double`](crate::models::types::Type::Double)
     Double(f64),
-    /// Bytes whose type is not known, denoted in the stream by [`Type::Unknown`](crate::models::types::Type::Unknown)
-    Byte(u8),
     /// Arbitrary collection of bytes in an array, denoted in the stream by [`Type::Array`](crate::models::types::Type::Array)
     Array(&'a [u8]),
-    /// Reference to another object by index in the [`object_table`](crate::deserializer::typedstream::TypedStreamDeserializer::object_table).
+    /// Reference into the [`object_table`](crate::deserializer::typedstream::TypedStreamDeserializer::object_table):
+    /// an [`Archived::Object`](crate::models::archived::Archived::Object) for an [`@`](crate::models::archived::Archived::Object) slot, or an
+    /// [`Archived::Class`](crate::models::archived::Archived::Class) for a [`#`](crate::models::archived::Archived::Class) slot.
     Object(usize),
     /// Represents a null value.
     Null,
@@ -119,25 +119,6 @@ impl<'a> OutputData<'a> {
         }
     }
 
-    /// Returns the inner byte if this is a `Byte` variant.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use crabstep::models::output_data::OutputData;
-    ///
-    /// let data = OutputData::Byte(0xFF);
-    /// assert_eq!(data.as_byte(), Some(0xFF));
-    /// ```
-    #[must_use]
-    pub fn as_byte(&self) -> Option<u8> {
-        if let OutputData::Byte(b) = self {
-            Some(*b)
-        } else {
-            None
-        }
-    }
-
     /// Returns the inner byte slice if this is an `Array` variant.
     ///
     /// # Examples
@@ -186,7 +167,6 @@ impl core::fmt::Display for OutputData<'_> {
             OutputData::UnsignedInteger(u) => write!(f, "{u}"),
             OutputData::Float(fp) => write!(f, "{fp}"),
             OutputData::Double(d) => write!(f, "{d}"),
-            OutputData::Byte(b) => write!(f, "0x{b:02x}"),
             OutputData::Array(arr) => write!(f, "[{arr:02x?}]"),
             OutputData::Object(idx) => write!(f, "Object({idx})"),
             OutputData::Null => write!(f, "Null"),
