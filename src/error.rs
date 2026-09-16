@@ -36,6 +36,8 @@ pub enum TypedStreamError {
     InvalidArray(usize),
     /// Encountered an empty string where data was expected.
     EmptyString,
+    /// A byte in a type descriptor that `NSArchiver` never writes.
+    InvalidType(u8),
 }
 
 impl Display for TypedStreamError {
@@ -62,6 +64,13 @@ impl Display for TypedStreamError {
                 write!(f, "Invalid array at index: {offset:x}")
             }
             TypedStreamError::EmptyString => write!(f, "Empty string encountered in typedstream"),
+            TypedStreamError::InvalidType(byte) => {
+                write!(
+                    f,
+                    "Invalid type encoding byte: {:?} (0x{byte:02x})",
+                    *byte as char
+                )
+            }
         }
     }
 }
