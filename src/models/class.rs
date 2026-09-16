@@ -3,7 +3,7 @@
 /// Represents a class stored in a `typedstream`
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Class {
-    /// A reference to the class name stored in the [`type_table`](crate::deserializer::typedstream::TypedStreamDeserializer::type_table)
+    /// A reference to the class name stored in the [`string_table`](crate::deserializer::typedstream::TypedStreamDeserializer::string_table)
     pub name_index: usize,
     /// The encoded version of the class
     pub version: u64,
