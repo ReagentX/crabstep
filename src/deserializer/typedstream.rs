@@ -384,10 +384,9 @@ impl<'a> TypedStreamDeserializer<'a> {
                 }
                 Ok(Some(placeholder_index))
             }
-            EMPTY => {
-                self.position += 1;
-                Ok(None)
-            }
+            // A nil reference and a pointer are both one byte; like the `END`
+            // of an inline object, that byte is left for the caller to consume.
+            EMPTY => Ok(None),
             ptr => {
                 let pointer = read_pointer(&ptr)?;
                 Ok(Some(pointer.value as usize))
@@ -448,6 +447,19 @@ impl<'a> TypedStreamDeserializer<'a> {
                 let array_data = read_exact_bytes(&self.data[self.position..], length)?;
                 self.position += length;
                 Ok(OutputData::Array(array_data))
+            }
+            // Selectors share the class-name string table, so a repeated
+            // selector arrives as a reference and resolves through it.
+            Type::Selector => {
+                if *read_byte_at(self.data, self.position)? == EMPTY {
+                    self.position += 1;
+                    return Ok(OutputData::Null);
+                }
+                let name_idx = self.read_string()?;
+                match self.type_table[name_idx].first() {
+                    Some(Type::String(selector)) => Ok(OutputData::String(selector)),
+                    _ => Err(TypedStreamError::InvalidObject),
+                }
             }
             Type::Unknown(byte) => Ok(OutputData::Byte(byte)),
             // Handle all numeric types
@@ -696,6 +708,52 @@ mod group_tests {
                 assert_eq!(matches!(group, DataGroup::One(_)), group.len() == 1);
             }
         }
+    }
+
+    #[test]
+    fn nil_object_reference_consumes_one_byte() {
+        // `@` + EMPTY is a one-byte nil. The slot after it must still line up:
+        // consuming a second byte would swallow the `7`.
+        let bytes = stream(&[START, 2, b'@', b'C', EMPTY, 7]);
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let Archived::Object { data, .. } = &ts.object_table[root] else {
+            panic!("expected an object");
+        };
+        assert_eq!(
+            data,
+            &ObjectData::Groups(vec![DataGroup::Values(vec![
+                OutputData::Null,
+                OutputData::UnsignedInteger(7),
+            ])])
+        );
+        assert_eq!(ts.position, bytes.len());
+    }
+
+    #[test]
+    fn selectors_are_shared_strings() {
+        // Descriptor `::` is string-table entry 2, the literal `quit:` entry 3,
+        // so the second selector references it with tag 0x92 + 3.
+        let bytes = stream(&[
+            START, 2, b':', b':', START, 5, b'q', b'u', b'i', b't', b':', 0x95, START, 1, b':',
+            EMPTY,
+        ]);
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let Archived::Object { data, .. } = &ts.object_table[root] else {
+            panic!("expected an object");
+        };
+        assert_eq!(
+            data,
+            &ObjectData::Groups(vec![
+                DataGroup::Values(vec![
+                    OutputData::String("quit:"),
+                    OutputData::String("quit:"),
+                ]),
+                DataGroup::One(OutputData::Null),
+            ])
+        );
+        assert_eq!(ts.position, bytes.len());
     }
 
     #[test]
