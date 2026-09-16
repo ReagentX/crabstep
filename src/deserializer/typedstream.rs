@@ -573,3 +573,169 @@ impl<'a> TypedStreamDeserializer<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod group_tests {
+    use alloc::{vec, vec::Vec};
+
+    use super::TypedStreamDeserializer;
+    use crate::{
+        DataGroup, ObjectData, OutputData, Property,
+        deserializer::constants::{EMPTY, END, START},
+        models::archived::Archived,
+    };
+
+    fn stream(groups: &[u8]) -> Vec<u8> {
+        let mut bytes = vec![
+            4, 11, b's', b't', b'r', b'e', b'a', b'm', b't', b'y', b'p', b'e', b'd', 0x81, 0xe8, 3,
+            START, 1, b'@', START, START, START, 1, b'X', 0, EMPTY,
+        ];
+        bytes.extend_from_slice(groups);
+        bytes.push(END);
+        bytes
+    }
+
+    fn unsigned(property: Property<'_, '_>) -> u64 {
+        let Property::Primitive(value) = property else {
+            panic!("expected a primitive");
+        };
+        value.as_u64().unwrap()
+    }
+
+    #[test]
+    fn preserves_empty_groups_and_item_order() {
+        let bytes = stream(&[
+            START, 1, b'C', 1, START, 0, START, 2, b'C', b'C', 2, 3, START, 1, b'C', 4,
+            // An empty embedded value contributes no group. An empty descriptor does.
+            START, 1, b'*', EMPTY,
+        ]);
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let Archived::Object { data, .. } = &ts.object_table[root] else {
+            panic!("expected an object");
+        };
+        assert_eq!(data.group_count(), 4);
+        assert_eq!(
+            data,
+            &ObjectData::Groups(vec![
+                DataGroup::One(OutputData::UnsignedInteger(1)),
+                DataGroup::Many(vec![]),
+                DataGroup::Many(vec![
+                    OutputData::UnsignedInteger(2),
+                    OutputData::UnsignedInteger(3),
+                ]),
+                DataGroup::One(OutputData::UnsignedInteger(4)),
+            ])
+        );
+
+        let mut lengths = Vec::new();
+        let mut values = Vec::new();
+        for property in ts.resolve_properties(root).unwrap() {
+            let Property::Group(group) = property else {
+                panic!("expected a group");
+            };
+            lengths.push(group.len());
+            let forward: Vec<_> = group.iter().map(unsigned).collect();
+            let reverse: Vec<_> = group.iter().rev().map(unsigned).collect();
+            assert_eq!(reverse, forward.iter().rev().copied().collect::<Vec<_>>());
+            values.extend_from_slice(&forward);
+
+            let mut iter = group.iter();
+            assert_eq!(iter.len(), forward.len());
+            if !forward.is_empty() {
+                assert_eq!(unsigned(iter.next().unwrap()), forward[0]);
+                assert_eq!(iter.len(), forward.len() - 1);
+            }
+            if forward.len() == 2 {
+                assert_eq!(unsigned(iter.next_back().unwrap()), forward[1]);
+            }
+            assert_eq!(iter.len(), 0);
+            assert!(iter.next().is_none());
+            assert!(iter.next_back().is_none());
+        }
+        assert_eq!(lengths, [1, 0, 2, 1]);
+        assert_eq!(values, [1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn preserves_groups_when_promoting_inline_data() {
+        for (descriptors, expected) in [
+            (
+                vec![START, 1, b'C', 1, START, 1, b'C', 2],
+                vec![vec![1], vec![2]],
+            ),
+            (
+                vec![START, 1, b'C', 1, START, 2, b'C', b'C', 2, 3],
+                vec![vec![1], vec![2, 3]],
+            ),
+            (
+                vec![START, 2, b'C', b'C', 1, 2, START, 1, b'C', 3],
+                vec![vec![1, 2], vec![3]],
+            ),
+        ] {
+            let bytes = stream(&descriptors);
+            let mut ts = TypedStreamDeserializer::new(&bytes);
+            let root = ts.oxidize().unwrap();
+            let Archived::Object {
+                data: ObjectData::Groups(groups),
+                ..
+            } = &ts.object_table[root]
+            else {
+                panic!("expected grouped data");
+            };
+            let values: Vec<Vec<_>> = groups
+                .iter()
+                .map(|group| {
+                    group
+                        .as_slice()
+                        .iter()
+                        .map(|value| value.as_u64().unwrap())
+                        .collect()
+                })
+                .collect();
+            assert_eq!(values, expected);
+            assert!(groups.iter().all(|group| !group.is_empty()));
+            for group in groups {
+                assert_eq!(matches!(group, DataGroup::One(_)), group.len() == 1);
+            }
+        }
+    }
+
+    #[test]
+    fn preserves_shared_and_self_references() {
+        let bytes = stream(&[
+            // The child reuses class 1 and occupies object slot 2.
+            START, 1, b'@', START, 0x93, START, 1, b'C', 7, END, START, 1, b'@', 0x94, START, 2,
+            b'@', b'@', 0x92, 0x94,
+        ]);
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        assert_eq!(root, 0);
+        assert_eq!(ts.object_table.len(), 3);
+        assert_eq!(
+            ts.object_table[root],
+            Archived::Object {
+                class: 1,
+                data: ObjectData::Groups(vec![
+                    DataGroup::One(OutputData::Object(2)),
+                    DataGroup::One(OutputData::Object(2)),
+                    DataGroup::Many(vec![OutputData::Object(0), OutputData::Object(2)]),
+                ]),
+            }
+        );
+        assert_eq!(
+            ts.object_table[2],
+            Archived::Object {
+                class: 1,
+                data: ObjectData::Inline(OutputData::UnsignedInteger(7)),
+            }
+        );
+        let primitives = ts
+            .resolve_properties(root)
+            .unwrap()
+            .primitives_with_limits(10, 100);
+        assert!(!primitives.is_empty());
+        assert!(primitives.len() <= 100);
+        assert!(primitives.iter().all(|value| value.as_u64() == Some(7)));
+    }
+}

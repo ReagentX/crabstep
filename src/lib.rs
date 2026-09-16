@@ -16,7 +16,7 @@ pub use deserializer::{
     typedstream::TypedStreamDeserializer,
 };
 pub use models::{
-    archived::{Archived, ObjectData},
+    archived::{Archived, DataGroup, ObjectData},
     output_data::OutputData,
     types::TypeEntry,
 };
