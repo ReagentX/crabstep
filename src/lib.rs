@@ -24,7 +24,7 @@ pub use models::{
 #[cfg(test)]
 mod test_typedstream_deserializer {
     extern crate std;
-    use alloc::vec;
+    use alloc::{vec, vec::Vec};
     use std::{env::current_dir, fs::File, io::Read, println};
 
     use crate::{
@@ -8287,5 +8287,146 @@ mod test_typedstream_deserializer {
 
         assert_eq!(typedstream.type_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
+    }
+
+    /// A pre-keyed AppKit nib (`SDLMain.nib/objects.nib`, from the SDL project's
+    /// Mac template).
+    #[test]
+    fn test_parse_nib() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/SDLMainNib");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+
+        let root = ts.oxidize().unwrap();
+        // Byte-exact: every byte was consumed and nothing was left half-read.
+        assert_eq!(ts.position, bytes.len());
+        assert!(
+            !ts.object_table
+                .iter()
+                .any(|o| matches!(o, Archived::Placeholder)),
+            "an object was entered but never completed"
+        );
+
+        let class_name = |idx: usize| match &ts.object_table[idx] {
+            Archived::Class(class) => {
+                ts.type_table[class.name_index]
+                    .first()
+                    .and_then(|t| match t {
+                        Type::String(name) => Some(*name),
+                        _ => None,
+                    })
+            }
+            _ => None,
+        };
+        let Archived::Object { class, .. } = &ts.object_table[root] else {
+            panic!("root is not an object");
+        };
+        assert_eq!(class_name(*class), Some("NSIBObjectData"));
+
+        let mut classes: Vec<&str> = (0..ts.object_table.len()).filter_map(class_name).collect();
+        classes.sort_unstable();
+        assert_eq!(
+            classes,
+            [
+                "NSArray",
+                "NSCustomObject",
+                "NSCustomResource",
+                "NSIBObjectData",
+                "NSMenu",
+                "NSMenuItem",
+                "NSMutableArray",
+                "NSMutableSet",
+                "NSMutableString",
+                "NSNibConnector",
+                "NSNibControlConnector",
+                "NSNibOutletConnector",
+                "NSObject",
+                "NSSet",
+                "NSString",
+            ]
+        );
+
+        // Every value an object holds, whichever storage shape it took.
+        fn values_of<'v, 'a>(data: &'v ObjectData<'a>) -> Vec<&'v OutputData<'a>> {
+            match data {
+                ObjectData::Empty => Vec::new(),
+                ObjectData::Inline(value) => vec![value],
+                ObjectData::Groups(groups) => {
+                    groups.iter().flat_map(|group| group.as_slice()).collect()
+                }
+            }
+        }
+        let values: Vec<&OutputData<'_>> = ts
+            .object_table
+            .iter()
+            .filter_map(|o| match o {
+                Archived::Object { data, .. } => Some(values_of(data)),
+                _ => None,
+            })
+            .flatten()
+            .collect();
+        let strings: Vec<&str> = values.iter().filter_map(|v| v.as_str()).collect();
+        for selector in [
+            "submenuAction:",
+            "orderFrontStandardAboutPanel:",
+            "performMiniaturize:",
+            "unhideAllApplications:",
+            "quit:",
+        ] {
+            assert!(strings.contains(&selector), "missing selector {selector}");
+        }
+        for title in [
+            "MainMenu",
+            "Quit DEFCON",
+            "Hide Others",
+            "Minimize",
+            "User Manual",
+        ] {
+            assert!(strings.contains(&title), "missing title {title}");
+        }
+        // Nil outlets, images, and targets: the path Messages data never takes.
+        let nils = values
+            .iter()
+            .filter(|v| matches!(v, OutputData::Null))
+            .count();
+        assert!(nils >= 20, "expected many nil references, found {nils}");
+        // No byte fell through as an unrecognized type.
+        assert!(!values.iter().any(|v| matches!(v, OutputData::Byte(_))));
+
+        // Every object is reachable from the root through object references,
+        // including the back-references from menu items to their menus.
+        let mut seen = vec![false; ts.object_table.len()];
+        let mut stack = vec![root];
+        while let Some(idx) = stack.pop() {
+            if core::mem::replace(&mut seen[idx], true) {
+                continue;
+            }
+            if let Archived::Object { data, .. } = &ts.object_table[idx] {
+                for value in values_of(data) {
+                    if let OutputData::Object(child) = value {
+                        stack.push(*child);
+                    }
+                }
+            }
+        }
+        let unreachable: Vec<usize> = (0..ts.object_table.len())
+            .filter(|&i| !seen[i] && matches!(ts.object_table[i], Archived::Object { .. }))
+            .collect();
+        assert!(
+            unreachable.is_empty(),
+            "unreachable objects: {unreachable:?}"
+        );
+
+        // The lazy property view agrees with the table on the root's shape.
+        let root_groups = ts.resolve_properties(root).unwrap().count();
+        let Archived::Object { data, .. } = &ts.object_table[root] else {
+            unreachable!()
+        };
+        assert_eq!(root_groups, data.group_count());
     }
 }
