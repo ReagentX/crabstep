@@ -25,7 +25,8 @@ mod tests {
         let bytes = load("foundation/NumberBool"); // NSNumber(true) -> SignedInteger(1)
         let mut ts = TypedStreamDeserializer::new(&bytes);
         let root = ts.oxidize().unwrap();
-        let group = ts.resolve_properties(root).unwrap().next().unwrap();
+        // Root `NSNumber` groups: `objCType` first, numeric value last.
+        let group = ts.resolve_properties(root).unwrap().last().unwrap();
 
         assert_eq!(group.as_bool(), Some(true));
         assert_eq!(group.as_i64(), Some(1));

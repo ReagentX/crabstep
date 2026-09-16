@@ -17,5 +17,3 @@ pub const EMPTY: u8 = 0x85;
 pub const END: u8 = 0x86;
 /// Bytes equal or greater in value than the reference tag indicate an index in the table of already-seen types
 pub const REFERENCE_TAG: u64 = 0x92;
-/// Indicates an array in the byte stream
-pub const ARRAY: u8 = 0x5b;
