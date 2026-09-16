@@ -83,6 +83,8 @@ mod test_typedstream_deserializer {
                 &OutputData::UnsignedInteger(10),
                 &OutputData::SignedInteger(1),
                 &OutputData::SignedInteger(0),
+                // `NSNumber` archive: `objCType` alongside the value.
+                &OutputData::String("i"),
                 &OutputData::String("__kIMMessagePartAttributeName"),
                 &OutputData::SignedInteger(1)
             ]
@@ -132,7 +134,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -197,7 +199,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -209,7 +214,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(9),
+            Archived::CString(9),
         ];
 
         assert_eq!(typedstream.type_table, expected_types);
@@ -257,7 +262,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
@@ -312,7 +317,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -324,7 +332,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(11),
+            Archived::CString(11),
             Archived::Object {
                 class: 4,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -333,7 +341,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
         ];
 
@@ -381,7 +392,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSURL")]),
             TypeEntry::from_types(vec![Type::SignedInt]),
@@ -521,7 +532,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -533,7 +547,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(9),
+            Archived::CString(9),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -542,9 +556,12 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
-            Archived::Type(13),
+            Archived::CString(13),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -575,7 +592,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -786,7 +806,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(5)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(5)],
+                ]),
             },
             Archived::Object {
                 class: 8,
@@ -802,7 +825,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(11)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(11)],
+                ]),
             },
             Archived::Object {
                 class: 8,
@@ -818,7 +844,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(9)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(9)],
+                ]),
             },
             Archived::Object {
                 class: 8,
@@ -834,7 +863,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(8)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(8)],
+                ]),
             },
             Archived::Object {
                 class: 8,
@@ -850,7 +882,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(12)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(12)],
+                ]),
             },
             Archived::Object {
                 class: 8,
@@ -866,7 +901,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(4)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(4)],
+                ]),
             },
             Archived::Object {
                 class: 8,
@@ -882,7 +920,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(6)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(6)],
+                ]),
             },
             Archived::Object {
                 class: 8,
@@ -898,7 +939,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(10)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(10)],
+                ]),
             },
         ];
 
@@ -953,7 +997,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::Array(635)]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::String("NSURL")]),
             TypeEntry::from_types(vec![Type::SignedInt]),
         ];
@@ -1075,7 +1119,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 11,
@@ -1087,7 +1134,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(7),
+            Archived::CString(7),
             Archived::Object {
                 class: 4,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -1118,7 +1165,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -1189,7 +1239,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSURL")]),
@@ -1269,7 +1319,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -1281,7 +1334,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(13),
+            Archived::CString(13),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -1290,9 +1343,12 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("c")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
-            Archived::Type(14),
+            Archived::CString(14),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -1325,7 +1381,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -1432,7 +1491,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
@@ -1501,7 +1560,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -1513,7 +1575,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(11),
+            Archived::CString(11),
             Archived::Object {
                 class: 4,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -1522,7 +1584,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
         ];
 
@@ -1570,7 +1635,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::String("NSData")]),
             TypeEntry::from_types(vec![Type::Array(904)]),
         ];
@@ -1645,7 +1710,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -1657,7 +1725,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(9),
+            Archived::CString(9),
             Archived::Object {
                 class: 8,
                 data: ObjectData::from_groups(vec![
@@ -1787,7 +1855,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::Double]),
             TypeEntry::from_types(vec![Type::SignedInt]),
         ];
@@ -1880,7 +1948,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::Double(1139.0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("d")],
+                    vec![OutputData::Double(1139.0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -1892,7 +1963,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(13),
+            Archived::CString(13),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -1901,9 +1972,12 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
-            Archived::Type(14),
+            Archived::CString(14),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -1912,9 +1986,12 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
-            Archived::Type(9),
+            Archived::CString(9),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -1935,7 +2012,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::Double(952.0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("d")],
+                    vec![OutputData::Double(952.0)],
+                ]),
             },
             Archived::Object {
                 class: 8,
@@ -1961,7 +2041,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
         ];
 
@@ -2012,7 +2095,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
@@ -2097,7 +2180,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(600)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(600)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -2109,7 +2195,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(13),
+            Archived::CString(13),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -2118,7 +2204,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -2128,7 +2217,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -2150,7 +2242,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(660)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(660)],
+                ]),
             },
         ];
 
@@ -2263,7 +2358,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::String("NSData")]),
             TypeEntry::from_types(vec![Type::Array(535)]),
         ];
@@ -2338,7 +2433,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -2350,7 +2448,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(9),
+            Archived::CString(9),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -2483,7 +2581,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
@@ -2545,7 +2643,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -2557,7 +2658,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(11),
+            Archived::CString(11),
             Archived::Object {
                 class: 4,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -2566,7 +2667,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -2594,7 +2698,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
         ];
 
@@ -2642,7 +2749,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::String("NSMutableData")]),
             TypeEntry::from_types(vec![Type::String("NSData")]),
             TypeEntry::from_types(vec![Type::Array(669)]),
@@ -2715,7 +2822,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -2727,7 +2837,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(9),
+            Archived::CString(9),
             Archived::Object {
                 class: 8,
                 data: ObjectData::from_groups(vec![
@@ -2853,7 +2963,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -2907,7 +3017,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -2919,7 +3032,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(7),
+            Archived::CString(7),
             Archived::Object {
                 class: 4,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -2928,7 +3041,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
         ];
 
@@ -2977,7 +3093,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::Array(667)]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::String("NSURL")]),
             TypeEntry::from_types(vec![Type::SignedInt]),
         ];
@@ -3107,7 +3223,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 11,
@@ -3119,7 +3238,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(7),
+            Archived::CString(7),
             Archived::Object {
                 class: 4,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -3205,7 +3324,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -3264,7 +3383,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -3276,7 +3398,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(7),
+            Archived::CString(7),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![
@@ -3295,7 +3417,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
             Archived::Object {
                 class: 4,
@@ -3382,7 +3507,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
@@ -3437,7 +3562,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -3449,7 +3577,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(11),
+            Archived::CString(11),
             Archived::Object {
                 class: 4,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -3458,7 +3586,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
         ];
 
@@ -3509,7 +3640,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -3576,7 +3707,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -3588,7 +3722,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(9),
+            Archived::CString(9),
         ];
 
         assert_eq!(typedstream.type_table, expected_types);
@@ -3638,7 +3772,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -3703,7 +3837,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -3715,7 +3852,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(9),
+            Archived::CString(9),
             Archived::Object {
                 class: 8,
                 data: ObjectData::from_groups(vec![
@@ -3791,7 +3928,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
@@ -3926,7 +4063,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -3938,7 +4078,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(13),
+            Archived::CString(13),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -3947,7 +4087,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -3975,7 +4118,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4009,7 +4155,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(2)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(2)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4031,7 +4180,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(3)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(3)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4053,7 +4205,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(4)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(4)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4075,7 +4230,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(5)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(5)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4097,7 +4255,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(6)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(6)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4119,7 +4280,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(7)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(7)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4141,7 +4305,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(8)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(8)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4163,7 +4330,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(9)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(9)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4185,7 +4355,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(10)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(10)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4207,7 +4380,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(11)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(11)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4229,7 +4405,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(12)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(12)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4251,7 +4430,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(13)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(13)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4273,7 +4455,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(14)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(14)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4295,7 +4480,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(15)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(15)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4317,7 +4505,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(16)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(16)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4339,7 +4530,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(17)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(17)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4361,7 +4555,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(18)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(18)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -4418,7 +4615,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -4506,7 +4703,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -4518,7 +4718,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(9),
+            Archived::CString(9),
             Archived::Object {
                 class: 8,
                 data: ObjectData::from_groups(vec![
@@ -4535,7 +4735,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
             Archived::Object {
                 class: 8,
@@ -4555,7 +4758,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(2)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(2)],
+                ]),
             },
             Archived::Object {
                 class: 8,
@@ -4567,7 +4773,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(3)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(3)],
+                ]),
             },
             Archived::Object {
                 class: 8,
@@ -4587,7 +4796,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(4)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(4)],
+                ]),
             },
             Archived::Object {
                 class: 8,
@@ -4599,7 +4811,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(5)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(5)],
+                ]),
             },
         ];
 
@@ -4650,7 +4865,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -4724,7 +4939,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -4736,7 +4954,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(9),
+            Archived::CString(9),
             Archived::Object {
                 class: 8,
                 data: ObjectData::from_groups(vec![
@@ -4767,7 +4985,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
             Archived::Object {
                 class: 8,
@@ -4785,7 +5006,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(2)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(2)],
+                ]),
             },
         ];
 
@@ -4836,7 +5060,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSData")]),
             TypeEntry::from_types(vec![Type::Array(820)]),
@@ -4914,7 +5138,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -4926,7 +5153,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(9),
+            Archived::CString(9),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -4935,9 +5162,12 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
-            Archived::Type(13),
+            Archived::CString(13),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -4946,7 +5176,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -5114,7 +5347,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSURL")]),
             TypeEntry::from_types(vec![Type::SignedInt]),
@@ -5193,7 +5426,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -5205,7 +5441,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(13),
+            Archived::CString(13),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -5214,7 +5450,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Object {
                 class: 8,
@@ -5357,7 +5596,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSData")]),
@@ -5439,7 +5678,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -5451,7 +5693,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(13),
+            Archived::CString(13),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -5460,9 +5702,12 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("c")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
-            Archived::Type(14),
+            Archived::CString(14),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -5524,7 +5769,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -5534,7 +5782,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(5)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(5)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -5607,7 +5858,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
@@ -5684,7 +5935,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(5)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(5)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -5696,7 +5950,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(11),
+            Archived::CString(11),
             Archived::Object {
                 class: 4,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -5705,9 +5959,12 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
-            Archived::Type(7),
+            Archived::CString(7),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![
@@ -5734,7 +5991,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(11)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(11)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -5748,7 +6008,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(9)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(9)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -5762,7 +6025,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(8)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(8)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -5776,7 +6042,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(12)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(12)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -5790,7 +6059,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(4)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(4)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -5804,7 +6076,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(6)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(6)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -5818,7 +6093,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(10)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(10)],
+                ]),
             },
         ];
 
@@ -5867,7 +6145,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -5939,7 +6217,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -5951,7 +6232,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(7),
+            Archived::CString(7),
             Archived::Object {
                 class: 4,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -5960,7 +6241,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -6087,7 +6371,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
@@ -6151,7 +6435,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -6163,7 +6450,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(11),
+            Archived::CString(11),
             Archived::Object {
                 class: 4,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -6172,7 +6459,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Object {
                 class: 4,
@@ -6182,9 +6472,12 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
-            Archived::Type(7),
+            Archived::CString(7),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![
@@ -6215,7 +6508,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(10)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(10)],
+                ]),
             },
         ];
 
@@ -6264,7 +6560,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -6327,7 +6623,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -6339,7 +6638,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(7),
+            Archived::CString(7),
             Archived::Object {
                 class: 4,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -6354,7 +6653,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Object {
                 class: 4,
@@ -6415,7 +6717,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
         ];
 
@@ -6496,7 +6798,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -6508,7 +6813,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(11),
+            Archived::CString(11),
             Archived::Object {
                 class: 4,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -6517,7 +6822,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
         ];
 
@@ -6567,7 +6875,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSData")]),
             TypeEntry::from_types(vec![Type::Array(582)]),
@@ -6667,7 +6975,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 15,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 12,
@@ -6679,7 +6990,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(15),
+            Archived::CString(15),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -6688,7 +6999,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 15,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
             Archived::Object {
                 class: 6,
@@ -6793,7 +7107,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSMutableData")]),
             TypeEntry::from_types(vec![Type::String("NSData")]),
@@ -6894,7 +7208,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 15,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 12,
@@ -6906,7 +7223,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(15),
+            Archived::CString(15),
             Archived::Object {
                 class: 6,
                 data: ObjectData::from_groups(vec![vec![OutputData::String(
@@ -6973,7 +7290,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 15,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(-1)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("q")],
+                    vec![OutputData::SignedInteger(-1)],
+                ]),
             },
         ];
 
@@ -7024,7 +7344,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -7089,7 +7409,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -7101,7 +7424,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(9),
+            Archived::CString(9),
         ];
 
         assert_eq!(typedstream.type_table, expected_types);
@@ -7176,7 +7499,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::Array(1187)]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -7326,7 +7649,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 13,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 11,
@@ -7338,7 +7664,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(7),
+            Archived::CString(7),
         ];
 
         assert_eq!(typedstream.type_table, expected_types);
@@ -7386,7 +7712,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -7441,7 +7767,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -7453,7 +7782,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(7),
+            Archived::CString(7),
         ];
 
         assert_eq!(typedstream.type_table, expected_types);
@@ -7501,7 +7830,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -7558,7 +7887,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 9,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 8,
@@ -7570,7 +7902,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(2),
             }),
-            Archived::Type(7),
+            Archived::CString(7),
         ];
 
         assert_eq!(typedstream.type_table, expected_types);
@@ -7620,7 +7952,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::SignedInt]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
             TypeEntry::from_types(vec![Type::String("NSData")]),
             TypeEntry::from_types(vec![Type::Array(764)]),
             TypeEntry::from_types(vec![Type::Array(748)]),
@@ -7699,7 +8031,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 11,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 10,
@@ -7711,7 +8046,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(9),
+            Archived::CString(9),
             Archived::Object {
                 class: 8,
                 data: ObjectData::from_groups(vec![
@@ -7956,7 +8291,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::Array(754)]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -8082,7 +8417,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 14,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 12,
@@ -8094,7 +8432,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(9),
+            Archived::CString(9),
         ];
 
         assert_eq!(typedstream.type_table, expected_types);
@@ -8146,7 +8484,7 @@ mod test_typedstream_deserializer {
             TypeEntry::from_types(vec![Type::Array(664)]),
             TypeEntry::from_types(vec![Type::String("NSNumber")]),
             TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::EmbeddedData]),
+            TypeEntry::from_types(vec![Type::CString]),
         ];
 
         let expected_objects = vec![
@@ -8270,7 +8608,10 @@ mod test_typedstream_deserializer {
             },
             Archived::Object {
                 class: 14,
-                data: ObjectData::from_groups(vec![vec![OutputData::SignedInteger(0)]]),
+                data: ObjectData::from_groups(vec![
+                    vec![OutputData::String("i")],
+                    vec![OutputData::SignedInteger(0)],
+                ]),
             },
             Archived::Class(Class {
                 name_index: 12,
@@ -8282,7 +8623,7 @@ mod test_typedstream_deserializer {
                 version: 0,
                 parent_index: Some(3),
             }),
-            Archived::Type(9),
+            Archived::CString(9),
         ];
 
         assert_eq!(typedstream.type_table, expected_types);
@@ -8429,16 +8770,22 @@ mod test_typedstream_deserializer {
     }
 
     /// `NSValue`s with struct `objCType`s from the classic archiver
-    /// (`test_data/generators/foundation.swift`). Struct members are written
-    /// flat, so `{_NSRange=QQ}` is two slots and `{CGRect={CGPoint=dd}{CGSize=dd}}`
-    /// four. `CGSize` spells three scalar letters that are not slots.
+    /// (`test_data/generators/foundation.swift`). Layout: a `char *` `objCType`,
+    /// followed by the values described by that string. Struct layout: flat
+    /// members. Slot counts: two for `{_NSRange=QQ}` and four for
+    /// `{CGRect={CGPoint=dd}{CGSize=dd}}`. `CGSize` contributes three scalar
+    /// letters to its name, not three slots.
     #[test]
     fn test_parse_nsvalue_structs() {
         use OutputData::{Double as D, UnsignedInteger as U};
-        for (fixture, expected) in [
-            ("NSValueRange", vec![U(3), U(4)]),
-            ("NSValueSize", vec![D(1.5), D(2.5)]),
-            ("NSValueRect", vec![D(1.0), D(2.0), D(3.0), D(4.0)]),
+        for (fixture, obj_c_type, expected) in [
+            ("NSValueRange", "{_NSRange=QQ}", vec![U(3), U(4)]),
+            ("NSValueSize", "{CGSize=dd}", vec![D(1.5), D(2.5)]),
+            (
+                "NSValueRect",
+                "{CGRect={CGPoint=dd}{CGSize=dd}}",
+                vec![D(1.0), D(2.0), D(3.0), D(4.0)],
+            ),
         ] {
             let typedstream_path = current_dir()
                 .unwrap()
@@ -8466,13 +8813,62 @@ mod test_typedstream_deserializer {
                 Some(&Type::String("NSValue")),
                 "{fixture}"
             );
-            // Expect the members and nothing else: braces, `=`, and name
-            // letters are grammar, not values.
+            // Expect the `objCType` string first, followed by the members and
+            // nothing else. Braces, `=`, and name letters are grammar, not values.
             assert_eq!(
                 data,
-                &ObjectData::Groups(vec![DataGroup::Values(expected)]),
+                &ObjectData::Groups(vec![
+                    DataGroup::One(OutputData::String(obj_c_type)),
+                    DataGroup::Values(expected),
+                ]),
                 "{fixture}"
             );
         }
+    }
+
+    /// Bare `char *` slots from the classic archiver (`CStrings` in
+    /// `test_data/generators/foundation.swift`). Test sequence: a literal,
+    /// `NULL`, the same pointer again, a distinct pointer with the same text,
+    /// then an `int`. Track pointer identity in the object table: reuse the
+    /// existing slot for the repeated pointer; allocate a new slot for the
+    /// second pointer and reuse the string-table entry for its text.
+    #[test]
+    fn test_parse_c_strings() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/foundation/CStrings");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+
+        let root = ts.oxidize().unwrap();
+        assert_eq!(ts.position, bytes.len());
+        let Archived::Object { data, .. } = &ts.object_table[root] else {
+            panic!("root is not an object");
+        };
+        assert_eq!(
+            data,
+            &ObjectData::Groups(vec![
+                DataGroup::One(OutputData::String("hello")),
+                DataGroup::One(OutputData::Null),
+                DataGroup::One(OutputData::String("hello")),
+                DataGroup::One(OutputData::String("hello")),
+                DataGroup::One(OutputData::SignedInteger(7)),
+            ])
+        );
+        // Two pointers, two slots, one shared string.
+        let slots: Vec<usize> = ts
+            .object_table
+            .iter()
+            .filter_map(|o| match o {
+                Archived::CString(index) => Some(*index),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(slots.len(), 2);
+        assert!(slots.iter().all(|&i| ts.shared_string(i) == Some("hello")));
+        assert_eq!(slots[0], slots[1]);
     }
 }
