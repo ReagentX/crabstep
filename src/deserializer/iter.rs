@@ -8,7 +8,7 @@ use crate::models::{
     archived::{Archived, DataGroup, ObjectData},
     class::Class,
     output_data::OutputData,
-    types::{Type, TypeEntry},
+    shared_string::SharedString,
 };
 
 /// A single resolved property from an [`Archived::Object`].
@@ -18,7 +18,7 @@ pub enum Property<'a, 'b> {
     Object {
         /// The class of the object
         class: &'a Class,
-        /// The name of the class, typically a string from the type table
+        /// The name of the class, its entry in the string table
         name: &'a str,
         /// An iterator over the properties of this object
         data: PropertyIterator<'a, 'b>,
@@ -43,7 +43,7 @@ pub enum Property<'a, 'b> {
 pub struct PropertyGroup<'a, 'b> {
     items: &'b [OutputData<'a>],
     object_table: &'b [Archived<'a>],
-    type_table: &'b [TypeEntry<'a>],
+    string_table: &'b [SharedString<'a>],
 }
 
 impl<'a, 'b: 'a> PropertyGroup<'a, 'b> {
@@ -83,10 +83,10 @@ impl<'a, 'b: 'a> PropertyGroup<'a, 'b> {
     }
 
     /// Resolve a single stored value into a [`Property`]. Object references are
-    /// resolved against the object/type tables; everything else is a primitive.
+    /// resolved against the object and string tables; everything else is a primitive.
     fn resolve(&self, item: &'b OutputData<'a>) -> Property<'a, 'b> {
         if let OutputData::Object(idx) = item
-            && let Some(object) = object_property(self.object_table, self.type_table, *idx)
+            && let Some(object) = object_property(self.object_table, self.string_table, *idx)
         {
             return object;
         }
@@ -99,7 +99,7 @@ impl<'a, 'b: 'a> PropertyGroup<'a, 'b> {
 /// [`PropertyGroup`] resolution and the deserializer's object/root resolvers.
 pub(crate) fn object_property<'a, 'b: 'a>(
     object_table: &'b [Archived<'a>],
-    type_table: &'b [TypeEntry<'a>],
+    string_table: &'b [SharedString<'a>],
     index: usize,
 ) -> Option<Property<'a, 'b>> {
     let Some(Archived::Object { class: cls, .. }) = object_table.get(index) else {
@@ -108,15 +108,10 @@ pub(crate) fn object_property<'a, 'b: 'a>(
     let Some(Archived::Class(cls)) = object_table.get(*cls) else {
         return None;
     };
-    let data = PropertyIterator::new(object_table, type_table, index)?;
-    let name = type_table
+    let data = PropertyIterator::new(object_table, string_table, index)?;
+    let name = string_table
         .get(cls.name_index)
-        .and_then(|types| types.first())
-        .and_then(|t| match t {
-            Type::String(name) => Some(*name),
-            _ => None,
-        })
-        .unwrap_or("Unknown Class");
+        .map_or("Unknown Class", |entry| entry.text);
     Some(Property::Object {
         class: cls,
         name,
@@ -183,7 +178,7 @@ impl<'a, 'b: 'a> ExactSizeIterator for PropertyGroupIter<'a, 'b> {}
 /// An iterator that resolves the top-level properties of a single [`Archived::Object`].
 ///
 /// This iterator will yield `Property` items, which can be either nested objects or primitive values.
-/// It is created from an `Archived` object and its associated type table.
+/// It is created from an `Archived` object and its associated string table.
 ///
 /// It is designed to traverse the properties of an object, allowing you to access nested objects and their properties recursively.
 ///
@@ -209,7 +204,7 @@ impl<'a, 'b: 'a> ExactSizeIterator for PropertyGroupIter<'a, 'b> {}
 #[derive(Debug, Clone)]
 pub struct PropertyIterator<'a, 'b> {
     object_table: &'b [Archived<'a>],
-    type_table: &'b [TypeEntry<'a>],
+    string_table: &'b [SharedString<'a>],
     groups: GroupSource<'a, 'b>,
 }
 
@@ -227,7 +222,7 @@ enum GroupSource<'a, 'b> {
 impl<'a, 'b> PropertyIterator<'a, 'b> {
     pub(crate) fn new(
         object_table: &'b [Archived<'a>],
-        type_table: &'b [TypeEntry<'a>],
+        string_table: &'b [SharedString<'a>],
         root_object_index: usize,
     ) -> Option<Self> {
         let root_object = object_table.get(root_object_index)?;
@@ -244,7 +239,7 @@ impl<'a, 'b> PropertyIterator<'a, 'b> {
 
         Some(Self {
             object_table,
-            type_table,
+            string_table,
             groups,
         })
     }
@@ -347,7 +342,7 @@ impl<'a, 'b: 'a> Iterator for PropertyIterator<'a, 'b> {
         Some(Property::Group(PropertyGroup {
             items,
             object_table: self.object_table,
-            type_table: self.type_table,
+            string_table: self.string_table,
         }))
     }
 }
