@@ -16,7 +16,7 @@ pub enum Type<'a> {
     ///
     /// | Hex    | UTF-8 |
     /// |--------|-------|
-    /// | `0x28` | [`+`](https://www.compart.com/en/unicode/U+002B) |
+    /// | `0x2B` | [`+`](https://www.compart.com/en/unicode/U+002B) |
     Utf8String,
     /// Encoded bytes that can be parsed again as data. Denoted by:
     ///
