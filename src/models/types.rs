@@ -16,7 +16,7 @@ pub enum Type<'a> {
     ///
     /// | Hex    | UTF-8 |
     /// |--------|-------|
-    /// | `0x28` | [`+`](https://www.compart.com/en/unicode/U+002B) |
+    /// | `0x2B` | [`+`](https://www.compart.com/en/unicode/U+002B) |
     Utf8String,
     /// Encoded bytes that can be parsed again as data. Denoted by:
     ///
@@ -24,6 +24,14 @@ pub enum Type<'a> {
     /// |--------|-------|
     /// | `0x2A` | [`*`](https://www.compart.com/en/unicode/U+002A) |
     EmbeddedData,
+    /// A method selector (`SEL`), written as a shared string: the first
+    /// occurrence is a literal, later ones are references to it, and a `NULL`
+    /// selector is [`EMPTY`](crate::deserializer::constants::EMPTY). Denoted by:
+    ///
+    /// | Hex    | UTF-8 |
+    /// |--------|-------|
+    /// | `0x3A` | [`:`](https://www.compart.com/en/unicode/U+003A) |
+    Selector,
     /// An instance of a class, usually with data. Denoted by:
     ///
     /// | Hex    | UTF-8 |
@@ -80,6 +88,7 @@ impl<'a> Type<'a> {
             0x40 => Self::Object,
             0x2B => Self::Utf8String,
             0x2A => Self::EmbeddedData,
+            0x3A => Self::Selector,
             0x66 => Self::Float,
             0x64 => Self::Double,
             0x63 | 0x69 | 0x6c | 0x71 | 0x73 => Self::SignedInt,
