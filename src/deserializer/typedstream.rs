@@ -448,8 +448,8 @@ impl<'a> TypedStreamDeserializer<'a> {
                 self.position += length;
                 Ok(OutputData::Array(array_data))
             }
-            // Selectors share the class-name string table, so a repeated
-            // selector arrives as a reference and resolves through it.
+            // Selectors are stored in the class-name string table, so a repeated
+            // one is a reference, resolved through `read_string`.
             Type::Selector => {
                 if *read_byte_at(self.data, self.position)? == EMPTY {
                     self.position += 1;
@@ -461,7 +461,12 @@ impl<'a> TypedStreamDeserializer<'a> {
                     _ => Err(TypedStreamError::InvalidObject),
                 }
             }
-            Type::Unknown(byte) => Ok(OutputData::Byte(byte)),
+            // A class chain, encoded exactly like an object's class header;
+            // `idx` is the `Archived::Class` entry, not an object.
+            Type::Class => Ok(match self.read_class()? {
+                Some(idx) => OutputData::Object(idx),
+                None => OutputData::Null,
+            }),
             // Handle all numeric types
             Type::SignedInt | Type::UnsignedInt | Type::Float | Type::Double => {
                 self.read_number(ty)
@@ -578,7 +583,7 @@ mod group_tests {
     use crate::{
         DataGroup, ObjectData, OutputData, Property,
         deserializer::constants::{EMPTY, END, START},
-        models::archived::Archived,
+        models::{archived::Archived, types::Type},
     };
 
     fn stream(groups: &[u8]) -> Vec<u8> {
@@ -754,6 +759,85 @@ mod group_tests {
             ])
         );
         assert_eq!(ts.position, bytes.len());
+    }
+
+    #[test]
+    fn class_references_read_a_class_chain() {
+        // `#` then a class header: name, version, superclass terminator.
+        let bytes = stream(&[
+            START, 2, b'#', b'#', START, START, 3, b'F', b'o', b'o', 2, EMPTY, EMPTY,
+        ]);
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let Archived::Object {
+            data: ObjectData::Groups(groups),
+            ..
+        } = &ts.object_table[root]
+        else {
+            panic!("expected grouped data");
+        };
+        let [DataGroup::Values(values)] = groups.as_slice() else {
+            panic!("expected one two-slot group");
+        };
+        let [OutputData::Object(class_idx), OutputData::Null] = values.as_slice() else {
+            panic!("expected a class reference and a nil class, got {values:?}");
+        };
+        let Archived::Class(class) = &ts.object_table[*class_idx] else {
+            panic!("`#` must reference a class entry");
+        };
+        assert_eq!(
+            ts.type_table[class.name_index].first(),
+            Some(&Type::String("Foo"))
+        );
+        assert_eq!(class.version, 2);
+        assert_eq!(class.parent_index, None);
+        assert_eq!(ts.position, bytes.len());
+    }
+
+    #[test]
+    fn aggregates_decode_flat_in_stream() {
+        use OutputData::{Array as A, Double as D, SignedInteger as I, UnsignedInteger as U};
+        // Integral doubles are written as one-byte ints, as NSArchiver does.
+        for (descriptor, values, expected) in [
+            (&b"B"[..], &[1u8][..], vec![U(1)]),
+            (b"{_NSRange=QQ}", &[3, 4], vec![U(3), U(4)]),
+            (b"i{CGSize=dd}", &[7, 1, 2], vec![I(7), D(1.0), D(2.0)]),
+            (b"[2i]", &[5, 6], vec![I(5), I(6)]),
+            (b"[2[2c]]", b"abcd", vec![A(b"ab"), A(b"cd")]),
+            (b"i[2c]i", &[1, b'x', b'y', 2], vec![I(1), A(b"xy"), I(2)]),
+        ] {
+            let mut group = vec![START, u8::try_from(descriptor.len()).unwrap()];
+            group.extend_from_slice(descriptor);
+            group.extend_from_slice(values);
+            let bytes = stream(&group);
+            let mut ts = TypedStreamDeserializer::new(&bytes);
+            let root = ts.oxidize().unwrap();
+            let Archived::Object { data, .. } = &ts.object_table[root] else {
+                panic!("expected an object");
+            };
+            let got = match data {
+                ObjectData::Inline(value) => core::slice::from_ref(value),
+                ObjectData::Groups(groups) => groups[0].as_slice(),
+                ObjectData::Empty => panic!("no data"),
+            };
+            assert_eq!(
+                got,
+                expected.as_slice(),
+                "{}",
+                core::str::from_utf8(descriptor).unwrap()
+            );
+            assert_eq!(ts.position, bytes.len());
+        }
+    }
+
+    #[test]
+    fn unencodable_descriptor_is_an_error_not_a_desync() {
+        let bytes = stream(&[START, 2, b'^', b'i', 0]);
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        assert!(matches!(
+            ts.oxidize(),
+            Err(crate::error::TypedStreamError::InvalidType(b'^'))
+        ));
     }
 
     #[test]
