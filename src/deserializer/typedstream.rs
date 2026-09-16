@@ -37,15 +37,20 @@ pub struct TypedStreamDeserializer<'a> {
     pub data: &'a [u8],
     /// The current index we are at in the stream
     pub(crate) position: usize,
-    /// As we parse the `typedstream`, build a table of seen [`Type`]s to reference in the future
+    /// The shared-string table, with descriptor literals stored as parsed types.
     ///
-    /// The first time a [`Type`] is seen, it is present in the stream literally,
-    /// but afterwards are only referenced by index in order of appearance.
+    /// Shared-string layout: literal once, index thereafter. Entry kinds:
+    /// type descriptors, class names, selectors, and `char *` values. Register
+    /// names and values as [`Type::String`]; parse an entry in place before
+    /// using it as a descriptor. Keep every entry's original text available
+    /// through [`shared_string`](Self::shared_string).
     pub type_table: Vec<TypeEntry<'a>>,
+    /// Text for each [`type_table`](Self::type_table) entry, by index. Keep both
+    /// vectors aligned by routing every registration through
+    /// [`register_string`](Self::register_string).
+    pub(crate) strings: Vec<&'a str>,
     /// As we parse the `typedstream`, build a table of seen [`Archived`] data to reference in the future
     pub object_table: Vec<Archived<'a>>,
-    /// We want to copy embedded types the first time they are seen, even if the types were resolved through references
-    pub(crate) seen_embedded_types: Vec<usize>,
 }
 
 impl<'a> TypedStreamDeserializer<'a> {
@@ -68,8 +73,8 @@ impl<'a> TypedStreamDeserializer<'a> {
             data,
             position: 0,
             type_table: Vec::new(),
+            strings: Vec::new(),
             object_table: Vec::new(),
-            seen_embedded_types: Vec::new(),
         }
     }
 
@@ -117,19 +122,18 @@ impl<'a> TypedStreamDeserializer<'a> {
         // distinct-object-heavy streams); the object table is the only one that
         // grows large, so the others stay tight.
         let estimated_size = self.data.len();
-        self.type_table
-            .reserve((estimated_size / 64).clamp(16, 256));
+        let strings = (estimated_size / 64).clamp(16, 256);
+        self.type_table.reserve(strings);
+        self.strings.reserve(strings);
         self.object_table
             .reserve((estimated_size / 16).clamp(32, 8192));
-        self.seen_embedded_types
-            .reserve((estimated_size / 128).clamp(8, 64));
 
         // Advance by the number of bytes consumed by the header validation
         self.position += validation.bytes_consumed;
 
         // The root must be an object: a stream with no root descriptor, or one
         // whose first value is not an object reference, has nothing to walk.
-        let Some(type_index) = self.read_type(false)? else {
+        let Some(type_index) = self.read_type()? else {
             return Err(TypedStreamError::InvalidObject);
         };
         match self.read_types(type_index)?.as_slice().first() {
@@ -248,51 +252,59 @@ impl<'a> TypedStreamDeserializer<'a> {
         Ok(unsigned_int.value)
     }
 
-    /// [`Archivable`] data can be embedded on a class or in a C String marked as [`Type::EmbeddedData`]
-    fn read_embedded_type(&mut self) -> Result<Option<usize>> {
-        match *self.consume_current_byte()? {
-            START => {
-                // 0x84 indicates the start of embedded data
-                self.read_type(true)
-            }
-            EMPTY => Ok(None),
-            ptr => {
-                let pointer = read_pointer(&ptr)?.map(|v| v as usize);
-                if let Some(Archived::Type(idx)) = self.object_table.get(pointer.value) {
-                    Ok(Some(*idx))
-                } else {
-                    Err(TypedStreamError::InvalidPointer(pointer.value as u8))
-                }
-            }
-        }
-    }
-
+    /// Reads a shared string: a literal, registered as a new entry, or a
+    /// reference to an existing one. Returns the entry's index.
     fn read_string(&mut self) -> Result<usize> {
-        let current_byte = *self.consume_current_byte()?;
-        match current_byte {
+        match *self.consume_current_byte()? {
             START => {
                 let string_data = read_string(&self.data[self.position..])?;
                 self.position += string_data.bytes_consumed;
-                self.type_table
-                    .push(TypeEntry::One(Type::new_string(string_data.value)));
-                Ok(self.type_table.len() - 1)
+                Ok(self.register_string(string_data.value, None))
             }
             EMPTY => Err(TypedStreamError::EmptyString),
             ptr => {
-                let pointer = read_pointer(&ptr)?.map(|v| v as usize);
-                if let Some(Type::String(_)) = self
-                    .type_table
-                    .get(pointer.value)
-                    .and_then(|inner| inner.first())
-                {
-                    Ok(pointer.value)
+                let index = read_pointer(&ptr)?.value as usize;
+                if index < self.strings.len() {
+                    Ok(index)
                 } else {
-                    Err(TypedStreamError::InvalidPointer(pointer.value as u8))
+                    Err(TypedStreamError::InvalidPointer(index as u8))
                 }
             }
         }
     }
 
+    /// Returns the text of shared-string entry `index`: a type descriptor, class
+    /// name, selector, or `char *` value.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use crabstep::TypedStreamDeserializer;
+    ///
+    /// let mut ts = TypedStreamDeserializer::new(&[]);
+    /// ts.oxidize().unwrap();
+    /// assert_eq!(ts.shared_string(0), Some("@"));
+    /// ```
+    #[must_use]
+    pub fn shared_string(&self, index: usize) -> Option<&'a str> {
+        debug_assert_eq!(self.strings.len(), self.type_table.len());
+        self.strings.get(index).copied()
+    }
+
+    /// Appends a shared string to both tables and returns its index. Route every
+    /// registration through this function so the tables remain aligned.
+    ///
+    /// `parsed`: the descriptor view for a descriptor literal. For a name or
+    /// value, omit parsed types; parse the entry only for descriptor use.
+    fn register_string(&mut self, text: &'a str, parsed: Option<TypeEntry<'a>>) -> usize {
+        self.type_table
+            .push(parsed.unwrap_or(TypeEntry::One(Type::new_string(text))));
+        self.strings.push(text);
+        debug_assert_eq!(self.strings.len(), self.type_table.len());
+        self.strings.len() - 1
+    }
+
+    /// Reads a class from the stream, handling nested class definitions.
     fn read_class(&mut self) -> Result<Option<usize>> {
         // Index of the first START we encounter (the bottom-most child)
         let mut first_new: Option<usize> = None;
@@ -355,6 +367,7 @@ impl<'a> TypedStreamDeserializer<'a> {
         Ok(Some(first_idx))
     }
 
+    /// Reads an object from the stream, handling its class and associated data.
     fn read_object(&mut self) -> Result<Option<usize>> {
         match *read_byte_at(self.data, self.position)? {
             START => {
@@ -375,7 +388,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                         && *read_byte_at(self.data, self.position)? != END
                     {
                         // Read the next type, which should be an object
-                        if let Some(next_index) = self.read_type(false)? {
+                        if let Some(next_index) = self.read_type()? {
                             // Recursively read the types for this object
                             data.push(self.read_types(next_index)?);
                         }
@@ -421,11 +434,7 @@ impl<'a> TypedStreamDeserializer<'a> {
         }
     }
 
-    /// Decodes a single, already-resolved non-embedded type descriptor into one
-    /// [`OutputData`] value.
-    ///
-    /// [`Type::EmbeddedData`] is handled by the caller ([`Self::read_types`])
-    /// because it redirects to another type entry rather than producing a value.
+    /// Decodes one slot of a descriptor into one [`OutputData`] value.
     #[inline]
     fn read_value(&mut self, ty: Type<'a>) -> Result<OutputData<'a>> {
         match ty {
@@ -442,25 +451,42 @@ impl<'a> TypedStreamDeserializer<'a> {
                     None => OutputData::Null,
                 })
             }
-            Type::String(s) => Ok(OutputData::String(s)),
+            // Parse every string-table entry in `read_type` before passing it to `read_types`
+            Type::String(_) => Err(TypedStreamError::InvalidObject),
             Type::Array(length) => {
                 let array_data = read_exact_bytes(&self.data[self.position..], length)?;
                 self.position += length;
                 Ok(OutputData::Array(array_data))
             }
-            // Selectors are stored in the class-name string table, so a repeated
-            // one is a reference, resolved through `read_string`.
+            // Selector encoding: one literal, then shared-string references.
             Type::Selector => {
                 if *read_byte_at(self.data, self.position)? == EMPTY {
                     self.position += 1;
                     return Ok(OutputData::Null);
                 }
-                let name_idx = self.read_string()?;
-                match self.type_table[name_idx].first() {
-                    Some(Type::String(selector)) => Ok(OutputData::String(selector)),
-                    _ => Err(TypedStreamError::InvalidObject),
-                }
+                let index = self.read_string()?;
+                Ok(OutputData::String(self.strings[index]))
             }
+            // Track C strings by pointer identity through the object table:
+            // allocate a slot on `START`, store the shared-string index, and
+            // reuse an earlier slot for a pointer.
+            Type::CString => match *self.consume_current_byte()? {
+                EMPTY => Ok(OutputData::Null),
+                START => {
+                    let index = self.read_string()?;
+                    self.object_table.push(Archived::CString(index));
+                    Ok(OutputData::String(self.strings[index]))
+                }
+                ptr => {
+                    let slot = read_pointer(&ptr)?.value as usize;
+                    match self.object_table.get(slot) {
+                        Some(Archived::CString(index)) => {
+                            Ok(OutputData::String(self.strings[*index]))
+                        }
+                        _ => Err(TypedStreamError::InvalidPointer(slot as u8)),
+                    }
+                }
+            },
             // A class chain, encoded exactly like an object's class header;
             // `idx` is the `Archived::Class` entry, not an object.
             Type::Class => Ok(match self.read_class()? {
@@ -471,105 +497,56 @@ impl<'a> TypedStreamDeserializer<'a> {
             Type::SignedInt | Type::UnsignedInt | Type::Float | Type::Double => {
                 self.read_number(ty)
             }
-            // `EmbeddedData` is intercepted by `read_types` before reaching here.
-            Type::EmbeddedData => Err(TypedStreamError::InvalidObject),
         }
     }
 
-    /// Reads an `EmbeddedData` descriptor, redirecting to the embedded type
-    /// entry. Returns the group decoded from that entry.
-    ///
-    /// A nil embedded type is a `NULL` pointer written into the slot, the same
-    /// thing a nil object reference is, so it decodes to
-    /// [`OutputData::Null`] and keeps its position in the object's groups.
-    fn read_embedded(&mut self) -> Result<DataGroup<'a>> {
-        if let Some(idx) = self.read_embedded_type()? {
-            self.position += 1;
-            self.read_types(idx)
-        } else {
-            Ok(DataGroup::One(OutputData::Null))
-        }
-    }
-
-    /// Reads all type descriptors at `types_index` into a single data group.
+    /// Reads one value per slot of the descriptor at `types_index` into a
+    /// single data group.
     fn read_types(&mut self, types_index: usize) -> Result<DataGroup<'a>> {
         let len = self.type_table[types_index].len();
 
         // Common case: a single descriptor decodes to a single value with no Vec.
         if len == 1 {
             let ty = self.type_table[types_index][0];
-            return if matches!(ty, Type::EmbeddedData) {
-                self.read_embedded()
-            } else {
-                Ok(DataGroup::One(self.read_value(ty)?))
-            };
+            return Ok(DataGroup::One(self.read_value(ty)?));
         }
 
         let mut out_v = Vec::with_capacity(len);
         for i in 0..len {
             let ty = self.type_table[types_index][i];
-            if matches!(ty, Type::EmbeddedData) {
-                // Read the embedded group and merge its contents into the current output vector.
-                match self.read_embedded()? {
-                    DataGroup::One(value) => out_v.push(value),
-                    DataGroup::Values(values) => out_v.extend(values),
-                }
-                continue;
-            }
             out_v.push(self.read_value(ty)?);
         }
-
-        // An embed with no types can leave a multi-slot descriptor holding one
-        // value; keep `One` exact.
-        Ok(if out_v.len() == 1 {
-            DataGroup::One(out_v.pop().unwrap())
-        } else {
-            DataGroup::Values(out_v)
-        })
+        Ok(DataGroup::Values(out_v))
     }
 
-    /// Gets the current type from the stream, either by reading it from the stream or reading it from
-    /// the specified index of [`Self::type_table`]. Returns an index into the types table
-    /// to avoid cloning large type vectors.
-    fn read_type(&mut self, is_embedded_type: bool) -> Result<Option<usize>> {
-        let byte = *self.consume_current_byte()?;
-
-        match byte {
+    /// Reads a type descriptor: a literal, registered as a new shared string, or
+    /// a reference to an existing one. Returns its index in
+    /// [`type_table`](Self::type_table), or `None` at an [`END`]/[`EMPTY`] marker
+    /// where a descriptor was optional.
+    ///
+    /// Descriptor-reference case: a name or `char *` value already in the
+    /// referenced entry. For `NSValue`'s `objCType`, parse that entry in place,
+    /// then use its text to decode the following value. Keep the text in
+    /// [`strings`](Self::strings).
+    fn read_type(&mut self) -> Result<Option<usize>> {
+        match *self.consume_current_byte()? {
             START => {
-                // Get the type of the object
-                let new_types = Type::read_new_type(&self.data[self.position..])?;
-                let new_type_index = self.type_table.len();
-                // Embedded data is stored as a Type in the objects table
-                if is_embedded_type {
-                    self.object_table.push(Archived::Type(new_type_index));
-                    // We only want to include the first embedded reference tag, not subsequent references to the same embed
-                    self.seen_embedded_types
-                        .push(self.object_table.len().saturating_sub(1));
-                }
-
-                self.type_table.push(new_types.value);
-                self.position += new_types.bytes_consumed;
-                Ok(Some(self.type_table.len() - 1))
+                let literal = Type::read_new_type(&self.data[self.position..])?;
+                self.position += literal.bytes_consumed;
+                let (text, entry) = literal.value;
+                Ok(Some(self.register_string(text, Some(entry))))
             }
             END | EMPTY => Ok(None),
             ptr => {
-                let pointer = read_pointer(&ptr)?;
-                let ref_tag = pointer.value as usize;
-
-                // Optimize bounds checking
-                if ref_tag >= self.type_table.len() {
-                    return Ok(None);
+                let index = read_pointer(&ptr)?.value as usize;
+                if index >= self.type_table.len() {
+                    return Err(TypedStreamError::InvalidPointer(index as u8));
                 }
-
-                if is_embedded_type {
-                    // We only want to include the first embedded reference tag, not subsequent references to the same embed
-                    if !self.seen_embedded_types.contains(&ref_tag) {
-                        self.object_table.push(Archived::Type(ref_tag));
-                        self.seen_embedded_types.push(ref_tag);
-                    }
+                if let Some(Type::String(text)) = self.type_table[index].first() {
+                    let remaining = self.data.len() - self.position;
+                    self.type_table[index] = Type::parse_descriptor(text, remaining)?;
                 }
-
-                Ok(Some(ref_tag))
+                Ok(Some(index))
             }
         }
     }
@@ -583,7 +560,10 @@ mod group_tests {
     use crate::{
         DataGroup, ObjectData, OutputData, Property,
         deserializer::constants::{EMPTY, END, START},
-        models::{archived::Archived, types::Type},
+        models::{
+            archived::Archived,
+            types::{Type, TypeEntry},
+        },
     };
 
     fn stream(groups: &[u8]) -> Vec<u8> {
@@ -608,7 +588,7 @@ mod group_tests {
         let bytes = stream(&[
             // A zero-length descriptor is a group with no values; it keeps its position.
             START, 1, b'C', 1, START, 0, START, 2, b'C', b'C', 2, 3, START, 1, b'C', 4,
-            // A nil `EmbeddedData` is a slot written as `NULL`: one group holding `Null`.
+            // A nil `char *` value: one `NULL` byte and one group holding `Null`.
             START, 1, b'*', EMPTY,
         ]);
         let mut ts = TypedStreamDeserializer::new(&bytes);
@@ -841,67 +821,100 @@ mod group_tests {
     }
 
     #[test]
-    fn splices_embedded_values_into_multi_slot_groups() {
-        // A descriptor with several slots fills one group; an `EmbeddedData`
-        // slot contributes the embedded values in place.
-        use OutputData::UnsignedInteger as U;
-        for (descriptors, expected) in [
-            // Embed last: the values decoded before it must survive.
+    fn c_strings_share_by_pointer_through_the_object_table() {
+        // `stream()` prefix: object-table slots [0] (root), [1] (class), [2]
+        // (first C string, tag `0x94`). Shared-string entries: [0] `@`, [1] `X`,
+        // [2] first group descriptor, [3] C-string literal (`0x95`).
+        use DataGroup::{One, Values};
+        use OutputData::{Null, SignedInteger as I, String as S, UnsignedInteger as U};
+        for (groups, expected, c_string_slots) in [
+            // Literal C string: allocate a slot, then read the shared string.
             (
-                vec![START, 2, b'C', b'*', 1, START, START, 1, b'C', 0x94, 2],
-                vec![U(1), U(2)],
+                vec![START, 2, b'C', b'*', 1, START, START, 2, b'h', b'i'],
+                vec![Values(vec![U(1), S("hi")])],
+                1,
             ),
-            // Embed first: the slots after it must still be read.
             (
-                vec![START, 2, b'*', b'C', START, START, 1, b'C', 0x94, 1, 2],
-                vec![U(1), U(2)],
+                vec![START, 2, b'*', b'C', START, START, 2, b'h', b'i', 2],
+                vec![Values(vec![S("hi"), U(2)])],
+                1,
             ),
-            // Embed in the middle.
-            (
-                vec![
-                    START, 3, b'C', b'*', b'C', 1, START, START, 1, b'C', 0x94, 2, 3,
-                ],
-                vec![U(1), U(2), U(3)],
-            ),
-            // A multi-value embedded type flattens into the enclosing group.
-            (
-                vec![
-                    START, 2, b'C', b'*', 1, START, START, 2, b'C', b'C', 0x94, 2, 3,
-                ],
-                vec![U(1), U(2), U(3)],
-            ),
-            // A nil embed is a `NULL` slot; the slot after it is still read.
+            // `NULL`: one byte; no object-table slot.
             (
                 vec![START, 3, b'C', b'*', b'C', 1, EMPTY, 3],
-                vec![U(1), OutputData::Null, U(3)],
+                vec![Values(vec![U(1), Null, U(3)])],
+                0,
             ),
-            // An embedded type with no types contributes nothing, which can
-            // leave a multi-slot descriptor with one value.
+            // Repeated pointer: a bare reference to the existing slot.
             (
-                vec![START, 2, b'C', b'*', 1, START, START, 0, 0x94],
-                vec![U(1)],
+                vec![START, 1, b'*', START, START, 2, b'h', b'i', 0x94, 0x94],
+                vec![One(S("hi")), One(S("hi"))],
+                1,
+            ),
+            // Distinct pointer, same text: a new object-table slot and the same
+            // string-table entry.
+            (
+                vec![
+                    START, 1, b'*', START, START, 2, b'h', b'i', 0x94, START, 0x95,
+                ],
+                vec![One(S("hi")), One(S("hi"))],
+                2,
+            ),
+            // Existing descriptor text (`i`): reuse its string-table entry for
+            // the C-string value.
+            (
+                vec![START, 1, b'i', 7, START, 1, b'*', START, 0x94],
+                vec![One(I(7)), One(S("i"))],
+                1,
             ),
         ] {
-            let bytes = stream(&descriptors);
+            let bytes = stream(&groups);
             let mut ts = TypedStreamDeserializer::new(&bytes);
             let root = ts.oxidize().unwrap();
-            let Archived::Object { data, .. } = &ts.object_table[root] else {
-                panic!("expected an object");
+            let Archived::Object {
+                data: ObjectData::Groups(got),
+                ..
+            } = &ts.object_table[root]
+            else {
+                panic!("expected grouped data for {groups:?}");
             };
-            assert_eq!(data.group_count(), 1, "{descriptors:?}");
-            let values = match data {
-                ObjectData::Inline(value) => core::slice::from_ref(value),
-                ObjectData::Groups(groups) => groups[0].as_slice(),
-                ObjectData::Empty => panic!("expected data for {descriptors:?}"),
-            };
-            assert_eq!(values, expected.as_slice(), "{descriptors:?}");
-            // A single value never lands in `Values`, whichever path produced it.
+            assert_eq!(got, &expected, "{groups:?}");
             assert_eq!(
-                matches!(data, ObjectData::Inline(_)),
-                expected.len() == 1,
-                "{descriptors:?}"
+                ts.object_table
+                    .iter()
+                    .filter(|o| matches!(o, Archived::CString(_)))
+                    .count(),
+                c_string_slots,
+                "{groups:?}"
             );
+            assert_eq!(ts.position, bytes.len(), "{groups:?}");
         }
+    }
+
+    #[test]
+    fn c_string_text_types_the_value_that_follows() {
+        // `NSValue` layout: record `objCType` through `*`, then reuse that
+        // string to type the following value.
+        let bytes = stream(&[START, 1, b'*', START, START, 1, b'q', 0x95, 5]);
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let Archived::Object { data, .. } = &ts.object_table[root] else {
+            panic!("expected an object");
+        };
+        assert_eq!(
+            data,
+            &ObjectData::Groups(vec![
+                DataGroup::One(OutputData::String("q")),
+                DataGroup::One(OutputData::SignedInteger(5)),
+            ])
+        );
+        // Entry [3]: register the value string first; parse it in place when the
+        // descriptor references it, while preserving the original text for
+        // `shared_string`.
+        assert_eq!(ts.shared_string(3), Some("q"));
+        assert_eq!(ts.type_table[3], TypeEntry::One(Type::SignedInt));
+        assert_eq!(ts.object_table[2], Archived::CString(3));
+        assert_eq!(ts.position, bytes.len());
     }
 
     #[test]

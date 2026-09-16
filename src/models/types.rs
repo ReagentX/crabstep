@@ -16,12 +16,15 @@ pub enum Type<'a> {
     /// |--------|-------|
     /// | `0x2B` | [`+`](https://www.compart.com/en/unicode/U+002B) |
     Utf8String,
-    /// Encoded bytes that can be parsed again as data. Denoted by:
+    /// A C string (`char *`) encoded as a nullable shared pointer:
+    /// [`EMPTY`](crate::deserializer::constants::EMPTY) for `NULL`; otherwise,
+    /// a new object-table slot with a shared-string index or a reference to an
+    /// earlier pointer's slot. Denoted by:
     ///
     /// | Hex    | UTF-8 |
     /// |--------|-------|
     /// | `0x2A` | [`*`](https://www.compart.com/en/unicode/U+002A) |
-    EmbeddedData,
+    CString,
     /// A method selector (`SEL`), written as a shared string: the first
     /// occurrence is a literal, later ones are references to it, and a `NULL`
     /// selector is [`EMPTY`](crate::deserializer::constants::EMPTY). Denoted by:
@@ -93,43 +96,53 @@ impl<'a> Type<'a> {
         Self::String(str)
     }
 
-    /// Parses a length-prefixed type descriptor into the types it denotes, in
-    /// slot order.
-    ///
-    /// A descriptor is an Objective-C type-encoding string, and `NSArchiver`
-    /// writes one value per leaf type in it: struct members flat, array
-    /// elements one after another. Thus `{_NSRange=QQ}` is two
-    /// unsigned ints, `[2i]` is two signed ints, and `i{?=ii}i` is four signed
-    /// ints. The only aggregate kept whole is a `char` array, `[Nc]`, which is
-    /// `N` raw bytes.
-    pub(crate) fn read_new_type(data: &'_ [u8]) -> Result<Consumed<TypeEntry<'_>>> {
+    /// Reads a length-prefixed type descriptor literal and returns its text with
+    /// its slot types. Preserve the text for the shared-string table; use this
+    /// entry by index when decoding a later `char *` value.
+    pub(crate) fn read_new_type(data: &'_ [u8]) -> Result<Consumed<(&'_ str, TypeEntry<'_>)>> {
         let type_length = read_unsigned_int(data)?;
         let type_bytes = read_exact_bytes(
             &data[type_length.bytes_consumed..],
             type_length.value as usize,
         )?;
         let bytes_consumed = type_length.bytes_consumed + type_bytes.len();
+        let text = core::str::from_utf8(type_bytes)?;
+        let entry = Type::parse_descriptor(text, data.len() - bytes_consumed)?;
+        Ok(Consumed::new((text, entry), bytes_consumed))
+    }
+
+    /// Parses a type descriptor into its slot types.
+    ///
+    /// Input: an Objective-C type-encoding string.
+    /// Leaf-value order: struct members flat; array elements one after another.
+    /// Thus `{_NSRange=QQ}` is two unsigned ints, `[2i]` is two signed ints, and
+    /// `i{?=ii}i` is four signed ints. Exception: keep a `char` array, `[Nc]`,
+    /// as `N` raw bytes.
+    ///
+    /// Use `max_slots` to bound the bytes available after the descriptor. At
+    /// least one byte belongs to each decoded slot; an array that expands past
+    /// this bound is malformed.
+    pub(crate) fn parse_descriptor(text: &str, max_slots: usize) -> Result<TypeEntry<'a>> {
+        let bytes = text.as_bytes();
 
         // The overwhelming majority of descriptors are a single scalar letter,
         // so keep that case off the heap.
-        if let [byte] = type_bytes
+        if let [byte] = bytes
             && let Some(ty) = Type::scalar(*byte)
         {
-            return Ok(Consumed::new(TypeEntry::One(ty), bytes_consumed));
+            return Ok(TypeEntry::One(ty));
         }
 
-        let max_slots = data.len() - bytes_consumed;
         let mut types = Vec::new();
         let mut pos = 0;
-        while pos < type_bytes.len() {
-            Type::parse_one(type_bytes, &mut pos, &mut types, max_slots)?;
+        while pos < bytes.len() {
+            Type::parse_one(bytes, &mut pos, &mut types, max_slots)?;
         }
-        let entry = if types.len() == 1 {
+        Ok(if types.len() == 1 {
             TypeEntry::One(types.pop().unwrap())
         } else {
             TypeEntry::Many(types)
-        };
-        Ok(Consumed::new(entry, bytes_consumed))
+        })
     }
 
     /// The type a single non-aggregate encoding character denotes, if any.
@@ -139,7 +152,7 @@ impl<'a> Type<'a> {
             b'@' => Self::Object,
             b'#' => Self::Class,
             b':' => Self::Selector,
-            b'*' => Self::EmbeddedData,
+            b'*' => Self::CString,
             b'+' => Self::Utf8String,
             b'f' => Self::Float,
             b'd' => Self::Double,
@@ -329,7 +342,8 @@ mod type_encoding_tests {
         // The parser borrows nothing from the descriptor, so the lifetime is free.
         Type::read_new_type(bytes.leak()).map(|c| {
             assert_eq!(c.bytes_consumed, encoding.len() + 1);
-            c.value
+            assert_eq!(c.value.0, encoding);
+            c.value.1
         })
     }
 
@@ -343,7 +357,7 @@ mod type_encoding_tests {
             ("@", Type::Object),
             ("#", Type::Class),
             (":", Type::Selector),
-            ("*", Type::EmbeddedData),
+            ("*", Type::CString),
             ("+", Type::Utf8String),
             ("f", Type::Float),
             ("d", Type::Double),

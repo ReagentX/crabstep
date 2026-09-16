@@ -139,6 +139,10 @@ pub enum Archived<'a> {
     /// comes before the ones it inherits from. To preserve the order, we reserve the first slot to store the actual object's data
     /// and then later add it back to the right place.
     Placeholder,
-    /// An embedded type that describes the [`Type`](crate::models::types::Type) of the subsequent bytes, referred to by its index in the [`type_table`](crate::deserializer::typedstream::TypedStreamDeserializer::type_table).
-    Type(usize),
+    /// A `char *` value represented by a shared-string index. During decoding,
+    /// allocate one object-table slot per distinct pointer and store the string
+    /// index in that slot. Look up the text in the
+    /// [`type_table`](crate::deserializer::typedstream::TypedStreamDeserializer::type_table);
+    /// reuse that entry for descriptors and class names.
+    CString(usize),
 }
