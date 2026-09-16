@@ -1,15 +1,12 @@
 //! Type tags that denote the type of data stored in a `typedstream`
-use crate::{
-    deserializer::{consumed::Consumed, number::read_unsigned_int, read::read_exact_bytes},
-    error::{Result, TypedStreamError},
-};
+use crate::error::{Result, TypedStreamError};
 use alloc::vec::Vec;
 
 /// Represents primitive types of data that can be stored in a `typedstream`
 ///
 /// These type encodings are partially documented [here](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html#//apple_ref/doc/uid/TP40008048-CH100-SW1) by Apple.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Type<'a> {
+pub enum Type {
     /// Encoded string data, usually embedded in an object. Denoted by:
     ///
     /// | Hex    | UTF-8 |
@@ -82,35 +79,13 @@ pub enum Type<'a> {
     /// |--------|-------|
     /// | `0x64` | [`d`](https://www.compart.com/en/unicode/U+0064) |
     Double,
-    /// Some text we can reuse later, i.e. a class name.
-    String(&'a str),
     /// `length` raw bytes: a `char` array, `[Nc]` or `[NC]`. An array of any
     /// other element type is expanded to `N` copies of the element's types,
     /// because `NSArchiver` writes each element with its own encoding.
     Array(usize),
 }
 
-impl<'a> Type<'a> {
-    #[inline]
-    pub(crate) fn new_string(str: &'a str) -> Self {
-        Self::String(str)
-    }
-
-    /// Reads a length-prefixed type descriptor literal and returns its text with
-    /// its slot types. Preserve the text for the shared-string table; use this
-    /// entry by index when decoding a later `char *` value.
-    pub(crate) fn read_new_type(data: &'_ [u8]) -> Result<Consumed<(&'_ str, TypeEntry<'_>)>> {
-        let type_length = read_unsigned_int(data)?;
-        let type_bytes = read_exact_bytes(
-            &data[type_length.bytes_consumed..],
-            type_length.value as usize,
-        )?;
-        let bytes_consumed = type_length.bytes_consumed + type_bytes.len();
-        let text = core::str::from_utf8(type_bytes)?;
-        let entry = Type::parse_descriptor(text, data.len() - bytes_consumed)?;
-        Ok(Consumed::new((text, entry), bytes_consumed))
-    }
-
+impl Type {
     /// Parses a type descriptor into its slot types.
     ///
     /// Input: an Objective-C type-encoding string.
@@ -122,7 +97,7 @@ impl<'a> Type<'a> {
     /// Use `max_slots` to bound the bytes available after the descriptor. At
     /// least one byte belongs to each decoded slot; an array that expands past
     /// this bound is malformed.
-    pub(crate) fn parse_descriptor(text: &str, max_slots: usize) -> Result<TypeEntry<'a>> {
+    pub(crate) fn parse_descriptor(text: &str, max_slots: usize) -> Result<TypeEntry> {
         let bytes = text.as_bytes();
 
         // The overwhelming majority of descriptors are a single scalar letter,
@@ -167,7 +142,7 @@ impl<'a> Type<'a> {
     fn parse_one(
         bytes: &[u8],
         pos: &mut usize,
-        out: &mut Vec<Type<'a>>,
+        out: &mut Vec<Type>,
         max_slots: usize,
     ) -> Result<()> {
         // Skip method qualifiers (`const`, `in`, `out`, ...) ahead of the type.
@@ -258,20 +233,19 @@ impl<'a> Type<'a> {
     }
 }
 
-/// One entry in the deserializer's type table.
+/// The parsed view of a type descriptor: the types it denotes, in slot order.
 ///
 /// A type descriptor usually resolves to a single [`Type`]; storing that inline
-/// avoids a heap allocation per entry (the table was previously a
-/// `Vec<Vec<Type>>`). Multi-type descriptors fall back to a [`Vec`].
+/// avoids a heap allocation per entry. Multi-type descriptors fall back to a [`Vec`].
 #[derive(Debug, Clone, PartialEq)]
-pub enum TypeEntry<'a> {
+pub enum TypeEntry {
     /// A single type, stored inline.
-    One(Type<'a>),
+    One(Type),
     /// Two or more types.
-    Many(Vec<Type<'a>>),
+    Many(Vec<Type>),
 }
 
-impl<'a> TypeEntry<'a> {
+impl TypeEntry {
     /// The number of types in this entry.
     #[must_use]
     pub fn len(&self) -> usize {
@@ -289,28 +263,16 @@ impl<'a> TypeEntry<'a> {
 
     /// The first type in the entry, if any.
     #[must_use]
-    pub fn first(&self) -> Option<&Type<'a>> {
+    pub fn first(&self) -> Option<&Type> {
         match self {
             TypeEntry::One(ty) => Some(ty),
             TypeEntry::Many(types) => types.first(),
         }
     }
-
-    /// Build a [`TypeEntry`] from a list of types, normalizing the single-type
-    /// case to [`TypeEntry::One`]. Used by tests to express expected type tables
-    /// in the pre-existing nested style.
-    #[cfg(test)]
-    pub(crate) fn from_types(mut types: Vec<Type<'a>>) -> Self {
-        if types.len() == 1 {
-            TypeEntry::One(types.pop().unwrap())
-        } else {
-            TypeEntry::Many(types)
-        }
-    }
 }
 
-impl<'a> core::ops::Index<usize> for TypeEntry<'a> {
-    type Output = Type<'a>;
+impl core::ops::Index<usize> for TypeEntry {
+    type Output = Type;
 
     fn index(&self, index: usize) -> &Self::Output {
         match self {
@@ -330,24 +292,13 @@ mod type_encoding_tests {
     use super::{Type, TypeEntry};
     use crate::error::TypedStreamError;
 
-    /// Parses a bare encoding string as a length-prefixed descriptor followed by
-    /// `remaining` bytes of stream, which bound array expansion.
-    fn parse_with(
-        encoding: &str,
-        remaining: usize,
-    ) -> Result<TypeEntry<'static>, TypedStreamError> {
-        let mut bytes = vec![u8::try_from(encoding.len()).unwrap()];
-        bytes.extend_from_slice(encoding.as_bytes());
-        bytes.resize(bytes.len() + remaining, 0);
-        // The parser borrows nothing from the descriptor, so the lifetime is free.
-        Type::read_new_type(bytes.leak()).map(|c| {
-            assert_eq!(c.bytes_consumed, encoding.len() + 1);
-            assert_eq!(c.value.0, encoding);
-            c.value.1
-        })
+    /// Parses an encoding string with `remaining` bytes of stream after it,
+    /// which bound array expansion.
+    fn parse_with(encoding: &str, remaining: usize) -> Result<TypeEntry, TypedStreamError> {
+        Type::parse_descriptor(encoding, remaining)
     }
 
-    fn parse(encoding: &str) -> Result<TypeEntry<'static>, TypedStreamError> {
+    fn parse(encoding: &str) -> Result<TypeEntry, TypedStreamError> {
         parse_with(encoding, 64)
     }
 

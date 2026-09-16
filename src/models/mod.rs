@@ -3,4 +3,5 @@
 pub mod archived;
 pub mod class;
 pub mod output_data;
+pub mod shared_string;
 pub mod types;

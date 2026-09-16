@@ -20,7 +20,8 @@ use crate::{
         archived::{Archived, DataGroup, ObjectData},
         class::Class,
         output_data::OutputData,
-        types::{Type, TypeEntry},
+        shared_string::SharedString,
+        types::Type,
     },
 };
 
@@ -37,18 +38,13 @@ pub struct TypedStreamDeserializer<'a> {
     pub data: &'a [u8],
     /// The current index we are at in the stream
     pub(crate) position: usize,
-    /// The shared-string table, with descriptor literals stored as parsed types.
-    ///
-    /// Shared-string layout: literal once, index thereafter. Entry kinds:
-    /// type descriptors, class names, selectors, and `char *` values. Register
-    /// names and values as [`Type::String`]; parse an entry in place before
-    /// using it as a descriptor. Keep every entry's original text available
-    /// through [`shared_string`](Self::shared_string).
-    pub type_table: Vec<TypeEntry<'a>>,
-    /// Text for each [`type_table`](Self::type_table) entry, by index. Keep both
-    /// vectors aligned by routing every registration through
-    /// [`register_string`](Self::register_string).
-    pub(crate) strings: Vec<&'a str>,
+    /// The shared-string table. `NSArchiver` writes every string once and
+    /// refers to it by index afterward, and type descriptors, class names,
+    /// selectors, and `char *` values all share that one index space. This
+    /// means a reference byte in the stream is an index here, whatever kind of
+    /// string it names; see [`SharedString`] for how one entry serves as both
+    /// text and descriptor.
+    pub string_table: Vec<SharedString<'a>>,
     /// As we parse the `typedstream`, build a table of seen [`Archived`] data to reference in the future
     pub object_table: Vec<Archived<'a>>,
 }
@@ -72,8 +68,7 @@ impl<'a> TypedStreamDeserializer<'a> {
         Self {
             data,
             position: 0,
-            type_table: Vec::new(),
-            strings: Vec::new(),
+            string_table: Vec::new(),
             object_table: Vec::new(),
         }
     }
@@ -122,9 +117,8 @@ impl<'a> TypedStreamDeserializer<'a> {
         // distinct-object-heavy streams); the object table is the only one that
         // grows large, so the others stay tight.
         let estimated_size = self.data.len();
-        let strings = (estimated_size / 64).clamp(16, 256);
-        self.type_table.reserve(strings);
-        self.strings.reserve(strings);
+        self.string_table
+            .reserve((estimated_size / 64).clamp(16, 256));
         self.object_table
             .reserve((estimated_size / 16).clamp(32, 8192));
 
@@ -173,7 +167,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                 self.object_table.len(),
             ));
         }
-        PropertyIterator::new(&self.object_table, &self.type_table, root_object_index)
+        PropertyIterator::new(&self.object_table, &self.string_table, root_object_index)
             .ok_or(TypedStreamError::InvalidObject)
     }
 
@@ -207,7 +201,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                 self.object_table.len(),
             ));
         }
-        object_property(&self.object_table, &self.type_table, object_index)
+        object_property(&self.object_table, &self.string_table, object_index)
             .ok_or(TypedStreamError::InvalidObject)
     }
 
@@ -259,12 +253,12 @@ impl<'a> TypedStreamDeserializer<'a> {
             START => {
                 let string_data = read_string(&self.data[self.position..])?;
                 self.position += string_data.bytes_consumed;
-                Ok(self.register_string(string_data.value, None))
+                Ok(self.register_string(string_data.value))
             }
             EMPTY => Err(TypedStreamError::EmptyString),
             ptr => {
                 let index = read_pointer(&ptr)?.value as usize;
-                if index < self.strings.len() {
+                if index < self.string_table.len() {
                     Ok(index)
                 } else {
                     Err(TypedStreamError::InvalidPointer(index as u8))
@@ -273,8 +267,8 @@ impl<'a> TypedStreamDeserializer<'a> {
         }
     }
 
-    /// Returns the text of shared-string entry `index`: a type descriptor, class
-    /// name, selector, or `char *` value.
+    /// The text of shared-string entry `index`, whichever kind of string it is:
+    /// a type descriptor, a class name, a selector, or a `char *` value.
     ///
     /// # Examples
     ///
@@ -287,21 +281,20 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// ```
     #[must_use]
     pub fn shared_string(&self, index: usize) -> Option<&'a str> {
-        debug_assert_eq!(self.strings.len(), self.type_table.len());
-        self.strings.get(index).copied()
+        self.string_table.get(index).map(|entry| entry.text)
     }
 
-    /// Appends a shared string to both tables and returns its index. Route every
-    /// registration through this function so the tables remain aligned.
+    /// Appends a shared string and returns its index. Every registration comes
+    /// through here, so the table grows in exactly the order `NSArchiver`
+    /// assigned indices.
     ///
-    /// `parsed`: the descriptor view for a descriptor literal. For a name or
-    /// value, omit parsed types; parse the entry only for descriptor use.
-    fn register_string(&mut self, text: &'a str, parsed: Option<TypeEntry<'a>>) -> usize {
-        self.type_table
-            .push(parsed.unwrap_or(TypeEntry::One(Type::new_string(text))));
-        self.strings.push(text);
-        debug_assert_eq!(self.strings.len(), self.type_table.len());
-        self.strings.len() - 1
+    /// The entry starts as plain text. Whoever uses it as a descriptor parses
+    /// it then: `read_type` immediately for a literal, and on the first
+    /// reference for a name or `char *` value.
+    fn register_string(&mut self, text: &'a str) -> usize {
+        let index = self.string_table.len();
+        self.string_table.push(SharedString::new(text));
+        index
     }
 
     /// Reads a class from the stream, handling nested class definitions.
@@ -408,7 +401,7 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     /// Reads numeric types (signed, unsigned, float, double) and returns the corresponding `OutputData`
-    fn read_number(&mut self, ty: Type<'a>) -> Result<OutputData<'a>> {
+    fn read_number(&mut self, ty: Type) -> Result<OutputData<'a>> {
         match ty {
             Type::SignedInt => {
                 let signed_int = read_signed_int(&self.data[self.position..])?;
@@ -436,7 +429,7 @@ impl<'a> TypedStreamDeserializer<'a> {
 
     /// Decodes one slot of a descriptor into one [`OutputData`] value.
     #[inline]
-    fn read_value(&mut self, ty: Type<'a>) -> Result<OutputData<'a>> {
+    fn read_value(&mut self, ty: Type) -> Result<OutputData<'a>> {
         match ty {
             Type::Utf8String => {
                 let str_data = read_string(&self.data[self.position..])?;
@@ -451,8 +444,6 @@ impl<'a> TypedStreamDeserializer<'a> {
                     None => OutputData::Null,
                 })
             }
-            // Parse every string-table entry in `read_type` before passing it to `read_types`
-            Type::String(_) => Err(TypedStreamError::InvalidObject),
             Type::Array(length) => {
                 let array_data = read_exact_bytes(&self.data[self.position..], length)?;
                 self.position += length;
@@ -465,7 +456,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                     return Ok(OutputData::Null);
                 }
                 let index = self.read_string()?;
-                Ok(OutputData::String(self.strings[index]))
+                Ok(OutputData::String(self.string_table[index].text))
             }
             // Track C strings by pointer identity through the object table:
             // allocate a slot on `START`, store the shared-string index, and
@@ -475,13 +466,13 @@ impl<'a> TypedStreamDeserializer<'a> {
                 START => {
                     let index = self.read_string()?;
                     self.object_table.push(Archived::CString(index));
-                    Ok(OutputData::String(self.strings[index]))
+                    Ok(OutputData::String(self.string_table[index].text))
                 }
                 ptr => {
                     let slot = read_pointer(&ptr)?.value as usize;
                     match self.object_table.get(slot) {
                         Some(Archived::CString(index)) => {
-                            Ok(OutputData::String(self.strings[*index]))
+                            Ok(OutputData::String(self.string_table[*index].text))
                         }
                         _ => Err(TypedStreamError::InvalidPointer(slot as u8)),
                     }
@@ -503,17 +494,28 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// Reads one value per slot of the descriptor at `types_index` into a
     /// single data group.
     fn read_types(&mut self, types_index: usize) -> Result<DataGroup<'a>> {
-        let len = self.type_table[types_index].len();
+        // `read_type` parsed the entry before handing over its index; `Type` is
+        // `Copy`, so each slot is fetched without holding the table borrow.
+        let slot = |ts: &Self, i: usize| -> Result<Type> {
+            let parsed = ts.string_table[types_index]
+                .parsed()
+                .ok_or(TypedStreamError::InvalidObject)?;
+            Ok(parsed[i])
+        };
+        let len = self.string_table[types_index]
+            .parsed()
+            .ok_or(TypedStreamError::InvalidObject)?
+            .len();
 
         // Common case: a single descriptor decodes to a single value with no Vec.
         if len == 1 {
-            let ty = self.type_table[types_index][0];
+            let ty = slot(self, 0)?;
             return Ok(DataGroup::One(self.read_value(ty)?));
         }
 
         let mut out_v = Vec::with_capacity(len);
         for i in 0..len {
-            let ty = self.type_table[types_index][i];
+            let ty = slot(self, i)?;
             out_v.push(self.read_value(ty)?);
         }
         Ok(DataGroup::Values(out_v))
@@ -521,34 +523,37 @@ impl<'a> TypedStreamDeserializer<'a> {
 
     /// Reads a type descriptor: a literal, registered as a new shared string, or
     /// a reference to an existing one. Returns its index in
-    /// [`type_table`](Self::type_table), or `None` at an [`END`]/[`EMPTY`] marker
+    /// [`string_table`](Self::string_table), or `None` at an [`END`]/[`EMPTY`] marker
     /// where a descriptor was optional.
     ///
-    /// Descriptor-reference case: a name or `char *` value already in the
-    /// referenced entry. For `NSValue`'s `objCType`, parse that entry in place,
-    /// then use its text to decode the following value. Keep the text in
-    /// [`strings`](Self::strings).
+    /// A reference may resolve to an entry that was registered as a name or
+    /// `char *` value rather than as a descriptor. `NSValue` does exactly this:
+    /// it writes its `objCType` as a `char *`, then references that same string
+    /// as the descriptor for the value that follows. Since the entry keeps its
+    /// text, the deserializer parses the descriptor view on that first use and
+    /// the entry serves both roles from then on.
     fn read_type(&mut self) -> Result<Option<usize>> {
-        match *self.consume_current_byte()? {
+        let index = match *self.consume_current_byte()? {
             START => {
-                let literal = Type::read_new_type(&self.data[self.position..])?;
+                let literal = read_string(&self.data[self.position..])?;
                 self.position += literal.bytes_consumed;
-                let (text, entry) = literal.value;
-                Ok(Some(self.register_string(text, Some(entry))))
+                self.register_string(literal.value)
             }
-            END | EMPTY => Ok(None),
+            END | EMPTY => return Ok(None),
             ptr => {
                 let index = read_pointer(&ptr)?.value as usize;
-                if index >= self.type_table.len() {
+                if index >= self.string_table.len() {
                     return Err(TypedStreamError::InvalidPointer(index as u8));
                 }
-                if let Some(Type::String(text)) = self.type_table[index].first() {
-                    let remaining = self.data.len() - self.position;
-                    self.type_table[index] = Type::parse_descriptor(text, remaining)?;
-                }
-                Ok(Some(index))
+                index
             }
-        }
+        };
+        // A literal is parsed here, before any value is read with it, so a
+        // malformed descriptor fails at its own bytes. A reference to a name or
+        // `char *` value is parsed here too, on this first use as a descriptor.
+        let remaining = self.data.len() - self.position;
+        self.string_table[index].descriptor(remaining)?;
+        Ok(Some(index))
     }
 }
 
@@ -765,10 +770,7 @@ mod group_tests {
         let Archived::Class(class) = &ts.object_table[*class_idx] else {
             panic!("`#` must reference a class entry");
         };
-        assert_eq!(
-            ts.type_table[class.name_index].first(),
-            Some(&Type::String("Foo"))
-        );
+        assert_eq!(ts.string_table[class.name_index].text, "Foo");
         assert_eq!(class.version, 2);
         assert_eq!(class.parent_index, None);
         assert_eq!(ts.position, bytes.len());
@@ -912,7 +914,11 @@ mod group_tests {
         // descriptor references it, while preserving the original text for
         // `shared_string`.
         assert_eq!(ts.shared_string(3), Some("q"));
-        assert_eq!(ts.type_table[3], TypeEntry::One(Type::SignedInt));
+        assert_eq!(ts.string_table[3].text, "q");
+        assert_eq!(
+            ts.string_table[3].parsed(),
+            Some(&TypeEntry::One(Type::SignedInt))
+        );
         assert_eq!(ts.object_table[2], Archived::CString(3));
         assert_eq!(ts.position, bytes.len());
     }

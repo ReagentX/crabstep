@@ -139,10 +139,12 @@ pub enum Archived<'a> {
     /// comes before the ones it inherits from. To preserve the order, we reserve the first slot to store the actual object's data
     /// and then later add it back to the right place.
     Placeholder,
-    /// A `char *` value represented by a shared-string index. During decoding,
-    /// allocate one object-table slot per distinct pointer and store the string
-    /// index in that slot. Look up the text in the
-    /// [`type_table`](crate::deserializer::typedstream::TypedStreamDeserializer::type_table);
-    /// reuse that entry for descriptors and class names.
+    /// A `char *` value. `NSArchiver` shares C strings by pointer identity
+    /// through the object table, so each distinct pointer takes one slot here
+    /// and a repeated pointer is written as a reference to that slot. The text
+    /// itself is shared separately, through the
+    /// [`string_table`](crate::deserializer::typedstream::TypedStreamDeserializer::string_table),
+    /// which this index names. This means two pointers with the same text get
+    /// two slots but one string.
     CString(usize),
 }

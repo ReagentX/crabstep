@@ -18,6 +18,7 @@ pub use deserializer::{
 pub use models::{
     archived::{Archived, DataGroup, ObjectData},
     output_data::OutputData,
+    shared_string::SharedString,
     types::TypeEntry,
 };
 
@@ -33,7 +34,6 @@ mod test_typedstream_deserializer {
             archived::{Archived, DataGroup, ObjectData},
             class::Class,
             output_data::OutputData,
-            types::{Type, TypeEntry},
         },
     };
 
@@ -107,9 +107,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -121,20 +121,20 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -217,7 +217,7 @@ mod test_typedstream_deserializer {
             Archived::CString(9),
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -237,9 +237,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -251,19 +251,19 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
         ];
 
         let expected_objects = vec![
@@ -348,7 +348,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -365,9 +365,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -379,25 +379,25 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSURL")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(649)]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
+            "NSURL",
+            "c",
+            "NSData",
+            "[649c]",
         ];
 
         let expected_objects = vec![
@@ -946,7 +946,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(
             typedstream.object_table[..expected_objects.len()],
             expected_objects
@@ -969,9 +969,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -983,23 +983,23 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSMutableData")]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(635)]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::String("NSURL")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSMutableData",
+            "NSData",
+            "[635c]",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "NSURL",
+            "c",
         ];
 
         let expected_objects = vec![
@@ -1192,7 +1192,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -1212,9 +1212,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -1226,25 +1226,25 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSURL")]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(675)]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
+            "c",
+            "NSURL",
+            "NSData",
+            "[675c]",
         ];
 
         let expected_objects = vec![
@@ -1446,7 +1446,7 @@ mod test_typedstream_deserializer {
             }),
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -1466,9 +1466,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -1480,19 +1480,19 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
         ];
 
         let expected_objects = vec![
@@ -1591,7 +1591,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -1608,9 +1608,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -1622,22 +1622,22 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(904)]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "NSData",
+            "[904c]",
         ];
 
         let expected_objects = vec![
@@ -1808,7 +1808,7 @@ mod test_typedstream_deserializer {
             }),
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -1828,9 +1828,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -1842,22 +1842,22 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::Double]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "d",
+            "q",
         ];
 
         let expected_objects = vec![
@@ -2048,7 +2048,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -2068,9 +2068,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -2082,21 +2082,21 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
         ];
 
         let expected_objects = vec![
@@ -2249,7 +2249,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -2266,9 +2266,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -2280,13 +2280,7 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-        ];
+        let expected_types = ["@", "NSAttributedString", "NSObject", "NSString", "+"];
 
         let expected_objects = vec![
             Archived::Object {
@@ -2314,7 +2308,7 @@ mod test_typedstream_deserializer {
             }),
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -2331,9 +2325,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -2345,22 +2339,22 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(535)]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "NSData",
+            "[535c]",
         ];
 
         let expected_objects = vec![
@@ -2536,7 +2530,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -2556,9 +2550,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -2570,19 +2564,19 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
         ];
 
         let expected_objects = vec![
@@ -2705,7 +2699,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -2722,9 +2716,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -2736,23 +2730,23 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::String("NSMutableData")]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(669)]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "NSMutableData",
+            "NSData",
+            "[669c]",
         ];
 
         let expected_objects = vec![
@@ -2918,7 +2912,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -2938,9 +2932,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -2952,18 +2946,18 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -3048,7 +3042,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -3065,9 +3059,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -3079,23 +3073,23 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSMutableData")]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(667)]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::String("NSURL")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSMutableData",
+            "NSData",
+            "[667c]",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "NSURL",
+            "c",
         ];
 
         let expected_objects = vec![
@@ -3279,7 +3273,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -3299,9 +3293,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -3313,18 +3307,18 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -3446,7 +3440,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -3482,9 +3476,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -3496,19 +3490,19 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
         ];
 
         let expected_objects = vec![
@@ -3593,7 +3587,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -3613,9 +3607,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -3627,20 +3621,20 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -3725,7 +3719,7 @@ mod test_typedstream_deserializer {
             Archived::CString(9),
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -3745,9 +3739,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -3759,20 +3753,20 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -3881,7 +3875,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -3901,9 +3895,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -3915,21 +3909,21 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
         ];
 
         let expected_objects = vec![
@@ -4568,7 +4562,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -4588,9 +4582,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -4602,20 +4596,20 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -4818,7 +4812,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -4838,9 +4832,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -4852,20 +4846,20 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -5013,7 +5007,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -5033,9 +5027,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -5047,23 +5041,23 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(820)]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
+            "NSData",
+            "[820c]",
         ];
 
         let expected_objects = vec![
@@ -5300,7 +5294,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -5320,9 +5314,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -5334,25 +5328,25 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSURL")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(649)]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
+            "NSURL",
+            "c",
+            "NSData",
+            "[649c]",
         ];
 
         let expected_objects = vec![
@@ -5549,7 +5543,7 @@ mod test_typedstream_deserializer {
             }),
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -5569,9 +5563,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -5583,25 +5577,25 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(591)]),
-            TypeEntry::from_types(vec![Type::String("NSURL")]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
+            "c",
+            "NSData",
+            "[591c]",
+            "NSURL",
         ];
 
         let expected_objects = vec![
@@ -5813,7 +5807,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -5833,9 +5827,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -5847,19 +5841,19 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
         ];
 
         let expected_objects = vec![
@@ -6100,7 +6094,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -6120,9 +6114,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -6134,18 +6128,18 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -6326,7 +6320,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -6346,9 +6340,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -6360,19 +6354,19 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
         ];
 
         let expected_objects = vec![
@@ -6515,7 +6509,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -6535,9 +6529,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -6549,18 +6543,18 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -6672,7 +6666,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -6692,9 +6686,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -6706,19 +6700,19 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
         ];
 
         let expected_objects = vec![
@@ -6829,7 +6823,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -6846,9 +6840,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -6860,25 +6854,25 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSURL")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(582)]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSURL",
+            "c",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
+            "NSData",
+            "[582c]",
         ];
 
         let expected_objects = vec![
@@ -7058,7 +7052,7 @@ mod test_typedstream_deserializer {
             }),
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -7078,9 +7072,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -7092,26 +7086,26 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSURL")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSMutableData")]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(604)]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSURL",
+            "c",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "q",
+            "NSMutableData",
+            "NSData",
+            "[604c]",
         ];
 
         let expected_objects = vec![
@@ -7297,7 +7291,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -7317,9 +7311,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -7331,20 +7325,20 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -7427,7 +7421,7 @@ mod test_typedstream_deserializer {
             Archived::CString(9),
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -7471,9 +7465,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -7485,21 +7479,21 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSMutableData")]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(1187)]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSMutableData",
+            "NSData",
+            "[1187c]",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -7667,7 +7661,7 @@ mod test_typedstream_deserializer {
             Archived::CString(7),
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -7687,9 +7681,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -7701,18 +7695,18 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -7785,7 +7779,7 @@ mod test_typedstream_deserializer {
             Archived::CString(7),
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -7805,9 +7799,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -7819,18 +7813,18 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSAttributedString",
+            "NSObject",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -7905,7 +7899,7 @@ mod test_typedstream_deserializer {
             Archived::CString(7),
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -7925,9 +7919,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -7939,24 +7933,24 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(764)]),
-            TypeEntry::from_types(vec![Type::Array(748)]),
-            TypeEntry::from_types(vec![Type::Array(760)]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSNumber",
+            "NSValue",
+            "*",
+            "NSData",
+            "[764c]",
+            "[748c]",
+            "[760c]",
         ];
 
         let expected_objects = vec![
@@ -8242,7 +8236,7 @@ mod test_typedstream_deserializer {
             },
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -8262,9 +8256,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -8276,22 +8270,22 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(754)]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSData",
+            "[754c]",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -8435,7 +8429,7 @@ mod test_typedstream_deserializer {
             Archived::CString(9),
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -8455,9 +8449,9 @@ mod test_typedstream_deserializer {
         println!("Root object: {:x?}", typedstream.object_table[root]);
         print_resolved(typedstream.resolve_properties(root).unwrap(), 2);
 
-        println!("\nFound {:?} types:", typedstream.type_table.len());
+        println!("\nFound {:?} types:", typedstream.string_table.len());
         typedstream
-            .type_table
+            .string_table
             .iter()
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
@@ -8469,22 +8463,22 @@ mod test_typedstream_deserializer {
             .enumerate()
             .for_each(|(idx, item)| println!("\t{idx}: {item:?}"));
 
-        let expected_types = vec![
-            TypeEntry::from_types(vec![Type::Object]),
-            TypeEntry::from_types(vec![Type::String("NSMutableAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSAttributedString")]),
-            TypeEntry::from_types(vec![Type::String("NSObject")]),
-            TypeEntry::from_types(vec![Type::String("NSMutableString")]),
-            TypeEntry::from_types(vec![Type::String("NSString")]),
-            TypeEntry::from_types(vec![Type::Utf8String]),
-            TypeEntry::from_types(vec![Type::SignedInt, Type::UnsignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSDictionary")]),
-            TypeEntry::from_types(vec![Type::SignedInt]),
-            TypeEntry::from_types(vec![Type::String("NSData")]),
-            TypeEntry::from_types(vec![Type::Array(664)]),
-            TypeEntry::from_types(vec![Type::String("NSNumber")]),
-            TypeEntry::from_types(vec![Type::String("NSValue")]),
-            TypeEntry::from_types(vec![Type::CString]),
+        let expected_types = [
+            "@",
+            "NSMutableAttributedString",
+            "NSAttributedString",
+            "NSObject",
+            "NSMutableString",
+            "NSString",
+            "+",
+            "iI",
+            "NSDictionary",
+            "i",
+            "NSData",
+            "[664c]",
+            "NSNumber",
+            "NSValue",
+            "*",
         ];
 
         let expected_objects = vec![
@@ -8626,7 +8620,7 @@ mod test_typedstream_deserializer {
             Archived::CString(9),
         ];
 
-        assert_eq!(typedstream.type_table, expected_types);
+        assert_eq!(typedstream.string_table, expected_types);
         assert_eq!(typedstream.object_table, expected_objects);
     }
 
@@ -8654,14 +8648,7 @@ mod test_typedstream_deserializer {
         );
 
         let class_name = |idx: usize| match &ts.object_table[idx] {
-            Archived::Class(class) => {
-                ts.type_table[class.name_index]
-                    .first()
-                    .and_then(|t| match t {
-                        Type::String(name) => Some(*name),
-                        _ => None,
-                    })
-            }
+            Archived::Class(class) => Some(ts.string_table[class.name_index].text),
             _ => None,
         };
         let Archived::Object { class, .. } = &ts.object_table[root] else {
@@ -8809,8 +8796,7 @@ mod test_typedstream_deserializer {
                 panic!("{fixture}: root class is not a class");
             };
             assert_eq!(
-                ts.type_table[class.name_index].first(),
-                Some(&Type::String("NSValue")),
+                ts.string_table[class.name_index].text, "NSValue",
                 "{fixture}"
             );
             // Expect the `objCType` string first, followed by the members and
@@ -8870,5 +8856,75 @@ mod test_typedstream_deserializer {
         assert_eq!(slots.len(), 2);
         assert!(slots.iter().all(|&i| ts.shared_string(i) == Some("hello")));
         assert_eq!(slots[0], slots[1]);
+    }
+
+    /// Which shared strings carry a descriptor view after a parse: descriptor
+    /// literals eagerly, class names never, and an `NSNumber`'s `objCType` on
+    /// the reference that types its payload.
+    #[test]
+    fn test_shared_string_views() {
+        use crate::models::{
+            shared_string::SharedString,
+            types::{Type, TypeEntry},
+        };
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/AttributedBodyTextOnly");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        ts.oxidize().unwrap();
+
+        let view = |text: &str| -> Option<TypeEntry> {
+            let entry = ts.string_table.iter().find(|e| e.text == text).unwrap();
+            entry.parsed().cloned()
+        };
+        use Type::{CString, Object, SignedInt, UnsignedInt, Utf8String};
+        assert_eq!(view("@"), Some(TypeEntry::One(Object)));
+        assert_eq!(view("+"), Some(TypeEntry::One(Utf8String)));
+        assert_eq!(view("*"), Some(TypeEntry::One(CString)));
+        assert_eq!(
+            view("iI"),
+            Some(TypeEntry::Many(vec![SignedInt, UnsignedInt]))
+        );
+        // `i` was first written as the NSNumber's `char *` objCType, then
+        // referenced as the descriptor of its value.
+        assert_eq!(view("i"), Some(TypeEntry::One(SignedInt)));
+        for name in [
+            "NSMutableAttributedString",
+            "NSString",
+            "NSDictionary",
+            "NSNumber",
+            "NSValue",
+        ] {
+            assert_eq!(
+                view(name),
+                None,
+                "{name} is a class name, never a descriptor"
+            );
+        }
+
+        // Equality is on text; a parsed view does not distinguish entries.
+        assert_eq!(ts.string_table[0], SharedString::new("@"));
+        assert_eq!(
+            ts.string_table,
+            [
+                "@",
+                "NSMutableAttributedString",
+                "NSAttributedString",
+                "NSObject",
+                "NSMutableString",
+                "NSString",
+                "+",
+                "iI",
+                "NSDictionary",
+                "i",
+                "NSNumber",
+                "NSValue",
+                "*"
+            ]
+        );
     }
 }

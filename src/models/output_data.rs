@@ -3,7 +3,7 @@
 /// Rust structures containing data stored in the `typedstream`
 #[derive(Debug, PartialEq)]
 pub enum OutputData<'a> {
-    /// Text data, denoted in the stream by [`Type::String`](crate::models::types::Type::String)
+    /// Text: a `+` string, a selector, a `char *`, or a class name.
     String(&'a str),
     /// Signed integer types are coerced into this container, denoted in the stream by [`Type::SignedInt`](crate::models::types::Type::SignedInt)
     SignedInteger(i64),
