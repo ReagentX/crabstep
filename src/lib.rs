@@ -8858,6 +8858,46 @@ mod test_typedstream_deserializer {
         assert_eq!(slots[0], slots[1]);
     }
 
+    /// `%` (`NXAtom`) slots from the classic archiver (`Atoms` in
+    /// `test_data/generators/foundation.swift`): a literal, `NULL`, the same
+    /// atom again, then an `int`.
+    #[test]
+    fn test_parse_atoms() {
+        let typedstream_path = current_dir()
+            .unwrap()
+            .as_path()
+            .join("src/test_data/foundation/Atoms");
+        let mut file = File::open(typedstream_path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+
+        let root = ts.oxidize().unwrap();
+        assert_eq!(ts.position, bytes.len());
+        let Archived::Object { data, .. } = &ts.object_table[root] else {
+            panic!("root is not an object");
+        };
+        assert_eq!(
+            data,
+            &ObjectData::Groups(vec![
+                DataGroup::One(OutputData::String("atom")),
+                DataGroup::One(OutputData::Null),
+                DataGroup::One(OutputData::String("atom")),
+                DataGroup::One(OutputData::SignedInteger(7)),
+            ])
+        );
+        assert!(
+            !ts.object_table
+                .iter()
+                .any(|o| matches!(o, Archived::CString(_))),
+            "an atom is shared by text, not by pointer"
+        );
+        assert_eq!(
+            ts.string_table.iter().filter(|e| e.text == "atom").count(),
+            1
+        );
+    }
+
     /// Which shared strings carry a descriptor view after a parse: descriptor
     /// literals eagerly, class names never, and an `NSNumber`'s `objCType` on
     /// the reference that types its payload.

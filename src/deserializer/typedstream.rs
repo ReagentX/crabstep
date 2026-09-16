@@ -449,8 +449,10 @@ impl<'a> TypedStreamDeserializer<'a> {
                 self.position += length;
                 Ok(OutputData::Array(array_data))
             }
-            // Selector encoding: one literal, then shared-string references.
-            Type::Selector => {
+            // Selector and atom encoding: one literal, then shared-string
+            // references. Both are unique by text, so neither takes an
+            // object-table slot.
+            Type::Selector | Type::Atom => {
                 if *read_byte_at(self.data, self.position)? == EMPTY {
                     self.position += 1;
                     return Ok(OutputData::Null);
@@ -716,6 +718,34 @@ mod group_tests {
                 OutputData::Null,
                 OutputData::UnsignedInteger(7),
             ])])
+        );
+        assert_eq!(ts.position, bytes.len());
+    }
+
+    #[test]
+    fn atoms_are_shared_strings_without_object_slots() {
+        // The layout NSArchiver writes for `%`: a literal, then a reference by
+        // string index, then NULL. Descriptor `%%` is entry 2 and `atom` entry
+        // 3 (tag 0x95). Unlike a `char *`, no object-table slot is taken.
+        let bytes = stream(&[
+            START, 2, b'%', b'%', START, 4, b'a', b't', b'o', b'm', 0x95, START, 1, b'%', EMPTY,
+        ]);
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let Archived::Object { data, .. } = &ts.object_table[root] else {
+            panic!("expected an object");
+        };
+        assert_eq!(
+            data,
+            &ObjectData::Groups(vec![
+                DataGroup::Values(vec![OutputData::String("atom"), OutputData::String("atom"),]),
+                DataGroup::One(OutputData::Null),
+            ])
+        );
+        assert!(
+            !ts.object_table
+                .iter()
+                .any(|o| matches!(o, Archived::CString(_)))
         );
         assert_eq!(ts.position, bytes.len());
     }
