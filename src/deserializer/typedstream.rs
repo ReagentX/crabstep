@@ -519,12 +519,23 @@ impl<'a> TypedStreamDeserializer<'a> {
         for i in 0..len {
             let ty = self.type_table[types_index][i];
             if matches!(ty, Type::EmbeddedData) {
-                return self.read_embedded();
+                // Read the embedded group and merge its contents into the current output vector.
+                match self.read_embedded()? {
+                    Group::Empty => {}
+                    Group::One(value) => out_v.push(value),
+                    Group::Many(values) => out_v.extend(values),
+                }
+                continue;
             }
             out_v.push(self.read_value(ty)?);
         }
 
-        Ok(Group::Many(out_v))
+        // Convert the output vector into the appropriate group variant.
+        Ok(if out_v.len() == 1 {
+            Group::One(out_v.pop().unwrap())
+        } else {
+            Group::Many(out_v)
+        })
     }
 
     /// Gets the current type from the stream, either by reading it from the stream or reading it from
@@ -698,6 +709,66 @@ mod group_tests {
             for group in groups {
                 assert_eq!(matches!(group, DataGroup::One(_)), group.len() == 1);
             }
+        }
+    }
+
+    #[test]
+    fn splices_embedded_values_into_multi_slot_groups() {
+        // A descriptor with several slots fills one group; an `EmbeddedData`
+        // slot contributes the embedded values in place.
+        use OutputData::UnsignedInteger as U;
+        for (descriptors, expected) in [
+            // Embed last: the values decoded before it must survive.
+            (
+                vec![START, 2, b'C', b'*', 1, START, START, 1, b'C', 0x94, 2],
+                vec![U(1), U(2)],
+            ),
+            // Embed first: the slots after it must still be read.
+            (
+                vec![START, 2, b'*', b'C', START, START, 1, b'C', 0x94, 1, 2],
+                vec![U(1), U(2)],
+            ),
+            // Embed in the middle.
+            (
+                vec![
+                    START, 3, b'C', b'*', b'C', 1, START, START, 1, b'C', 0x94, 2, 3,
+                ],
+                vec![U(1), U(2), U(3)],
+            ),
+            // A multi-value embedded type flattens into the enclosing group.
+            (
+                vec![
+                    START, 2, b'C', b'*', 1, START, START, 2, b'C', b'C', 0x94, 2, 3,
+                ],
+                vec![U(1), U(2), U(3)],
+            ),
+            // A nil embed contributes nothing; the slot after it is still read.
+            (
+                vec![START, 3, b'C', b'*', b'C', 1, EMPTY, 3],
+                vec![U(1), U(3)],
+            ),
+            // A nil embed can leave a multi-slot descriptor with one value.
+            (vec![START, 2, b'C', b'*', 1, EMPTY], vec![U(1)]),
+        ] {
+            let bytes = stream(&descriptors);
+            let mut ts = TypedStreamDeserializer::new(&bytes);
+            let root = ts.oxidize().unwrap();
+            let Archived::Object { data, .. } = &ts.object_table[root] else {
+                panic!("expected an object");
+            };
+            assert_eq!(data.group_count(), 1, "{descriptors:?}");
+            let values = match data {
+                ObjectData::Inline(value) => core::slice::from_ref(value),
+                ObjectData::Groups(groups) => groups[0].as_slice(),
+                ObjectData::Empty => panic!("expected data for {descriptors:?}"),
+            };
+            assert_eq!(values, expected.as_slice(), "{descriptors:?}");
+            // A single value never lands in `Many`, whichever path produced it.
+            assert_eq!(
+                matches!(data, ObjectData::Inline(_)),
+                expected.len() == 1,
+                "{descriptors:?}"
+            );
         }
     }
 
