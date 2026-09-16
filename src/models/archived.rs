@@ -4,16 +4,17 @@ use alloc::{vec, vec::Vec};
 
 use crate::models::{class::Class, output_data::OutputData};
 
-/// A data group within an [`ObjectData::Groups`] collection.
+/// A data group within an [`ObjectData::Groups`] collection: the values decoded
+/// from one type descriptor.
 ///
-/// Singleton values are stored inline so each dictionary key and value does not
-/// need a separate allocation. Empty and multi-value groups retain a [`Vec`].
+/// A lone value is stored inline so each dictionary key and value costs no
+/// allocation; anything else lives in a [`Vec`].
 #[derive(Debug, PartialEq)]
 pub enum DataGroup<'a> {
-    /// One value, stored inline.
+    /// Exactly one value, stored inline.
     One(OutputData<'a>),
-    /// An empty or multi-value group.
-    Many(Vec<OutputData<'a>>),
+    /// Zero, or multiple, values.
+    Values(Vec<OutputData<'a>>),
 }
 
 impl<'a> DataGroup<'a> {
@@ -22,7 +23,7 @@ impl<'a> DataGroup<'a> {
     pub fn as_slice(&self) -> &[OutputData<'a>] {
         match self {
             Self::One(value) => core::slice::from_ref(value),
-            Self::Many(values) => values,
+            Self::Values(values) => values,
         }
     }
 
@@ -42,8 +43,8 @@ impl<'a> DataGroup<'a> {
 /// The data attached to an [`Archived::Object`].
 ///
 /// Each group holds the values decoded from one type descriptor. An object with
-/// one single-value group stores that value inline. Other nonempty objects use
-/// a group vector, whose singleton values also remain inline.
+/// one single-value group stores that value inline; every other nonempty object
+/// holds its groups in stream order.
 #[derive(Debug, PartialEq)]
 pub enum ObjectData<'a> {
     /// The object has no data groups.
@@ -51,39 +52,32 @@ pub enum ObjectData<'a> {
     /// A single group containing a single value, stored inline. This is by far
     /// the most common shape and avoids two heap allocations per object.
     Inline(OutputData<'a>),
-    /// One or more groups, preserving empty groups and value order.
+    /// One or more groups in stream order.
     Groups(Vec<DataGroup<'a>>),
 }
 
 impl<'a> ObjectData<'a> {
-    /// Append a group that contains exactly one value.
+    /// Append a group in stream order.
+    ///
+    /// The first single-value group is stored inline; a second group of any
+    /// shape promotes the object to [`Groups`](Self::Groups).
     #[inline]
-    pub(crate) fn push_one(&mut self, value: OutputData<'a>) {
+    pub(crate) fn push(&mut self, group: DataGroup<'a>) {
         match self {
+            ObjectData::Groups(groups) => groups.push(group),
             // Common path: the object's first (and usually only) group.
-            ObjectData::Empty => *self = ObjectData::Inline(value),
-            ObjectData::Groups(groups) => groups.push(DataGroup::One(value)),
+            ObjectData::Empty => {
+                *self = match group {
+                    DataGroup::One(value) => ObjectData::Inline(value),
+                    group => ObjectData::Groups(vec![group]),
+                }
+            }
             // Promote a previously-inline object to the general representation.
             ObjectData::Inline(_) => {
                 let ObjectData::Inline(first) = core::mem::replace(self, ObjectData::Empty) else {
                     unreachable!()
                 };
-                *self = ObjectData::Groups(vec![DataGroup::One(first), DataGroup::One(value)]);
-            }
-        }
-    }
-
-    /// Append an empty or multi-value group.
-    #[inline]
-    pub(crate) fn push_many(&mut self, values: Vec<OutputData<'a>>) {
-        match self {
-            ObjectData::Empty => *self = ObjectData::Groups(vec![DataGroup::Many(values)]),
-            ObjectData::Groups(groups) => groups.push(DataGroup::Many(values)),
-            ObjectData::Inline(_) => {
-                let ObjectData::Inline(first) = core::mem::replace(self, ObjectData::Empty) else {
-                    unreachable!()
-                };
-                *self = ObjectData::Groups(vec![DataGroup::One(first), DataGroup::Many(values)]);
+                *self = ObjectData::Groups(vec![DataGroup::One(first), group]);
             }
         }
     }
@@ -105,7 +99,7 @@ impl<'a> ObjectData<'a> {
                         if group.len() == 1 {
                             DataGroup::One(group.pop().unwrap())
                         } else {
-                            DataGroup::Many(group)
+                            DataGroup::Values(group)
                         }
                     })
                     .collect(),
