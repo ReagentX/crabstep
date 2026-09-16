@@ -30,6 +30,16 @@ pub enum Type {
     /// |--------|-------|
     /// | `0x3A` | [`:`](https://www.compart.com/en/unicode/U+003A) |
     Selector,
+    /// A `NeXTSTEP` atom (`NXAtom`): a uniqued C string, the ancestor of `SEL`
+    /// interning. Since an atom is unique by text it is written exactly like
+    /// a selector: a shared string, with
+    /// [`EMPTY`](crate::deserializer::constants::EMPTY) for `NULL` and no
+    /// object-table slot. Denoted by:
+    ///
+    /// | Hex    | UTF-8 |
+    /// |--------|-------|
+    /// | `0x25` | [`%`](https://www.compart.com/en/unicode/U+0025) |
+    Atom,
     /// An instance of a class, usually with data. Denoted by:
     ///
     /// | Hex    | UTF-8 |
@@ -127,6 +137,7 @@ impl Type {
             b'@' => Self::Object,
             b'#' => Self::Class,
             b':' => Self::Selector,
+            b'%' => Self::Atom,
             b'*' => Self::CString,
             b'+' => Self::Utf8String,
             b'f' => Self::Float,
@@ -308,6 +319,7 @@ mod type_encoding_tests {
             ("@", Type::Object),
             ("#", Type::Class),
             (":", Type::Selector),
+            ("%", Type::Atom),
             ("*", Type::CString),
             ("+", Type::Utf8String),
             ("f", Type::Float),
