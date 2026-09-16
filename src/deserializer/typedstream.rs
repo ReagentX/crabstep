@@ -17,35 +17,12 @@ use crate::{
     },
     error::{Result, TypedStreamError},
     models::{
-        archived::{Archived, ObjectData},
+        archived::{Archived, DataGroup, ObjectData},
         class::Class,
         output_data::OutputData,
         types::{Type, TypeEntry},
     },
 };
-
-/// The decoded contents of a single data group, produced by
-/// [`TypedStreamDeserializer::read_types`]. The single-value case is kept out of
-/// a `Vec` so the common object shape costs no heap allocation.
-enum Group<'a> {
-    /// The group produced no values (e.g. an empty `EmbeddedData`).
-    Empty,
-    /// Exactly one value.
-    One(OutputData<'a>),
-    /// Two or more values.
-    Many(Vec<OutputData<'a>>),
-}
-
-impl<'a> Group<'a> {
-    /// The first value in the group, if any.
-    fn first(&self) -> Option<&OutputData<'a>> {
-        match self {
-            Group::Empty => None,
-            Group::One(value) => Some(value),
-            Group::Many(values) => values.first(),
-        }
-    }
-}
 
 /// Contains logic and data used to deserialize data from a `typedstream`.
 ///
@@ -131,7 +108,6 @@ impl<'a> TypedStreamDeserializer<'a> {
     /// let result = deserializer.oxidize();
     /// ```
     pub fn oxidize(&mut self) -> Result<usize> {
-        let mut obj = Group::Empty;
         let validation = validate_header(self.data)?;
 
         // Reserve table capacity now that the input is known to be a valid
@@ -151,16 +127,13 @@ impl<'a> TypedStreamDeserializer<'a> {
         // Advance by the number of bytes consumed by the header validation
         self.position += validation.bytes_consumed;
 
-        // while self.position <= self.data.len() {
-        let found_type = self.read_type(false)?;
-
-        if let Some(type_index) = found_type {
-            // Read the types at the specified index
-            obj = self.read_types(type_index)?;
-        }
-
-        match obj.first().ok_or(TypedStreamError::InvalidObject)? {
-            OutputData::Object(idx) => Ok(*idx),
+        // The root must be an object: a stream with no root descriptor, or one
+        // whose first value is not an object reference, has nothing to walk.
+        let Some(type_index) = self.read_type(false)? else {
+            return Err(TypedStreamError::InvalidObject);
+        };
+        match self.read_types(type_index)?.as_slice().first() {
+            Some(OutputData::Object(idx)) => Ok(*idx),
             _ => Err(TypedStreamError::InvalidObject),
         }
     }
@@ -404,11 +377,7 @@ impl<'a> TypedStreamDeserializer<'a> {
                         // Read the next type, which should be an object
                         if let Some(next_index) = self.read_type(false)? {
                             // Recursively read the types for this object
-                            match self.read_types(next_index)? {
-                                Group::Empty => {}
-                                Group::One(value) => data.push_one(value),
-                                Group::Many(values) => data.push_many(values),
-                            }
+                            data.push(self.read_types(next_index)?);
                         }
                     }
                     self.object_table[placeholder_index] = Archived::Object { class: cls, data };
@@ -491,18 +460,22 @@ impl<'a> TypedStreamDeserializer<'a> {
     }
 
     /// Reads an `EmbeddedData` descriptor, redirecting to the embedded type
-    /// entry. Returns the group decoded from that entry, or [`Group::Empty`].
-    fn read_embedded(&mut self) -> Result<Group<'a>> {
+    /// entry. Returns the group decoded from that entry.
+    ///
+    /// A nil embedded type is a `NULL` pointer written into the slot, the same
+    /// thing a nil object reference is, so it decodes to
+    /// [`OutputData::Null`] and keeps its position in the object's groups.
+    fn read_embedded(&mut self) -> Result<DataGroup<'a>> {
         if let Some(idx) = self.read_embedded_type()? {
             self.position += 1;
             self.read_types(idx)
         } else {
-            Ok(Group::Empty)
+            Ok(DataGroup::One(OutputData::Null))
         }
     }
 
     /// Reads all type descriptors at `types_index` into a single data group.
-    fn read_types(&mut self, types_index: usize) -> Result<Group<'a>> {
+    fn read_types(&mut self, types_index: usize) -> Result<DataGroup<'a>> {
         let len = self.type_table[types_index].len();
 
         // Common case: a single descriptor decodes to a single value with no Vec.
@@ -511,7 +484,7 @@ impl<'a> TypedStreamDeserializer<'a> {
             return if matches!(ty, Type::EmbeddedData) {
                 self.read_embedded()
             } else {
-                Ok(Group::One(self.read_value(ty)?))
+                Ok(DataGroup::One(self.read_value(ty)?))
             };
         }
 
@@ -519,12 +492,23 @@ impl<'a> TypedStreamDeserializer<'a> {
         for i in 0..len {
             let ty = self.type_table[types_index][i];
             if matches!(ty, Type::EmbeddedData) {
-                return self.read_embedded();
+                // Read the embedded group and merge its contents into the current output vector.
+                match self.read_embedded()? {
+                    DataGroup::One(value) => out_v.push(value),
+                    DataGroup::Values(values) => out_v.extend(values),
+                }
+                continue;
             }
             out_v.push(self.read_value(ty)?);
         }
 
-        Ok(Group::Many(out_v))
+        // An embed with no types can leave a multi-slot descriptor holding one
+        // value; keep `One` exact.
+        Ok(if out_v.len() == 1 {
+            DataGroup::One(out_v.pop().unwrap())
+        } else {
+            DataGroup::Values(out_v)
+        })
     }
 
     /// Gets the current type from the stream, either by reading it from the stream or reading it from
@@ -571,5 +555,248 @@ impl<'a> TypedStreamDeserializer<'a> {
                 Ok(Some(ref_tag))
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod group_tests {
+    use alloc::{vec, vec::Vec};
+
+    use super::TypedStreamDeserializer;
+    use crate::{
+        DataGroup, ObjectData, OutputData, Property,
+        deserializer::constants::{EMPTY, END, START},
+        models::archived::Archived,
+    };
+
+    fn stream(groups: &[u8]) -> Vec<u8> {
+        let mut bytes = vec![
+            4, 11, b's', b't', b'r', b'e', b'a', b'm', b't', b'y', b'p', b'e', b'd', 0x81, 0xe8, 3,
+            START, 1, b'@', START, START, START, 1, b'X', 0, EMPTY,
+        ];
+        bytes.extend_from_slice(groups);
+        bytes.push(END);
+        bytes
+    }
+
+    fn unsigned(property: Property<'_, '_>) -> u64 {
+        let Property::Primitive(value) = property else {
+            panic!("expected a primitive");
+        };
+        value.as_u64().unwrap()
+    }
+
+    #[test]
+    fn preserves_empty_groups_null_slots_and_item_order() {
+        let bytes = stream(&[
+            // A zero-length descriptor is a group with no values; it keeps its position.
+            START, 1, b'C', 1, START, 0, START, 2, b'C', b'C', 2, 3, START, 1, b'C', 4,
+            // A nil `EmbeddedData` is a slot written as `NULL`: one group holding `Null`.
+            START, 1, b'*', EMPTY,
+        ]);
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        let Archived::Object { data, .. } = &ts.object_table[root] else {
+            panic!("expected an object");
+        };
+        assert_eq!(data.group_count(), 5);
+        assert_eq!(
+            data,
+            &ObjectData::Groups(vec![
+                DataGroup::One(OutputData::UnsignedInteger(1)),
+                DataGroup::Values(vec![]),
+                DataGroup::Values(vec![
+                    OutputData::UnsignedInteger(2),
+                    OutputData::UnsignedInteger(3),
+                ]),
+                DataGroup::One(OutputData::UnsignedInteger(4)),
+                DataGroup::One(OutputData::Null),
+            ])
+        );
+
+        let mut properties = ts.resolve_properties(root).unwrap();
+        let mut lengths = Vec::new();
+        let mut values = Vec::new();
+        for property in properties.by_ref().take(4) {
+            let Property::Group(group) = property else {
+                panic!("expected a group");
+            };
+            lengths.push(group.len());
+            let forward: Vec<_> = group.iter().map(unsigned).collect();
+            let reverse: Vec<_> = group.iter().rev().map(unsigned).collect();
+            assert_eq!(reverse, forward.iter().rev().copied().collect::<Vec<_>>());
+            values.extend_from_slice(&forward);
+
+            let mut iter = group.iter();
+            assert_eq!(iter.len(), forward.len());
+            if !forward.is_empty() {
+                assert_eq!(unsigned(iter.next().unwrap()), forward[0]);
+                assert_eq!(iter.len(), forward.len() - 1);
+            }
+            if forward.len() == 2 {
+                assert_eq!(unsigned(iter.next_back().unwrap()), forward[1]);
+            }
+            assert_eq!(iter.len(), 0);
+            assert!(iter.next().is_none());
+            assert!(iter.next_back().is_none());
+        }
+        assert_eq!(lengths, [1, 0, 2, 1]);
+        assert_eq!(values, [1, 2, 3, 4]);
+
+        let Some(Property::Group(group)) = properties.next() else {
+            panic!("expected the nil embed's group");
+        };
+        assert_eq!(group.len(), 1);
+        assert!(matches!(
+            group.iter().next(),
+            Some(Property::Primitive(OutputData::Null))
+        ));
+        assert!(properties.next().is_none());
+    }
+
+    #[test]
+    fn preserves_groups_when_promoting_inline_data() {
+        for (descriptors, expected) in [
+            (
+                vec![START, 1, b'C', 1, START, 1, b'C', 2],
+                vec![vec![1], vec![2]],
+            ),
+            (
+                vec![START, 1, b'C', 1, START, 2, b'C', b'C', 2, 3],
+                vec![vec![1], vec![2, 3]],
+            ),
+            (
+                vec![START, 2, b'C', b'C', 1, 2, START, 1, b'C', 3],
+                vec![vec![1, 2], vec![3]],
+            ),
+        ] {
+            let bytes = stream(&descriptors);
+            let mut ts = TypedStreamDeserializer::new(&bytes);
+            let root = ts.oxidize().unwrap();
+            let Archived::Object {
+                data: ObjectData::Groups(groups),
+                ..
+            } = &ts.object_table[root]
+            else {
+                panic!("expected grouped data");
+            };
+            let values: Vec<Vec<_>> = groups
+                .iter()
+                .map(|group| {
+                    group
+                        .as_slice()
+                        .iter()
+                        .map(|value| value.as_u64().unwrap())
+                        .collect()
+                })
+                .collect();
+            assert_eq!(values, expected);
+            assert!(groups.iter().all(|group| !group.is_empty()));
+            for group in groups {
+                assert_eq!(matches!(group, DataGroup::One(_)), group.len() == 1);
+            }
+        }
+    }
+
+    #[test]
+    fn splices_embedded_values_into_multi_slot_groups() {
+        // A descriptor with several slots fills one group; an `EmbeddedData`
+        // slot contributes the embedded values in place.
+        use OutputData::UnsignedInteger as U;
+        for (descriptors, expected) in [
+            // Embed last: the values decoded before it must survive.
+            (
+                vec![START, 2, b'C', b'*', 1, START, START, 1, b'C', 0x94, 2],
+                vec![U(1), U(2)],
+            ),
+            // Embed first: the slots after it must still be read.
+            (
+                vec![START, 2, b'*', b'C', START, START, 1, b'C', 0x94, 1, 2],
+                vec![U(1), U(2)],
+            ),
+            // Embed in the middle.
+            (
+                vec![
+                    START, 3, b'C', b'*', b'C', 1, START, START, 1, b'C', 0x94, 2, 3,
+                ],
+                vec![U(1), U(2), U(3)],
+            ),
+            // A multi-value embedded type flattens into the enclosing group.
+            (
+                vec![
+                    START, 2, b'C', b'*', 1, START, START, 2, b'C', b'C', 0x94, 2, 3,
+                ],
+                vec![U(1), U(2), U(3)],
+            ),
+            // A nil embed is a `NULL` slot; the slot after it is still read.
+            (
+                vec![START, 3, b'C', b'*', b'C', 1, EMPTY, 3],
+                vec![U(1), OutputData::Null, U(3)],
+            ),
+            // An embedded type with no types contributes nothing, which can
+            // leave a multi-slot descriptor with one value.
+            (
+                vec![START, 2, b'C', b'*', 1, START, START, 0, 0x94],
+                vec![U(1)],
+            ),
+        ] {
+            let bytes = stream(&descriptors);
+            let mut ts = TypedStreamDeserializer::new(&bytes);
+            let root = ts.oxidize().unwrap();
+            let Archived::Object { data, .. } = &ts.object_table[root] else {
+                panic!("expected an object");
+            };
+            assert_eq!(data.group_count(), 1, "{descriptors:?}");
+            let values = match data {
+                ObjectData::Inline(value) => core::slice::from_ref(value),
+                ObjectData::Groups(groups) => groups[0].as_slice(),
+                ObjectData::Empty => panic!("expected data for {descriptors:?}"),
+            };
+            assert_eq!(values, expected.as_slice(), "{descriptors:?}");
+            // A single value never lands in `Values`, whichever path produced it.
+            assert_eq!(
+                matches!(data, ObjectData::Inline(_)),
+                expected.len() == 1,
+                "{descriptors:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn preserves_shared_and_self_references() {
+        let bytes = stream(&[
+            // The child reuses class 1 and occupies object slot 2.
+            START, 1, b'@', START, 0x93, START, 1, b'C', 7, END, START, 1, b'@', 0x94, START, 2,
+            b'@', b'@', 0x92, 0x94,
+        ]);
+        let mut ts = TypedStreamDeserializer::new(&bytes);
+        let root = ts.oxidize().unwrap();
+        assert_eq!(root, 0);
+        assert_eq!(ts.object_table.len(), 3);
+        assert_eq!(
+            ts.object_table[root],
+            Archived::Object {
+                class: 1,
+                data: ObjectData::Groups(vec![
+                    DataGroup::One(OutputData::Object(2)),
+                    DataGroup::One(OutputData::Object(2)),
+                    DataGroup::Values(vec![OutputData::Object(0), OutputData::Object(2)]),
+                ]),
+            }
+        );
+        assert_eq!(
+            ts.object_table[2],
+            Archived::Object {
+                class: 1,
+                data: ObjectData::Inline(OutputData::UnsignedInteger(7)),
+            }
+        );
+        let primitives = ts
+            .resolve_properties(root)
+            .unwrap()
+            .primitives_with_limits(10, 100);
+        assert!(!primitives.is_empty());
+        assert!(primitives.len() <= 100);
+        assert!(primitives.iter().all(|value| value.as_u64() == Some(7)));
     }
 }

@@ -5,7 +5,7 @@ use core::slice::Iter;
 use alloc::vec::Vec;
 
 use crate::models::{
-    archived::{Archived, ObjectData},
+    archived::{Archived, DataGroup, ObjectData},
     class::Class,
     output_data::OutputData,
     types::{Type, TypeEntry},
@@ -220,8 +220,8 @@ pub struct PropertyIterator<'a, 'b> {
 enum GroupSource<'a, 'b> {
     /// A single inline value that forms one group; yielded exactly once.
     Inline(Option<&'b OutputData<'a>>),
-    /// An iterator over the object's group vectors.
-    Groups(Iter<'b, Vec<OutputData<'a>>>),
+    /// An iterator over the object's data groups.
+    Groups(Iter<'b, DataGroup<'a>>),
 }
 
 impl<'a, 'b> PropertyIterator<'a, 'b> {
